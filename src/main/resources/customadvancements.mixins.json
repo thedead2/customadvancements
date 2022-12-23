@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "de.thedead2.customadvancements.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "customadvancements.refmap.json",
+  "mixins": [
+    "MixinJsonReloadListener"
+  ],
+  "client": [
+    "MixinSimpleTexture"
+  ],
+  "server": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}
