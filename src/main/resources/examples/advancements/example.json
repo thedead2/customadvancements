@@ -3,8 +3,8 @@
       "icon": {
         "item": "minecraft:dirt"
       },
-      "title": "Test",
-      "description": "Just testing!",
+      "title": "Example",
+      "description": "This is a example advancement!",
       "frame": "task",
       "show_toast": true,
       "announce_to_chat": true
