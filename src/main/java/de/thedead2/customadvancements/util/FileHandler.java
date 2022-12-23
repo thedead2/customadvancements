@@ -158,7 +158,7 @@ public class FileHandler {
     }
 
     private String getId(String filePath) {
-        return filePath.substring(filePath.indexOf(MOD_ID)).replaceFirst("/", ":");
+        return filePath.substring(filePath.lastIndexOf(MOD_ID)).replaceFirst("/", ":");
     }
 
     private void readFile(File file) {
@@ -229,6 +229,6 @@ public class FileHandler {
             fileOut.close();
         }
 
-        LOGGER.debug("Copied mod files from directory " + MOD_ID + ":" + pathIn + "to directory {} successfully!", pathOut);
+        LOGGER.debug("Copied mod files from directory " + MOD_ID + ":" + pathIn + " to directory {} successfully!", pathOut);
     }
 }

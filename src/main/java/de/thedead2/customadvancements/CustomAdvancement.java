@@ -54,7 +54,7 @@ public class CustomAdvancement {
     public String getFilePath(){return this.filePath;}
 
     private String getId(CustomAdvancement customAdvancement) {
-        return customAdvancement.getFilePath().substring(customAdvancement.getFilePath().indexOf(MOD_ID)).replaceFirst("/", ":");
+        return customAdvancement.getFilePath().substring(customAdvancement.getFilePath().lastIndexOf(MOD_ID)).replaceFirst("/", ":");
     }
 
     private void hasBackgroundImage(){
