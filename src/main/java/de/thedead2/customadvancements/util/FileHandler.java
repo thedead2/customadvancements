@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
@@ -41,7 +42,7 @@ public class FileHandler {
                 LOGGER.info("Created " + MOD_ID + " folder at " + GAME_DIR + " successfully!");
 
                 try {
-                    copyModFiles("examples/advancements", DIR_PATH);
+                    copyModFiles("examples/advancements", DIR_PATH, ".json");
                     LOGGER.debug("Created example custom advancements successfully!");
                 }
                 catch (IOException e) {
@@ -66,7 +67,7 @@ public class FileHandler {
                 LOGGER.info("Created textures folder at " + DIR_PATH + " successfully!");
 
                 try {
-                    copyModFiles("examples/textures", TEXTURES_PATH);
+                    copyModFiles("examples/textures", TEXTURES_PATH, ".png");
                     LOGGER.debug("Created example textures for custom advancements successfully!");
                 }
                 catch (IOException e) {
@@ -208,27 +209,36 @@ public class FileHandler {
         }
     }
 
-    public void copyModFiles(String pathIn, String pathOut) throws IOException {
+    public void copyModFiles(String pathIn, String pathOut, String suffix) throws IOException {
         Path filespath = THIS_MOD_FILE.findResource(pathIn);
 
-        File[] files = new File(filespath.toUri()).listFiles();
+        try (Stream<Path> paths = Files.list(filespath)) {
+            paths.filter(path -> path.toString().endsWith(suffix)).forEach(path -> {
+                try {
+                    InputStream fileIn = Files.newInputStream(path);
+                    OutputStream fileOut = Files.newOutputStream(Paths.get(pathOut + "/" + path.getFileName()));
 
-        assert files != null;
+                    int input;
 
-        for(File file:files){
-            InputStream fileIn = Files.newInputStream(file.toPath());
-            OutputStream fileOut = Files.newOutputStream(Paths.get(pathOut + "/" + file.getName()));
+                    while ((input = fileIn.read()) != -1) {
+                        fileOut.write(input);
+                    }
 
-            int input;
+                    fileIn.close();
+                    fileOut.close();
 
-            while ((input = fileIn.read()) != -1){
-                fileOut.write(input);
-            }
+                }
+                catch (IOException e){
+                    LOGGER.warn("Failed to copy files: " + e);
+                    e.printStackTrace();
+                }
+            });
 
-            fileIn.close();
-            fileOut.close();
+            LOGGER.debug("Copied mod files from directory " + MOD_ID + ":" + pathIn + " to directory {} successfully!", pathOut);
         }
-
-        LOGGER.debug("Copied mod files from directory " + MOD_ID + ":" + pathIn + " to directory {} successfully!", pathOut);
+        catch (IOException e) {
+            LOGGER.warn("Failed to copy files: " + e);
+            e.printStackTrace();
+        }
     }
 }
