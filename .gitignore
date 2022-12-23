@@ -10,3 +10,5 @@ src/main/resources/.DS_Store
 src/test/.DS_Store
 build
 run
+.idea
+.gradle
