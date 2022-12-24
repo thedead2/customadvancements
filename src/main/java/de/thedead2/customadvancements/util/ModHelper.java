@@ -6,7 +6,7 @@ import net.minecraftforge.fml.loading.moddiscovery.ModFile;
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.16.5-1.0.0.0";
+    public static final String MOD_VERSION = "1.16.5-1.0.1.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final ModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();

@@ -20,7 +20,6 @@ public class CustomAdvancements {
 
     private void setup(final FMLCommonSetupEvent event) {
         LOGGER.info("Starting " + MOD_NAME + ", Version: " + MOD_VERSION);
-        LOGGER.debug("Path of the mod file: " + THIS_MOD_FILE.getFilePath());
 
         FILE_HANDLER.getDirectory();
         FILE_HANDLER.readFiles();

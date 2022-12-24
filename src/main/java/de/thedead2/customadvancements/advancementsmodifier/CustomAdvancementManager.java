@@ -1,9 +1,8 @@
 package de.thedead2.customadvancements.advancementsmodifier;
 
-import com.google.gson.*;
+import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.CustomAdvancement;
 import de.thedead2.customadvancements.util.FileHandler;
-import de.thedead2.customadvancements.util.ModHelper;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.ResourceLocationException;
@@ -30,9 +29,7 @@ public class CustomAdvancementManager {
                     JsonElement customJsonElement = customAdvancement.getJsonObject();
 
                     try{
-                        Collection<ResourceLocation> resourceLocations = resourceManager.getAllResourceLocations("advancements", (filename) -> {
-                            return filename.endsWith(".json");
-                        });
+                        Collection<ResourceLocation> resourceLocations = resourceManager.getAllResourceLocations("advancements", (filename) -> filename.endsWith(".json"));
 
                         if(!resourceLocations.contains(customResourceLocation)){
                             ResourceLocation customResourceLocation1 = new ResourceLocation(customResourceLocation.getNamespace(), customResourceLocation.getPath().replace(".json", ""));
@@ -57,11 +54,9 @@ public class CustomAdvancementManager {
                 LOGGER.info("Injected {} Custom Advancements into Advancement Manager!", customadvancements.size());
             }
             catch(IndexOutOfBoundsException e){
-                if(customadvancements != null){
-                    LOGGER.error("Something went wrong injecting Custom Advancements into Advancement Manager!");
-                    LOGGER.debug("Catched IndexOutOfBoundsException: " + e);
-                    e.printStackTrace();
-                }
+                LOGGER.error("Something went wrong injecting Custom Advancements into Advancement Manager!");
+                LOGGER.debug("Catched IndexOutOfBoundsException: " + e);
+                e.printStackTrace();
             }
         }
 

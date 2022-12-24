@@ -48,6 +48,6 @@ public class JsonHandler {
     }
 
     protected boolean isCorrectJsonFormat(JsonObject json){
-        return json.get("parent") != null && json.get("criteria") != null && json.get("display") != null || json.get("parent") == null && json.get("display") != null;
+        return json.get("parent") != null && json.get("criteria") != null && json.get("display") != null || json.get("parent") == null && json.get("display").getAsJsonObject().get("background") != null;
     }
 }

@@ -15,8 +15,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.io.FileNotFoundException;
-
 @Mixin(SimpleTexture.class)
 public abstract class MixinSimpleTexture {
 
@@ -26,8 +24,8 @@ public abstract class MixinSimpleTexture {
 
 
     @Inject(at = @At("HEAD"), method = "loadTexture", cancellable = true)
-    public void loadTexture(IResourceManager resourceManager, CallbackInfo ci) throws FileNotFoundException {
-        if(this.textureLocation.getNamespace().equals(ModHelper.MOD_ID)){
+    public void loadTexture(IResourceManager resourceManager, CallbackInfo ci) {
+        if(this.textureLocation.getNamespace().equals(ModHelper.MOD_ID) && FileHandler.textures.containsKey(this.textureLocation)){
             ci.cancel();
 
             boolean blurIn = false;
@@ -44,8 +42,10 @@ public abstract class MixinSimpleTexture {
             }
             else {
                 CustomAdvancements.LOGGER.error("Could not load texture for: " + this.textureLocation);
-                throw new FileNotFoundException("No texture found for Resource Location: " + this.textureLocation);
             }
+        }
+        else if (this.textureLocation.getNamespace().equals(ModHelper.MOD_ID) && !FileHandler.textures.containsKey(this.textureLocation)){
+            CustomAdvancements.LOGGER.debug("Couldn't find texture location {} in custom advancements textures map! Using normal method to load texture!", this.textureLocation);
         }
     }
 }

@@ -229,7 +229,7 @@ public class FileHandler {
 
                 }
                 catch (IOException e){
-                    LOGGER.warn("Failed to copy files: " + e);
+                    LOGGER.warn("Failed to copy mod files: " + e);
                     e.printStackTrace();
                 }
             });
@@ -237,7 +237,7 @@ public class FileHandler {
             LOGGER.debug("Copied mod files from directory " + MOD_ID + ":" + pathIn + " to directory {} successfully!", pathOut);
         }
         catch (IOException e) {
-            LOGGER.warn("Failed to copy files: " + e);
+            LOGGER.warn("Failed to copy mod files: " + e);
             e.printStackTrace();
         }
     }
