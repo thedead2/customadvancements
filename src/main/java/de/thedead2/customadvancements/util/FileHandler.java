@@ -3,6 +3,8 @@ package de.thedead2.customadvancements.util;
 import com.google.gson.JsonObject;
 import de.thedead2.customadvancements.CustomAdvancement;
 import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.ResourceLocationException;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -241,4 +243,9 @@ public class FileHandler {
             e.printStackTrace();
         }
     }
+
+    /*public Texture getBackgroundTexture(ResourceLocation textureLocation) {
+        Texture texture = new SimpleTexture(textureLocation)
+        return texture;
+    }*/
 }

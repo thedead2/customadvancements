@@ -3,6 +3,7 @@ package de.thedead2.customadvancements.util;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Util;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.VersionChecker;
@@ -30,8 +31,23 @@ public abstract class ModHelper {
 
 
 
-    /** Inner Class VersionControl **/
-    public abstract static class VersionControl{
+    public static final ForgeConfigSpec SPEC = ConfigManager.SPEC;
+
+    public static final boolean OUT_DATED_MESSAGE = ConfigManager.OUT_DATED_MESSAGE.get();
+
+
+    public static void sendChatMessage(PlayerEntity player){
+        VersionControl.sendChatMessage(player);
+    }
+
+    public static void sendLoggerMessage(){
+        VersionControl.sendLoggerMessage();
+    }
+
+
+    /** Inner Class VersionControl
+     * handles every Update related action **/
+    private abstract static class VersionControl{
 
         private static final Logger LOGGER = LogManager.getLogger();
         private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(THIS_MOD_CONTAINER.getModInfo());
@@ -40,15 +56,15 @@ public abstract class ModHelper {
 
         public static void sendChatMessage(PlayerEntity player){
             if (RESULT.status.equals(VersionChecker.Status.OUTDATED)){
-                player.sendMessage(new StringTextComponent(PREFIX + "Mod is outdated! Please update " + MOD_NAME + " using this link:"), Util.DUMMY_UUID);
+                player.sendMessage(new StringTextComponent(PREFIX + "Mod is outdated! Please update using the link below:"), Util.DUMMY_UUID);
                 player.sendMessage(new StringTextComponent(MOD_UPDATE_LINK), Util.DUMMY_UUID);
             }
             else if (RESULT.status.equals(VersionChecker.Status.BETA)) {
-                player.sendMessage(new StringTextComponent(PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"),Util.DUMMY_UUID);
+                player.sendMessage(new StringTextComponent(PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.DUMMY_UUID);
             }
             else if (RESULT.status.equals(VersionChecker.Status.BETA_OUTDATED)) {
                 player.sendMessage(new StringTextComponent(PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.DUMMY_UUID);
-                player.sendMessage(new StringTextComponent(PREFIX + "This Beta Version is outdated! Please update " + MOD_NAME + " using this link:"), Util.DUMMY_UUID);
+                player.sendMessage(new StringTextComponent(PREFIX + "This Beta Version is outdated! Please update using the link below:"), Util.DUMMY_UUID);
                 player.sendMessage(new StringTextComponent(MOD_UPDATE_LINK), Util.DUMMY_UUID);
             }
         }
@@ -73,6 +89,30 @@ public abstract class ModHelper {
                 LOGGER.warn(PREFIX + "This Beta is outdated! Please update " + MOD_NAME + " using this link: " + MOD_UPDATE_LINK);
                 LOGGER.warn(PREFIX + "Beta Status: " + RESULT.status);
             }
+        }
+    }
+
+
+    /** Inner Class ConfigManager
+     * handles every Config related action **/
+    private abstract static class ConfigManager {
+
+        public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+        public static final ForgeConfigSpec SPEC;
+
+        /** All Config fields for Custom Advancements **/
+        public static final ForgeConfigSpec.ConfigValue<Boolean> OUT_DATED_MESSAGE;
+
+
+        static {
+            BUILDER.push("Config for " + MOD_NAME);
+
+            OUT_DATED_MESSAGE = BUILDER.comment("Whether the mod should send a chat message if an update is available:").define("Warn Message", true);
+
+
+
+            BUILDER.pop();
+            SPEC = BUILDER.build();
         }
     }
 }

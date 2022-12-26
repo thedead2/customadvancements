@@ -1,9 +1,10 @@
 package de.thedead2.customadvancements;
 
-import de.thedead2.customadvancements.util.ModHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -20,6 +21,9 @@ public class CustomAdvancements {
     public CustomAdvancements() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoadComplete);
+
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SPEC, MOD_ID + "-common.toml");
+
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);
         MinecraftForge.EVENT_BUS.register(this);
     }
@@ -32,9 +36,12 @@ public class CustomAdvancements {
     }
 
     private void onLoadComplete(final FMLLoadCompleteEvent event){
-        ModHelper.VersionControl.sendLoggerMessage();
+        sendLoggerMessage();
     }
+
     private void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
-        ModHelper.VersionControl.sendChatMessage(event.getPlayer());
+        if (OUT_DATED_MESSAGE) { //why is config not correctly loaded?
+            sendChatMessage(event.getPlayer());
+        }
     }
 }
