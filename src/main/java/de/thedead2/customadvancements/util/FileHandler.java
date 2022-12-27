@@ -1,13 +1,5 @@
 package de.thedead2.customadvancements.util;
 
-import com.google.gson.JsonObject;
-import de.thedead2.customadvancements.CustomAdvancement;
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.client.renderer.texture.SimpleTexture;
-import net.minecraft.client.renderer.texture.Texture;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.ResourceLocationException;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,22 +10,18 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
-public class FileHandler {
+public class FileHandler implements IFileHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static Set<CustomAdvancement> customadvancements = new HashSet<>();
-    public static Map<ResourceLocation, NativeImage> textures = new HashMap<>();
-
-    private static long filecounter = 0;
+    public static long file_counter = 0;
+    public static long textures_counter = 0;
 
 
     public void getDirectory() {
@@ -61,7 +49,6 @@ public class FileHandler {
             LOGGER.info("Found " + MOD_ID + " folder at: " + DIR_PATH);
         }
 
-
         File texturesDirectory = new File(TEXTURES_PATH);
 
         if (!texturesDirectory.exists()) {
@@ -87,135 +74,27 @@ public class FileHandler {
         }
     }
 
-    public void readFiles() {
-        File[] fileList = new File(DIR_PATH).listFiles();
 
+    public void readFiles(File main_directory) {
         LOGGER.info("Starting to read files...");
 
-        if (FMLEnvironment.dist.isDedicatedServer()){
-            LOGGER.debug("Detected dedicated server running! Disabling textures loading...");
+        try (Stream<File> fileStream = Arrays.stream(Objects.requireNonNull(main_directory.listFiles()))) {
+            fileStream.filter(file -> file.isDirectory() && !file.getName().equals("textures")).forEach(JSON_HANDLER::readFiles);
         }
 
-        try {
-            assert fileList != null;
+        JSON_HANDLER.readFiles(main_directory);
+        TEXTURE_HANDLER.readFiles(new File(TEXTURES_PATH));
 
-            if (fileList.length == 0) {
-                LOGGER.info("Found 0 files in " + MOD_ID + " to inject! Skipping...");
-                return;
-
-            }
-
-            for (File file : fileList) {
-                try {
-                    if (file.isFile()) {
-                        if(file.getName().endsWith(".json")){
-                            readFile(file);
-                            filecounter++;
-                        }
-                        else {
-                            LOGGER.warn("File '" + file.getName() + "' is not a .json file, ignoring it!");
-                        }
-                    }
-                    else if (file.isDirectory() && file.getName().equals("textures") && FMLEnvironment.dist.isClient()) {
-                        readTextures(file);
-                    }
-                    else if (file.isDirectory() && !file.getName().equals("textures")) {
-                        LOGGER.debug("Found subdirectory {}! Scanning for Custom Advancements...", file.getPath().substring(file.getPath().indexOf(MOD_ID)));
-
-                        File[] subFileList = new File(file.getAbsolutePath()).listFiles();
-
-                        assert subFileList != null;
-                        LOGGER.debug("Found " + subFileList.length + " files in " + file.getPath() + " directory!");
-
-                        for (File subFile : subFileList) {
-                            readFile(subFile);
-                            filecounter++;
-                        }
-                    }
-                }
-                catch (NullPointerException e) {
-                    LOGGER.error("Unable to read {}! Make sure that it matches the required format!", file.getName());
-                    e.printStackTrace();
-                }
-                catch (IllegalStateException e) {
-                    LOGGER.error("Error loading custom advancement: " + e);
-                    e.printStackTrace();
-                }
-                catch (ResourceLocationException e) {
-                    LOGGER.error("Unable to load {} as Custom Advancement!", file.getName());
-                    e.printStackTrace();
-                }
-                catch (Exception e) {
-                    LOGGER.fatal("Something went wrong: " + e);
-                    throw new RuntimeException(e);
-                }
-
-            }
-
-            LOGGER.info("Found " + filecounter + " Custom Advancements!");
-
-        }
-        catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private String getId(String filePath) {
-        return filePath.substring(filePath.lastIndexOf(MOD_ID)).replaceFirst("/", ":");
-    }
-
-    private void readFile(File file) {
-        String fileName = file.getName();
-
-        LOGGER.debug("Found file: " + fileName);
-
-        JsonObject jsonObject = JSON_HANDLER.getJson(file);
-
-        LOGGER.debug("File " + fileName + " as JsonObject: " + jsonObject);
-
-        if (JSON_HANDLER.isCorrectJsonFormat(jsonObject)) {
-            CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getAbsolutePath());
-
-            customadvancements.add(customadvancement);
-        }
-        else {
-            LOGGER.error(fileName + " does not match the required Json Format!");
-            throw new IllegalStateException();
-        }
+        LOGGER.info("Loaded " + textures_counter + (textures_counter >  1 ? " Textures!" : " Texture!"));
+        LOGGER.info("Loaded " + file_counter + (file_counter > 1 ? " Custom Advancements!" : " Custom Advancement!"));
     }
 
 
-    private void readTextures(File directory) throws IOException {
-        File[] texture_files = directory.listFiles();
-
-        LOGGER.info("Reading texture files!");
-
-        assert texture_files != null;
-
-        for (File texture : texture_files) {
-            if (texture.getName().endsWith(".png")) {
-                LOGGER.debug("Found file: " + texture.getName());
-
-                InputStream inputStream = Files.newInputStream(texture.toPath());
-                NativeImage image = NativeImage.read(inputStream);
-                ResourceLocation textureLocation = ResourceLocation.tryCreate(getId(texture.getPath()));
-
-                LOGGER.debug("Texture Location for file " + texture.getName() + ": " + textureLocation);
-
-                textures.put(textureLocation, image);
-                inputStream.close();
-            }
-            else {
-                LOGGER.warn("File '" + texture.getName() + "' is not a .png file, ignoring it!");
-            }
-        }
-    }
-
-    public void copyModFiles(String pathIn, String pathOut, String suffix) throws IOException {
+    private void copyModFiles(String pathIn, String pathOut, String filter) throws IOException {
         Path filespath = THIS_MOD_FILE.findResource(pathIn);
 
         try (Stream<Path> paths = Files.list(filespath)) {
-            paths.filter(path -> path.toString().endsWith(suffix)).forEach(path -> {
+            paths.filter(path -> path.toString().endsWith(filter)).forEach(path -> {
                 try {
                     InputStream fileIn = Files.newInputStream(path);
                     OutputStream fileOut = Files.newOutputStream(Paths.get(pathOut + "/" + path.getFileName()));
@@ -228,14 +107,12 @@ public class FileHandler {
 
                     fileIn.close();
                     fileOut.close();
-
                 }
                 catch (IOException e){
                     LOGGER.warn("Failed to copy mod files: " + e);
                     e.printStackTrace();
                 }
             });
-
             LOGGER.debug("Copied mod files from directory " + MOD_ID + ":" + pathIn + " to directory {} successfully!", pathOut);
         }
         catch (IOException e) {
@@ -243,9 +120,4 @@ public class FileHandler {
             e.printStackTrace();
         }
     }
-
-    /*public Texture getBackgroundTexture(ResourceLocation textureLocation) {
-        Texture texture = new SimpleTexture(textureLocation)
-        return texture;
-    }*/
 }

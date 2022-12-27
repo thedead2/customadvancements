@@ -2,7 +2,6 @@ package de.thedead2.customadvancements.advancementsmodifier;
 
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.CustomAdvancement;
-import de.thedead2.customadvancements.util.FileHandler;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.ResourceLocationException;
@@ -11,20 +10,23 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
+
+import static de.thedead2.customadvancements.util.ModHelper.CUSTOM_ADVANCEMENTS;
+
 
 public class CustomAdvancementManager {
+
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static Map<ResourceLocation, JsonElement> injectData(Map<ResourceLocation, JsonElement> map, IResourceManager resourceManager) {
-        Set<CustomAdvancement> customadvancements = FileHandler.customadvancements;
 
-        if(!customadvancements.isEmpty()){
-            LOGGER.debug("Starting to inject data of {} Custom Advancements into Advancement Manager!", customadvancements.size());
-            LOGGER.debug("All registered Custom Advancements: " + customadvancements);
+    public static Map<ResourceLocation, JsonElement> injectData(Map<ResourceLocation, JsonElement> map, IResourceManager resourceManager) {
+
+        if(!CUSTOM_ADVANCEMENTS.isEmpty()){
+            LOGGER.debug("Starting to inject data of {} Custom Advancements into Advancement Manager!", CUSTOM_ADVANCEMENTS.size());
+            LOGGER.debug("All registered Custom Advancements: " + CUSTOM_ADVANCEMENTS);
 
             try {
-                for(CustomAdvancement customAdvancement:customadvancements){
+                for(CustomAdvancement customAdvancement:CUSTOM_ADVANCEMENTS){
                     ResourceLocation customResourceLocation = customAdvancement.getResourceLocation();
                     JsonElement customJsonElement = customAdvancement.getJsonObject();
 
@@ -51,11 +53,11 @@ public class CustomAdvancementManager {
                     }
 
                 }
-                LOGGER.info("Injected {} Custom Advancements into Advancement Manager!", customadvancements.size());
+                LOGGER.info("Injected {} Custom Advancements into Advancement Manager!", CUSTOM_ADVANCEMENTS.size());
             }
             catch(IndexOutOfBoundsException e){
                 LOGGER.error("Something went wrong injecting Custom Advancements into Advancement Manager!");
-                LOGGER.debug("Catched IndexOutOfBoundsException: " + e);
+                LOGGER.debug("Caught IndexOutOfBoundsException: " + e);
                 e.printStackTrace();
             }
         }

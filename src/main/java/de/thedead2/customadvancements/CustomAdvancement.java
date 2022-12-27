@@ -1,17 +1,14 @@
 package de.thedead2.customadvancements;
 
 import com.google.gson.JsonObject;
-import de.thedead2.customadvancements.util.FileHandler;
-import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.ResourceLocationException;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Map;
-
 import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.ModHelper.TEXTURES;
 
 public class CustomAdvancement {
     private final JsonObject jsonObject;
@@ -19,9 +16,8 @@ public class CustomAdvancement {
     private final ResourceLocation resourceLocation;
     private final String filePath;
 
-    private final Map<ResourceLocation, NativeImage> textures = FileHandler.textures;
-
     private static final Logger LOGGER = LogManager.getLogger();
+
 
     public CustomAdvancement(JsonObject jsonObject, String fileName, String filePath){
         this.jsonObject = jsonObject;
@@ -30,6 +26,7 @@ public class CustomAdvancement {
         this.resourceLocation = createResourceLocation(getId(this));
         hasBackgroundImage();
     }
+
 
     public JsonObject getJsonObject(){
         return this.jsonObject;
@@ -63,7 +60,7 @@ public class CustomAdvancement {
         if(this.jsonObject.get("display").getAsJsonObject().get("background") != null) {
             ResourceLocation textureLocation = ResourceLocation.tryCreate(this.jsonObject.get("display").getAsJsonObject().get("background").getAsString());
 
-            background = textures.get(textureLocation) != null;
+            background = TEXTURES.get(textureLocation) != null;
 
             if(background) {
                 LOGGER.debug("Found background for " + fileName);

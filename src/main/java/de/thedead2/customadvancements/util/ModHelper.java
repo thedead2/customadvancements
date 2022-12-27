@@ -1,6 +1,9 @@
 package de.thedead2.customadvancements.util;
 
+import de.thedead2.customadvancements.CustomAdvancement;
+import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -11,6 +14,12 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 
 public abstract class ModHelper {
 
@@ -28,26 +37,16 @@ public abstract class ModHelper {
 
     public static final FileHandler FILE_HANDLER = new FileHandler();
     public static final JsonHandler JSON_HANDLER = new JsonHandler();
+    public static final TextureHandler TEXTURE_HANDLER = new TextureHandler();
 
+    public static final Set<CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashSet<>();
+    public static final Map<ResourceLocation, NativeImage> TEXTURES = new HashMap<>();
 
-
-    public static final ForgeConfigSpec SPEC = ConfigManager.SPEC;
-
-    public static final boolean OUT_DATED_MESSAGE = ConfigManager.OUT_DATED_MESSAGE.get();
-
-
-    public static void sendChatMessage(PlayerEntity player){
-        VersionControl.sendChatMessage(player);
-    }
-
-    public static void sendLoggerMessage(){
-        VersionControl.sendLoggerMessage();
-    }
 
 
     /** Inner Class VersionControl
      * handles every Update related action **/
-    private abstract static class VersionControl{
+    public abstract static class VersionControl{
 
         private static final Logger LOGGER = LogManager.getLogger();
         private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(THIS_MOD_CONTAINER.getModInfo());
@@ -95,24 +94,24 @@ public abstract class ModHelper {
 
     /** Inner Class ConfigManager
      * handles every Config related action **/
-    private abstract static class ConfigManager {
+    public abstract static class ConfigManager {
 
-        public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-        public static final ForgeConfigSpec SPEC;
+        private static final ForgeConfigSpec.Builder CONFIG_BUILDER = new ForgeConfigSpec.Builder();
+        public static final ForgeConfigSpec CONFIG_SPEC;
 
         /** All Config fields for Custom Advancements **/
         public static final ForgeConfigSpec.ConfigValue<Boolean> OUT_DATED_MESSAGE;
 
 
         static {
-            BUILDER.push("Config for " + MOD_NAME);
+            CONFIG_BUILDER.push("Config for " + MOD_NAME);
 
-            OUT_DATED_MESSAGE = BUILDER.comment("Whether the mod should send a chat message if an update is available:").define("Warn Message", true);
+            OUT_DATED_MESSAGE = CONFIG_BUILDER.comment("Whether the mod should send a chat message if an update is available:").define("Warn Message", true);
 
 
 
-            BUILDER.pop();
-            SPEC = BUILDER.build();
+            CONFIG_BUILDER.pop();
+            CONFIG_SPEC = CONFIG_BUILDER.build();
         }
     }
 }
