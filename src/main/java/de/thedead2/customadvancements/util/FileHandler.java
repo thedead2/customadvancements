@@ -76,17 +76,18 @@ public class FileHandler implements IFileHandler {
 
 
     public void readFiles(File main_directory) {
+        TEXTURE_HANDLER.readFiles(new File(TEXTURES_PATH));
+
         LOGGER.info("Starting to read files...");
+
+        JSON_HANDLER.readFiles(main_directory);
 
         try (Stream<File> fileStream = Arrays.stream(Objects.requireNonNull(main_directory.listFiles()))) {
             fileStream.filter(file -> file.isDirectory() && !file.getName().equals("textures")).forEach(JSON_HANDLER::readFiles);
         }
 
-        JSON_HANDLER.readFiles(main_directory);
-        TEXTURE_HANDLER.readFiles(new File(TEXTURES_PATH));
-
-        LOGGER.info("Loaded " + textures_counter + (textures_counter >  1 ? " Textures!" : " Texture!"));
-        LOGGER.info("Loaded " + file_counter + (file_counter > 1 ? " Custom Advancements!" : " Custom Advancement!"));
+        LOGGER.info("Loaded " + textures_counter + ((1 < textures_counter || textures_counter == 0) ? " Textures!" : " Texture!"));
+        LOGGER.info("Loaded " + file_counter + ((file_counter > 1 || file_counter == 0) ? " Custom Advancements!" : " Custom Advancement!"));
     }
 
 
