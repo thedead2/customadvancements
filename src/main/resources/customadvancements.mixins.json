@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "customadvancements.refmap.json",
   "mixins": [
-    "MixinJsonReloadListener"
+    "MixinJsonReloadListener",
+    "MixinPlayerAdvancements"
   ],
   "client": [
     "MixinSimpleTexture"

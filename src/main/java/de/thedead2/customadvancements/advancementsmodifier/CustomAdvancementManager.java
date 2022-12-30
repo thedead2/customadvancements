@@ -10,10 +10,7 @@ import net.minecraft.util.ResourceLocationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
@@ -25,6 +22,8 @@ public class CustomAdvancementManager {
     private static long counter = 0;
     private static final Multimap<ResourceLocation, ResourceLocation> parentChildrenMap = ArrayListMultimap.create();
     private static final Map<ResourceLocation, ResourceLocation> childrenParentMap = new HashMap<>();
+
+    public static final Set<ResourceLocation> REMOVED_ADVANCEMENTS_SET = new HashSet<>();
 
 
     public static Map<ResourceLocation, JsonElement> modifyData(Map<ResourceLocation, JsonElement> map){
@@ -104,6 +103,8 @@ public class CustomAdvancementManager {
                 LOGGER.debug("Removed advancement: " + blacklistedAdvancement);
                 counter++;
 
+                REMOVED_ADVANCEMENTS_SET.add(blacklistedAdvancement);
+
                 map = removeChildren(map, blacklistedAdvancement);
             }
 
@@ -124,6 +125,8 @@ public class CustomAdvancementManager {
                     map.remove(advancement);
                     LOGGER.debug("Removed advancement: " + advancement);
                     counter++;
+
+                    REMOVED_ADVANCEMENTS_SET.add(advancement);
                 }
             }
 
@@ -170,6 +173,8 @@ public class CustomAdvancementManager {
                 map.remove(childAdvancement);
                 LOGGER.debug("Removed child advancement: " + childAdvancement);
                 counter++;
+
+                REMOVED_ADVANCEMENTS_SET.add(childAdvancement);
             }
             removeChildren(map, childAdvancement);
         }
