@@ -15,15 +15,12 @@ import net.minecraftforge.fml.loading.moddiscovery.ModFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.16.5-1.3.0";
+    public static final String MOD_VERSION = "1.16.5-2.0.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
@@ -42,6 +39,7 @@ public abstract class ModHelper {
     public static final Set<CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashSet<>();
     public static final Map<ResourceLocation, NativeImage> TEXTURES = new HashMap<>();
 
+    public static final List<ResourceLocation> ADVANCEMENTS_BLACKLIST = ConfigManager.getBlacklistedResourceLocations();
 
 
     /** Inner Class VersionControl
@@ -101,17 +99,35 @@ public abstract class ModHelper {
 
         /** All Config fields for Custom Advancements **/
         public static final ForgeConfigSpec.ConfigValue<Boolean> OUT_DATED_MESSAGE;
+        public static final ForgeConfigSpec.ConfigValue<Boolean> NO_RECIPE_ADVANCEMENTS;
+        public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
 
 
         static {
             CONFIG_BUILDER.push("Config for " + MOD_NAME);
 
-            OUT_DATED_MESSAGE = CONFIG_BUILDER.comment("Whether the mod should send a chat message if an update is available:").define("Warn Message", true);
+            OUT_DATED_MESSAGE = CONFIG_BUILDER.comment("Whether the mod should send a chat message if an update is available:").define("warnMessage", true);
 
+            NO_RECIPE_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all recipe advancements:").define("noRecipeAdvancements", false);
 
+            ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod:").defineList("advancementsBlacklist" , Collections.emptyList(), it -> it instanceof String);
 
             CONFIG_BUILDER.pop();
             CONFIG_SPEC = CONFIG_BUILDER.build();
+        }
+
+        private static List<ResourceLocation> getBlacklistedResourceLocations(){
+            List<String> list = (List<String>) ADVANCEMENT_BLACKLIST.get();
+            List<ResourceLocation> resourceLocations = new ArrayList<>();
+
+            if(!list.isEmpty()){
+                list.forEach(inputString -> resourceLocations.add(ResourceLocation.tryCreate(inputString)));
+
+                return resourceLocations;
+            }
+            else {
+                return null;
+            }
         }
     }
 }
