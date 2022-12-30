@@ -20,7 +20,7 @@ import java.util.*;
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.16.5-2.0.0";
+    public static final String MOD_VERSION = "1.16.5-2.1.2";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
@@ -39,12 +39,11 @@ public abstract class ModHelper {
     public static final Set<CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashSet<>();
     public static final Map<ResourceLocation, NativeImage> TEXTURES = new HashMap<>();
 
-    public static final List<ResourceLocation> ADVANCEMENTS_BLACKLIST = ConfigManager.getBlacklistedResourceLocations();
 
 
-    /** Inner Class VersionControl
+    /** Inner Class VersionManager
      * handles every Update related action **/
-    public abstract static class VersionControl{
+    public abstract static class VersionManager {
 
         private static final Logger LOGGER = LogManager.getLogger();
         private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(THIS_MOD_CONTAINER.getModInfo());
@@ -99,35 +98,44 @@ public abstract class ModHelper {
 
         /** All Config fields for Custom Advancements **/
         public static final ForgeConfigSpec.ConfigValue<Boolean> OUT_DATED_MESSAGE;
+        public static final ForgeConfigSpec.ConfigValue<Boolean> OPTIFINE_SHADER_COMPATIBILITY;
         public static final ForgeConfigSpec.ConfigValue<Boolean> NO_RECIPE_ADVANCEMENTS;
-        public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
+        public static final ForgeConfigSpec.ConfigValue<Boolean> NO_ADVANCEMENTS;
+        public static final ForgeConfigSpec.ConfigValue<Boolean> BLACKLIST_IS_WHITELIST;
+        private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
 
 
         static {
             CONFIG_BUILDER.push("Config for " + MOD_NAME);
 
+
             OUT_DATED_MESSAGE = CONFIG_BUILDER.comment("Whether the mod should send a chat message if an update is available:").define("warnMessage", true);
+
+            OPTIFINE_SHADER_COMPATIBILITY = CONFIG_BUILDER.comment("Whether the compatibility mode for Optifine Shaders should be enabled. Note: This disables custom background textures for advancements! (You need to restart your game for the actions to take effect)").worldRestart().define("optifineShaderCompatibility", false);
+
+            NO_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all advancements (You need to restart your game for the actions to take effect):").worldRestart().define("noAdvancements", false);
 
             NO_RECIPE_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all recipe advancements:").define("noRecipeAdvancements", false);
 
-            ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod:").defineList("advancementsBlacklist" , Collections.emptyList(), it -> it instanceof String);
+            ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod:").worldRestart().defineList("advancementsBlacklist" , Collections.emptyList(), it -> it instanceof String);
+
+            BLACKLIST_IS_WHITELIST = CONFIG_BUILDER.comment("Whether the Blacklist of Advancements should be a Whitelist:").define("blacklistIsWhitelist", false);
+
 
             CONFIG_BUILDER.pop();
             CONFIG_SPEC = CONFIG_BUILDER.build();
         }
 
-        private static List<ResourceLocation> getBlacklistedResourceLocations(){
+
+        public static Set<ResourceLocation> getBlacklistedResourceLocations(){
             List<String> list = (List<String>) ADVANCEMENT_BLACKLIST.get();
-            List<ResourceLocation> resourceLocations = new ArrayList<>();
+            Set<ResourceLocation> resourceLocations = new HashSet<>();
 
             if(!list.isEmpty()){
                 list.forEach(inputString -> resourceLocations.add(ResourceLocation.tryCreate(inputString)));
+            }
 
-                return resourceLocations;
-            }
-            else {
-                return null;
-            }
+            return resourceLocations;
         }
     }
 }

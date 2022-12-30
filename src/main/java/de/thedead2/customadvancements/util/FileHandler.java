@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.util;
 
 import de.thedead2.customadvancements.CustomAdvancement;
+import de.thedead2.customadvancements.util.miscellaneous.FileCopyException;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -23,6 +24,7 @@ public class FileHandler implements IFileHandler {
 
     public static long file_counter = 0;
     public static long textures_counter = 0;
+    public static Collection<ResourceLocation> resourceLocations;
 
 
     public void getDirectory() {
@@ -34,7 +36,7 @@ public class FileHandler implements IFileHandler {
 
                 try {
                     copyModFiles("examples/advancements", DIR_PATH, ".json");
-                    LOGGER.debug("Created example advancements");
+                    LOGGER.debug("Created example custom advancements!");
                 }
                 catch (FileCopyException e){
                     LOGGER.error("Unable to create example advancements!");
@@ -115,7 +117,7 @@ public class FileHandler implements IFileHandler {
                     throw new FileCopyException("Failed to copy files: " + e);
                 }
             });
-            LOGGER.debug("Copied files from directory " + MOD_ID + ":" + pathIn + " to directory {}...", pathOut);
+            LOGGER.debug("Copied files from directory " + MOD_ID + ":" + pathIn + " to directory {}", pathOut);
         }
         catch (IOException e) {
             LOGGER.warn("Unable to locate directory: " + MOD_ID + ":" + pathIn);
@@ -126,7 +128,7 @@ public class FileHandler implements IFileHandler {
 
 
     public void printResourceLocations(IResourceManager resourceManager) {
-        Collection<ResourceLocation> resourceLocations = resourceManager.getAllResourceLocations("advancements", (filename) -> filename.endsWith(".json"));
+        resourceLocations = resourceManager.getAllResourceLocations("advancements", (filename) -> filename.endsWith(".json"));
 
         File outputFile = new File(DIR_PATH + "/resource_locations.txt");
 

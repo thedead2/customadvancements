@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import static de.thedead2.customadvancements.util.IFileHandler.getId;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 import static de.thedead2.customadvancements.util.ModHelper.TEXTURES;
 
 public class CustomAdvancement {
@@ -60,7 +61,8 @@ public class CustomAdvancement {
             ResourceLocation textureLocation = ResourceLocation.tryCreate(this.jsonObject.get("display").getAsJsonObject().get("background").getAsString());
 
             this.textureLocation = textureLocation;
-            boolean backgroundImage_in_map = TEXTURES.get(textureLocation) != null;
+            assert textureLocation != null;
+            boolean backgroundImage_in_map = !textureLocation.getNamespace().equals(MOD_ID) || TEXTURES.get(textureLocation) != null;
 
             if(backgroundImage_in_map) {
                 LOGGER.debug("Found background for " + fileName);

@@ -23,7 +23,7 @@ public class JsonHandler implements IFileHandler {
 
 
     public void readFiles(File directory) {
-        LOGGER.debug("Starting to read json files in: " + directory.getPath() + "...");
+        LOGGER.debug("Starting to read json files in: " + directory.getPath());
 
         File[] fileList = directory.listFiles();
 

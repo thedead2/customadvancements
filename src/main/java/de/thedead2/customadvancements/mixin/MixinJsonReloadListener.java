@@ -29,9 +29,7 @@ public abstract class MixinJsonReloadListener {
         FILE_HANDLER.printResourceLocations(resourceManagerIn);
 
         if (Objects.equals(this.folder, "advancements")) {
-            map = CustomAdvancementManager.injectData(map, resourceManagerIn);
-            map = CustomAdvancementManager.removeRecipeAdvancements(map, resourceManagerIn);
-            map = CustomAdvancementManager.removeBlacklistedAdvancements(map);
+            map = CustomAdvancementManager.modifyData(map);
         }
     }
 }

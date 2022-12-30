@@ -1,5 +1,6 @@
 package de.thedead2.customadvancements;
 
+import de.thedead2.customadvancements.util.miscellaneous.LoggerFilter;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -28,22 +29,34 @@ public class CustomAdvancements {
 
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);
         MinecraftForge.EVENT_BUS.register(this);
+
+
+        Logger rootLogger = LogManager.getRootLogger();
+        if (rootLogger instanceof org.apache.logging.log4j.core.Logger logger) {
+            logger.addFilter(new LoggerFilter.MissingAdvancementFilter());
+            logger.addFilter(new LoggerFilter.UnknownRecipeCategoryFilter());
+        }
+        else {
+            LOGGER.error("Unable to register filter for Logger with class {}", rootLogger.getClass());
+        }
     }
 
     private void setup(final FMLCommonSetupEvent event) {
         LOGGER.info("Starting " + MOD_NAME + ", Version: " + MOD_VERSION);
 
         FILE_HANDLER.getDirectory();
-        FILE_HANDLER.readFiles(new File(DIR_PATH));
+        if(!ConfigManager.NO_ADVANCEMENTS.get()){
+            FILE_HANDLER.readFiles(new File(DIR_PATH));
+        }
     }
 
     private void onLoadComplete(final FMLLoadCompleteEvent event){
-        VersionControl.sendLoggerMessage();
+        VersionManager.sendLoggerMessage();
     }
 
     private void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
         if(ConfigManager.OUT_DATED_MESSAGE.get()){
-            VersionControl.sendChatMessage(event.getPlayer());
+            VersionManager.sendChatMessage(event.getPlayer());
         }
     }
 }

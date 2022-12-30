@@ -24,6 +24,11 @@ public class TextureHandler implements IFileHandler{
             return;
         }
 
+        if (ModHelper.ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
+            LOGGER.warn("Enabling compatibility mode for Optifine Shaders! This disables custom background textures for advancements!");
+            return;
+        }
+
         File[] texture_files = directory.listFiles();
 
         LOGGER.debug("Starting to read texture files...");

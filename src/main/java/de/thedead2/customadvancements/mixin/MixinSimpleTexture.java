@@ -26,7 +26,7 @@ public abstract class MixinSimpleTexture {
 
     @Inject(at = @At("HEAD"), method = "loadTexture", cancellable = true)
     public void loadTexture(IResourceManager resourceManager, CallbackInfo ci) {
-        if(this.textureLocation.getNamespace().equals(ModHelper.MOD_ID) && TEXTURES.containsKey(this.textureLocation)){
+        if(this.textureLocation.getNamespace().equals(ModHelper.MOD_ID) && TEXTURES.containsKey(this.textureLocation) && !ModHelper.ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
             ci.cancel();
 
             boolean blurIn = false;
