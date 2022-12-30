@@ -1,8 +1,8 @@
 package de.thedead2.customadvancements.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.thedead2.customadvancements.CustomAdvancements;
 import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.TextureHandler;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.resources.IResourceManager;
@@ -43,11 +43,11 @@ public abstract class MixinSimpleTexture {
                 }
             }
             else {
-                CustomAdvancements.LOGGER.error("Could not load texture for: " + this.textureLocation);
+                TextureHandler.LOGGER.error("Could not load texture for: " + this.textureLocation);
             }
         }
         else if (this.textureLocation.getNamespace().equals(ModHelper.MOD_ID) && !TEXTURES.containsKey(this.textureLocation)){
-            CustomAdvancements.LOGGER.debug("Couldn't find texture location {} in custom advancements textures map! Using normal method to load texture!", this.textureLocation);
+            TextureHandler.LOGGER.debug("Couldn't find texture location {} in custom advancements textures map! Using normal method to load texture!", this.textureLocation);
         }
     }
 }

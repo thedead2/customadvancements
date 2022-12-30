@@ -15,7 +15,7 @@ import static de.thedead2.customadvancements.util.ModHelper.TEXTURES;
 
 public class TextureHandler implements IFileHandler{
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
 
 
     public void readFiles(File directory) {

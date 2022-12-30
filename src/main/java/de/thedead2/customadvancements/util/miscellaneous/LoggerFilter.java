@@ -18,7 +18,8 @@ public class LoggerFilter {
             Message message = event.getMessage();
             if (Objects.equals(message.getFormat(), "Ignored advancement '{}' in progress file {} - it doesn't exist anymore?")) {
                 return Result.DENY;
-            } else {
+            }
+            else {
                 return Result.NEUTRAL;
             }
         }
@@ -32,7 +33,8 @@ public class LoggerFilter {
             Message message = event.getMessage();
             if (Objects.equals(message.getFormat(), "Unknown recipe category: {}/{}")) {
                 return Result.DENY;
-            } else {
+            }
+            else {
                 return Result.NEUTRAL;
             }
         }

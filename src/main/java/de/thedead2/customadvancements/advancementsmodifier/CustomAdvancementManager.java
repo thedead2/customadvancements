@@ -21,7 +21,7 @@ import static de.thedead2.customadvancements.util.ModHelper.*;
 
 public class CustomAdvancementManager {
 
-    public static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
     private static long counter = 0;
     private static final Multimap<ResourceLocation, ResourceLocation> parentChildrenMap = ArrayListMultimap.create();
     private static final Map<ResourceLocation, ResourceLocation> childrenParentMap = new HashMap<>();

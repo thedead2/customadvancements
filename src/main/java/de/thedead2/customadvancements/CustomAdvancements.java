@@ -18,7 +18,7 @@ import static de.thedead2.customadvancements.util.ModHelper.*;
 
 @Mod(MOD_ID)
 public class CustomAdvancements {
-    public static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
 
     public CustomAdvancements() {
