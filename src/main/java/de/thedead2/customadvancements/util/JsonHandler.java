@@ -23,6 +23,7 @@ public class JsonHandler implements IFileHandler {
 
 
     public void readFiles(File directory) {
+        LOGGER.debug("Starting to read json files in: " + directory.getPath() + "...");
 
         File[] fileList = directory.listFiles();
 
@@ -36,20 +37,20 @@ public class JsonHandler implements IFileHandler {
 
                     try {
                         InputStream fileInput = Files.newInputStream(file.toPath());
-                        String filedata = new String(ByteStreams.toByteArray(fileInput), StandardCharsets.UTF_8);
-                        LOGGER.debug(fileName + ":\n" + filedata);
+                        String file_data = new String(ByteStreams.toByteArray(fileInput), StandardCharsets.UTF_8);
+                        LOGGER.debug("\n" + file_data);
                         fileInput.close();
                     }
                     catch (IOException e) {
-                        LOGGER.debug("Failed to read File by InputStream!");
+                        LOGGER.warn("Unable to read File by InputStream!");
                         e.printStackTrace();
                     }
 
-                    JsonObject jsonObject = getJson(file);
+                    JsonObject jsonObject = getJsonObject(file);
 
                     assert jsonObject != null;
                     if (isCorrectJsonFormat(jsonObject)) {
-                        CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getAbsolutePath());
+                        CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
 
                         CUSTOM_ADVANCEMENTS.add(customadvancement);
                     }
@@ -59,16 +60,20 @@ public class JsonHandler implements IFileHandler {
                     }
                     FileHandler.file_counter++;
                 }
-                else if(file.isFile()) {
-                    LOGGER.warn("File '" + file.getName() + "' is not a .json file, ignoring it!");
+                else if(file.isFile() && !fileName.equals("resource_locations.txt")) {
+                    LOGGER.warn("File '" + fileName + "' is not a '.json' file, ignoring it!");
                 }
             }
+            catch (NullPointerException e){
+                LOGGER.error("Unable to get JsonObject for: " + fileName);
+                e.printStackTrace();
+            }
             catch (IllegalStateException e){
-                LOGGER.error("Unable to create Custom Advancement for " + fileName);
+                LOGGER.error("Unable to create Custom Advancement for: " + fileName);
                 e.printStackTrace();
             }
             catch (ResourceLocationException e) {
-                LOGGER.error("Unable to create Resource Location for Custom Advancement: " + fileName);
+                LOGGER.error("Unable to create Resource Location for: " + fileName);
                 e.printStackTrace();
             }
             catch (Exception e) {
@@ -79,35 +84,32 @@ public class JsonHandler implements IFileHandler {
     }
 
 
-    private JsonObject getJson(File file){
-        JsonParser parser = new JsonParser();
+    private JsonObject getJsonObject(File file){
+        final JsonParser parser = new JsonParser();
+        final String fileName = file.getName();
 
         try{
-            Object obj = parser.parse(new FileReader(file));
-            JsonObject file_to_Json = (JsonObject) obj;
+            final Object object = parser.parse(new FileReader(file));
 
-            LOGGER.debug("Parsed " + file.getName() + " to JsonObject!");
-
-            return file_to_Json;
+            return (JsonObject) object;
         }
         catch (FileNotFoundException e) {
-            LOGGER.error("Unable to parse " + file.getName() + " to JsonObject: " + e);
-
+            LOGGER.error("Unable to parse " + fileName + " to JsonObject: " + e);
+            e.printStackTrace();
             return null;
         }
         catch (ClassCastException e){
-            LOGGER.error("Failed to cast {} to JsonObject as it is empty!", file.getName());
+            LOGGER.error("Failed to cast {} to JsonObject! Maybe it's empty...", fileName);
             e.printStackTrace();
-
             return null;
         }
         catch (JsonSyntaxException e){
-            LOGGER.error("Failed to read {}! Make sure to have the right Syntax for Json Files!", file.getName());
+            LOGGER.error("Failed to read {}! Make sure to have the right Syntax for Json Files!", fileName);
             e.printStackTrace();
-
             return null;
         }
     }
+
 
     private boolean isCorrectJsonFormat(JsonObject json){
         return json.get("parent") != null && json.get("criteria") != null && json.get("display") != null || json.get("parent") == null && json.get("display").getAsJsonObject().get("background") != null;

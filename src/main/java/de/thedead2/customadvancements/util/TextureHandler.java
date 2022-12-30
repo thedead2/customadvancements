@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
-import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 import static de.thedead2.customadvancements.util.ModHelper.TEXTURES;
 
 public class TextureHandler implements IFileHandler{
@@ -27,7 +26,7 @@ public class TextureHandler implements IFileHandler{
 
         File[] texture_files = directory.listFiles();
 
-        LOGGER.info("Reading texture files!");
+        LOGGER.debug("Starting to read texture files...");
 
         assert texture_files != null;
         for (File texture : texture_files) {
@@ -37,27 +36,23 @@ public class TextureHandler implements IFileHandler{
                 try {
                     InputStream inputStream = Files.newInputStream(texture.toPath());
                     NativeImage image = NativeImage.read(inputStream);
-                    ResourceLocation textureLocation = ResourceLocation.tryCreate(getId(texture.getPath()));
+                    ResourceLocation textureLocation = ResourceLocation.tryCreate(IFileHandler.getId(texture.getPath()));
 
-                    LOGGER.debug("Texture Location for file " + texture.getName() + ": " + textureLocation);
+                    LOGGER.debug("Texture Location for " + texture.getName() + ": " + textureLocation);
 
                     TEXTURES.put(textureLocation, image);
                     inputStream.close();
+
+                    FileHandler.textures_counter++;
                 }
                 catch (IOException e) {
                     LOGGER.error("Failed to read texture files: " + e);
                     e.printStackTrace();
                 }
-
-                FileHandler.textures_counter++;
             }
             else {
-                LOGGER.warn("File '" + texture.getName() + "' is not a .png file, ignoring it!");
+                LOGGER.warn("File '" + texture.getName() + "' is not a '.png' file, ignoring it!");
             }
         }
-    }
-
-    private String getId(String filePath) {
-        return filePath.substring(filePath.lastIndexOf(MOD_ID)).replaceFirst("/", ":");
     }
 }
