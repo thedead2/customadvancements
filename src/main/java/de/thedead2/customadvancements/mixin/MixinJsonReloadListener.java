@@ -17,8 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Map;
 import java.util.Objects;
 
-import static de.thedead2.customadvancements.util.ModHelper.FILE_HANDLER;
-
 @Mixin(JsonReloadListener.class)
 public abstract class MixinJsonReloadListener {
 
@@ -26,10 +24,8 @@ public abstract class MixinJsonReloadListener {
 
     @Inject(at = @At(value = "RETURN"), method = "prepare(Lnet/minecraft/resources/IResourceManager;Lnet/minecraft/profiler/IProfiler;)Ljava/util/Map;", locals = LocalCapture.CAPTURE_FAILSOFT)
     private void prepare(IResourceManager resourceManagerIn, IProfiler profilerIn, CallbackInfoReturnable<Map<ResourceLocation, JsonElement>> cir, Map<ResourceLocation, JsonElement> map) {
-        FILE_HANDLER.printResourceLocations(resourceManagerIn);
-
         if (Objects.equals(this.folder, "advancements")) {
-            map = CustomAdvancementManager.modifyData(map);
+            map = CustomAdvancementManager.modifyData(map, resourceManagerIn);
         }
     }
 }

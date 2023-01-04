@@ -5,7 +5,8 @@ import com.google.common.io.ByteStreams;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import de.thedead2.customadvancements.CustomAdvancement;
+import de.thedead2.customadvancements.advancements.CustomAdvancement;
+import de.thedead2.customadvancements.advancements.GameAdvancement;
 import net.minecraft.util.ResourceLocationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,15 +51,26 @@ public class JsonHandler implements IFileHandler {
 
                     assert jsonObject != null;
                     if (isCorrectJsonFormat(jsonObject)) {
-                        CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
+                        if (!directory.getPath().contains(GAME_ADVANCEMENTS_PATH)){
+                            CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
 
-                        CUSTOM_ADVANCEMENTS.add(customadvancement);
+                            CUSTOM_ADVANCEMENTS.add(customadvancement);
+
+                            FileHandler.cA_file_counter++;
+                        }
+                        else {
+                            GameAdvancement gameAdvancement = new GameAdvancement(jsonObject, fileName, file.getPath());
+
+                            GAME_ADVANCEMENTS.put(gameAdvancement.getResourceLocation(), gameAdvancement);
+
+                            FileHandler.gA_file_counter++;
+                        }
                     }
                     else {
                         LOGGER.error(fileName + " does not match the required Json Format!");
                         throw new IllegalStateException("File does not match the required Json Format!");
                     }
-                    FileHandler.file_counter++;
+
                 }
                 else if(file.isFile() && !fileName.equals("resource_locations.txt")) {
                     LOGGER.warn("File '" + fileName + "' is not a '.json' file, ignoring it!");

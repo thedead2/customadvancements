@@ -1,6 +1,10 @@
 package de.thedead2.customadvancements.util;
 
-import de.thedead2.customadvancements.CustomAdvancement;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.gson.JsonElement;
+import de.thedead2.customadvancements.advancements.CustomAdvancement;
+import de.thedead2.customadvancements.advancements.GameAdvancement;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
@@ -20,7 +24,7 @@ import java.util.*;
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.16.5-2.1.4";
+    public static final String MOD_VERSION = "1.16.5-3.2.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
@@ -31,15 +35,40 @@ public abstract class ModHelper {
     public static final String GAME_DIR = FMLPaths.GAMEDIR.get().toString();
     public static final String DIR_PATH = GAME_DIR + "/" + MOD_ID;
     public static final String TEXTURES_PATH = DIR_PATH + "/" + "textures";
+    public static final String GAME_ADVANCEMENTS_PATH = DIR_PATH + "/game_advancements";
 
     public static final FileHandler FILE_HANDLER = new FileHandler();
     public static final JsonHandler JSON_HANDLER = new JsonHandler();
     public static final TextureHandler TEXTURE_HANDLER = new TextureHandler();
 
     public static final Set<CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashSet<>();
+    public static Map<ResourceLocation, GameAdvancement> GAME_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, NativeImage> TEXTURES = new HashMap<>();
+    public static final Set<ResourceLocation> REMOVED_ADVANCEMENTS_SET = new HashSet<>();
+    public static final Map<ResourceLocation, JsonElement> ALL_DETECTED_GAME_ADVANCEMENTS = new HashMap<>();
+    public static final Set<ResourceLocation> BLACKLISTED_GAME_ADVANCEMENTS = new HashSet<>();
+
+    public static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
+    public static final Map<ResourceLocation, ResourceLocation> CHILDREN_PARENT_MAP = new HashMap<>();
+    public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
 
 
+    public static boolean DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
+
+
+    public static void clearAll(){
+        CUSTOM_ADVANCEMENTS.clear();
+        GAME_ADVANCEMENTS.clear();
+        TEXTURES.clear();
+        REMOVED_ADVANCEMENTS_SET.clear();
+        ALL_DETECTED_GAME_ADVANCEMENTS.clear();
+        BLACKLISTED_GAME_ADVANCEMENTS.clear();
+        PARENT_CHILDREN_MAP.clear();
+        CHILDREN_PARENT_MAP.clear();
+        ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
+
+        DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
+    }
 
     /** Inner Class VersionManager
      * handles every Update related action **/
@@ -113,7 +142,7 @@ public abstract class ModHelper {
 
             OPTIFINE_SHADER_COMPATIBILITY = CONFIG_BUILDER.comment("Whether the compatibility mode for Optifine Shaders should be enabled. Note: This disables custom background textures for advancements! (You need to restart your game for the actions to take effect)").worldRestart().define("optifineShaderCompatibility", false);
 
-            NO_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all advancements (You need to restart your game for the actions to take effect):").worldRestart().define("noAdvancements", false);
+            NO_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all advancements:").worldRestart().define("noAdvancements", false);
 
             NO_RECIPE_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all recipe advancements:").define("noRecipeAdvancements", false);
 
@@ -129,13 +158,13 @@ public abstract class ModHelper {
 
         public static Set<ResourceLocation> getBlacklistedResourceLocations(){
             List<String> list = (List<String>) ADVANCEMENT_BLACKLIST.get();
-            Set<ResourceLocation> resourceLocations = new HashSet<>();
+            Set<ResourceLocation> blacklistedResourceLocations = new HashSet<>();
 
             if(!list.isEmpty()){
-                list.forEach(inputString -> resourceLocations.add(ResourceLocation.tryCreate(inputString)));
+                list.forEach(inputString -> blacklistedResourceLocations.add(ResourceLocation.tryCreate(inputString)));
             }
 
-            return resourceLocations;
+            return blacklistedResourceLocations;
         }
     }
 }

@@ -1,8 +1,7 @@
-package de.thedead2.customadvancements;
+package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonObject;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.ResourceLocationException;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,10 +10,11 @@ import static de.thedead2.customadvancements.util.IFileHandler.getId;
 import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 import static de.thedead2.customadvancements.util.ModHelper.TEXTURES;
 
-public class CustomAdvancement {
+public class CustomAdvancement implements IAdvancement {
     private final JsonObject jsonObject;
     private final String fileName;
     private final ResourceLocation resourceLocation;
+    private final ResourceLocation parentAdvancement;
     private final boolean backgroundImage;
     private ResourceLocation textureLocation;
 
@@ -24,37 +24,34 @@ public class CustomAdvancement {
     public CustomAdvancement(JsonObject jsonObject, String fileName, String path){
         this.jsonObject = jsonObject;
         this.fileName = fileName;
-        this.resourceLocation = createResourceLocation(getId(path));
+        this.resourceLocation = IAdvancement.createResourceLocation(getId(path), this.fileName, false);
         this.backgroundImage = hasBackgroundImage();
+        this.parentAdvancement = this.jsonObject.get("parent") != null ? IAdvancement.createResourceLocation((this.jsonObject.get("parent").getAsString() + ".json"), this.fileName, true) : null;
     }
 
 
+    @Override
     public JsonObject getJsonObject(){
         return this.jsonObject;
     }
 
+    @Override
     public String getFileName(){
         return this.fileName;
     }
 
+    @Override
     public ResourceLocation getResourceLocation(){return this.resourceLocation;}
 
+    @Override
+    public ResourceLocation getParentAdvancement() {
+        return this.parentAdvancement;
+    }
 
+    @Override
     public String toString(){
         return "Custom Advancement: {fileName = " + this.fileName + ", resourceLocation = " + this.resourceLocation + ", hasBackgroundImage = " + this.backgroundImage + (this.backgroundImage ? (", textureLocation = " + this.textureLocation) : "") + " }";
     }
-
-
-    private ResourceLocation createResourceLocation(String id){
-        ResourceLocation resourceLocation1 = ResourceLocation.tryCreate(id);
-        LOGGER.debug("Resource Location for " + fileName + ": " + resourceLocation1);
-        if(resourceLocation1 == null){
-            LOGGER.error("Unable to create Resource Location. Probably the Name of the file contains illegal characters!");
-            throw new ResourceLocationException("Could not create Resource Location for " + fileName + "!");
-        }
-        return resourceLocation1;
-    }
-
 
     private boolean hasBackgroundImage(){
         if(this.jsonObject.get("display").getAsJsonObject().get("background") != null) {

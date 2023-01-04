@@ -11,4 +11,9 @@ public interface IFileHandler {
     static String getId(String filePath) {
         return filePath.substring(filePath.lastIndexOf(MOD_ID)).replaceFirst("/", ":");
     }
+
+    static String getGameAdvancementsId(String filePath){
+        String subString = filePath.replace(ModHelper.GAME_ADVANCEMENTS_PATH + "/", "");
+        return subString.replaceFirst("/", ":");
+    }
 }
