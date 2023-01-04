@@ -54,7 +54,7 @@ public class CustomAdvancements {
         FILE_HANDLER.checkForMainDirectories();
         FILE_HANDLER.readFiles(new File(DIR_PATH));
 
-        LOGGER.info("Loading completed!");
+        LOGGER.info("Loading complete.");
     }
 
     private void onLoadComplete(final FMLLoadCompleteEvent event){
@@ -68,10 +68,12 @@ public class CustomAdvancements {
     }
 
     private void onCommandsRegister(RegisterCommandsEvent event){
+        LOGGER.debug("Registering commands...");
         new GenerateAdvancementsCommand(event.getDispatcher());
         new GenerateResourceLocationsFile(event.getDispatcher());
         new ReloadCommand(event.getDispatcher());
 
         ConfigCommand.register(event.getDispatcher());
+        LOGGER.debug("Command registering complete.");
     }
 }

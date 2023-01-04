@@ -37,6 +37,6 @@ public class GameAdvancement implements IAdvancement{
 
     @Override
     public String toString(){
-        return "Game Advancement: {fileName = " + this.fileName + ", resourceLocation = " + this.resourceLocation + " }";
+        return "Game Advancement: {fileName = " + this.fileName + ", resourceLocation = " + this.resourceLocation + ", parent = " + this.parentAdvancement + "}";
     }
 }

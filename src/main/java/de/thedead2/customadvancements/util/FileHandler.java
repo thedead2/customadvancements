@@ -1,6 +1,5 @@
 package de.thedead2.customadvancements.util;
 
-import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.util.miscellaneous.FileCopyException;
 import de.thedead2.customadvancements.util.miscellaneous.FileWriteException;
 import net.minecraft.client.Minecraft;
@@ -26,16 +25,11 @@ public class FileHandler implements IFileHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static long cA_file_counter = 0;
-    public static long gA_file_counter = 0;
-    public static long textures_counter = 0;
-
-
     public void checkForMainDirectories() {
         if(createDirectory(new File(DIR_PATH))){
             try {
                 copyModFiles("examples/advancements", DIR_PATH, ".json");
-                LOGGER.debug("Created example custom advancements!");
+                LOGGER.debug("Created example advancements!");
             }
             catch (FileCopyException e){
                 LOGGER.error("Unable to create example advancements!");
@@ -46,10 +40,10 @@ public class FileHandler implements IFileHandler {
         if(createDirectory(new File(TEXTURES_PATH))){
             try {
                 copyModFiles("examples/textures", TEXTURES_PATH, ".png");
-                LOGGER.debug("Created example textures for custom advancements!");
+                LOGGER.debug("Created example textures for advancements!");
             }
             catch (FileCopyException e){
-                LOGGER.error("Unable to create example textures for custom advancements!");
+                LOGGER.error("Unable to create example textures for advancements!");
                 e.printStackTrace();
             }
         }
@@ -67,15 +61,11 @@ public class FileHandler implements IFileHandler {
         }
         readGameAdvancements();
 
-        LOGGER.info("Loaded " + textures_counter + (textures_counter != 1 ? " Textures!" : " Texture!"));
-        LOGGER.info("Loaded " + cA_file_counter + (cA_file_counter != 1 ? " Custom Advancements!" : " Custom Advancement!"));
+        LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
+        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " Custom Advancements!" : " Custom Advancement!"));
         if(DISABLE_STANDARD_ADVANCEMENT_LOAD){
-            LOGGER.info("Loaded " + gA_file_counter + (gA_file_counter != 1 ? " Game Advancements!" : " Game Advancement!"));
+            LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " Game Advancements!" : " Game Advancement!"));
         }
-
-        cA_file_counter = 0;
-        gA_file_counter = 0;
-        textures_counter = 0;
     }
 
 
@@ -137,8 +127,8 @@ public class FileHandler implements IFileHandler {
                 }
             }
 
-            for (CustomAdvancement customAdvancement: CUSTOM_ADVANCEMENTS){
-                String resourceLocation_as_String = customAdvancement.getResourceLocation().toString().replace(".json", "") + ",\n";
+            for (ResourceLocation resourceLocation: CUSTOM_ADVANCEMENTS.keySet()){
+                String resourceLocation_as_String = resourceLocation.toString().replace(".json", "") + ",\n";
 
                 InputStream inputStream = new ByteArrayInputStream(resourceLocation_as_String.getBytes());
 
@@ -202,7 +192,7 @@ public class FileHandler implements IFileHandler {
         else {
             source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Reload completed! Please use /reload to reload all advancements"), false);
         }
-        LOGGER.info("Reload completed!");
+        LOGGER.info("Reload complete.");
         return 1;
     }
 
@@ -210,8 +200,8 @@ public class FileHandler implements IFileHandler {
     public int generateGameAdvancements(CommandSource source) {
         AtomicInteger counter = new AtomicInteger();
 
-        LOGGER.info("Starting to generate files for {} game advancements...", ALL_DETECTED_GAME_ADVANCEMENTS.size());
-        source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Starting to generate files for " + ALL_DETECTED_GAME_ADVANCEMENTS.size() + " game advancements..."), false);
+        LOGGER.info("Starting to generate files for game advancements...");
+        source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Starting to generate files for game advancements..."), false);
 
         createDirectory(new File(ModHelper.GAME_ADVANCEMENTS_PATH));
 
@@ -224,7 +214,7 @@ public class FileHandler implements IFileHandler {
                 return;
             }
 
-            LOGGER.debug("Starting to generate file: " + advancement);
+            LOGGER.debug("Generating file: " + advancement);
 
             createDirectory(new File(GAME_ADVANCEMENTS_PATH + "/" + advancementNamespace));
 
@@ -233,12 +223,13 @@ public class FileHandler implements IFileHandler {
             if(advancementPath.contains("/")){
                 String subStringDirectory = advancementPath.replaceAll(advancementPath.substring(advancementPath.indexOf("/")), "");
                 String modSubDirectory = GAME_ADVANCEMENTS_PATH + "/" + advancementNamespace + "/" + subStringDirectory;
+
                 createDirectory(new File(modSubDirectory));
 
                 advancementJson = new File(modSubDirectory + "/" + advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
             }
             else {
-                advancementJson = new File(GAME_ADVANCEMENTS_PATH + "/" + advancementNamespace + "/" + advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
+                advancementJson = new File(GAME_ADVANCEMENTS_PATH + "/" + advancementNamespace + "/" + advancementPath + ".json");
             }
 
 

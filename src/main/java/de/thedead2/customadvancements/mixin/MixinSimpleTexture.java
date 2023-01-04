@@ -47,7 +47,7 @@ public abstract class MixinSimpleTexture {
             }
         }
         else if (this.textureLocation.getNamespace().equals(ModHelper.MOD_ID) && !TEXTURES.containsKey(this.textureLocation)){
-            TextureHandler.LOGGER.debug("Couldn't find texture location {} in custom advancements textures map! Using normal method to load texture!", this.textureLocation);
+            TextureHandler.LOGGER.debug("Couldn't find texture location {} in textures map! Using normal method to load texture!", this.textureLocation);
         }
     }
 }

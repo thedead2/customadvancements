@@ -54,21 +54,17 @@ public class JsonHandler implements IFileHandler {
                         if (!directory.getPath().contains(GAME_ADVANCEMENTS_PATH)){
                             CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
 
-                            CUSTOM_ADVANCEMENTS.add(customadvancement);
-
-                            FileHandler.cA_file_counter++;
+                            CUSTOM_ADVANCEMENTS.put(customadvancement.getResourceLocation(), customadvancement);
                         }
                         else {
                             GameAdvancement gameAdvancement = new GameAdvancement(jsonObject, fileName, file.getPath());
 
                             GAME_ADVANCEMENTS.put(gameAdvancement.getResourceLocation(), gameAdvancement);
-
-                            FileHandler.gA_file_counter++;
                         }
                     }
                     else {
-                        LOGGER.error(fileName + " does not match the required Json Format!");
-                        throw new IllegalStateException("File does not match the required Json Format!");
+                        LOGGER.error(fileName + " does not match the required '.json' Format!");
+                        throw new IllegalStateException("File does not match the required '.json' Format!");
                     }
 
                 }
@@ -81,7 +77,7 @@ public class JsonHandler implements IFileHandler {
                 e.printStackTrace();
             }
             catch (IllegalStateException e){
-                LOGGER.error("Unable to create Custom Advancement for: " + fileName);
+                LOGGER.error("Unable to create Advancement for: " + fileName);
                 e.printStackTrace();
             }
             catch (ResourceLocationException e) {
@@ -116,7 +112,7 @@ public class JsonHandler implements IFileHandler {
             return null;
         }
         catch (JsonSyntaxException e){
-            LOGGER.error("Failed to read {}! Make sure to have the right Syntax for Json Files!", fileName);
+            LOGGER.error("Failed to read {}! Make sure you have the right syntax for '.json' files!", fileName);
             e.printStackTrace();
             return null;
         }
@@ -124,6 +120,6 @@ public class JsonHandler implements IFileHandler {
 
 
     private boolean isCorrectJsonFormat(JsonObject json){
-        return json.get("parent") != null && json.get("criteria") != null && json.get("display") != null || json.get("parent") == null && json.get("display").getAsJsonObject().get("background") != null;
+        return (json.get("parent") != null && json.get("criteria") != null && json.get("display") != null) || (json.get("parent") == null && json.get("display").getAsJsonObject().get("background") != null);
     }
 }

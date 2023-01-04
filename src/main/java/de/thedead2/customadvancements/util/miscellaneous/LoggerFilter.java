@@ -10,6 +10,7 @@ import org.apache.logging.log4j.message.Message;
 import java.util.Objects;
 
 public class LoggerFilter {
+
     @Plugin(name = "MissingAdvancementFilter", category = Node.CATEGORY, elementType = Filter.ELEMENT_TYPE)
     public static class MissingAdvancementFilter extends AbstractFilter {
 
@@ -28,6 +29,7 @@ public class LoggerFilter {
 
     @Plugin(name = "UnknownRecipeCategoryFilter", category = Node.CATEGORY, elementType = Filter.ELEMENT_TYPE)
     public static class UnknownRecipeCategoryFilter extends AbstractFilter {
+
         @Override
         public Result filter(LogEvent event) {
             Message message = event.getMessage();

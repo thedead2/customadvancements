@@ -50,7 +50,7 @@ public class CustomAdvancement implements IAdvancement {
 
     @Override
     public String toString(){
-        return "Custom Advancement: {fileName = " + this.fileName + ", resourceLocation = " + this.resourceLocation + ", hasBackgroundImage = " + this.backgroundImage + (this.backgroundImage ? (", textureLocation = " + this.textureLocation) : "") + " }";
+        return "Custom Advancement: {fileName = " + this.fileName + ", resourceLocation = " + this.resourceLocation + ", parent = " + this.parentAdvancement + ", hasBackgroundImage = " + this.backgroundImage + (this.backgroundImage ? (", textureLocation = " + this.textureLocation) : "") + " }";
     }
 
     private boolean hasBackgroundImage(){
