@@ -47,8 +47,6 @@ public class TextureHandler implements IFileHandler{
 
                     TEXTURES.put(textureLocation, image);
                     inputStream.close();
-
-                    FileHandler.textures_counter++;
                 }
                 catch (IOException e) {
                     LOGGER.error("Failed to read texture files: " + e);
