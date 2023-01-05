@@ -36,10 +36,10 @@ public class CustomAdvancementManager {
 
 
             removeAllAdvancements();
+            removeRecipeAdvancements();
             loadAdvancements(CUSTOM_ADVANCEMENTS);
             loadAdvancements(GAME_ADVANCEMENTS);
             removeBlacklistedAdvancements();
-            removeRecipeAdvancements();
 
 
             mapIn.putAll(TEMP_MAP);
@@ -61,6 +61,11 @@ public class CustomAdvancementManager {
             getMissingAdvancements(advancementsIn);
 
             for(ResourceLocation resourceLocation:advancementsIn.keySet()){
+                if(resourceLocation.toString().contains("recipes/") && ConfigManager.NO_RECIPE_ADVANCEMENTS.get()){
+                    LOGGER.debug("Skipped recipe advancement: " + resourceLocation);
+                    continue;
+                }
+
                 IAdvancement advancement = advancementsIn.get(resourceLocation);
 
                 JsonElement jsonElement = advancement.getJsonObject();
@@ -93,7 +98,7 @@ public class CustomAdvancementManager {
 
 
     private static void removeRecipeAdvancements(){
-        if(ConfigManager.NO_RECIPE_ADVANCEMENTS.get() || ConfigManager.NO_ADVANCEMENTS.get()){
+        if(ConfigManager.NO_RECIPE_ADVANCEMENTS.get() || ConfigManager.NO_ADVANCEMENTS.get() || DISABLE_STANDARD_ADVANCEMENT_LOAD){
             LOGGER.info("Starting to remove recipe advancements...");
 
             for (ResourceLocation resourceLocation : ALL_ADVANCEMENTS_RESOURCE_LOCATIONS){
@@ -163,7 +168,8 @@ public class CustomAdvancementManager {
         }
     }
 
-    private static void removeAllAdvancements(){
+    private static void removeAllAdvancements() {
+        if (ConfigManager.NO_ADVANCEMENTS.get() || DISABLE_STANDARD_ADVANCEMENT_LOAD){
             LOGGER.info("Starting to remove all advancements...");
 
             AtomicInteger counter = new AtomicInteger();
@@ -178,7 +184,7 @@ public class CustomAdvancementManager {
             });
             LOGGER.info("Removed {} Advancements!", counter.get());
             counter.set(0);
-
+        }
     }
 
 

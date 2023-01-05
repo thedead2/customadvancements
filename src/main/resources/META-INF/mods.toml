@@ -29,8 +29,7 @@ credits="" #optional
 authors="The_Dead_2" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Ever wanted to add your own Advancements to the game?
-Now you can!
+This mod gives players complete freedom about advancements.
 '''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.customadvancements]] #optional

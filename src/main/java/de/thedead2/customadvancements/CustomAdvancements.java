@@ -70,10 +70,13 @@ public class CustomAdvancements {
     private void onCommandsRegister(RegisterCommandsEvent event){
         LOGGER.debug("Registering commands...");
         new GenerateAdvancementsCommand(event.getDispatcher());
+        LOGGER.debug("Registered GenerateAdvancementsCommand!");
         new GenerateResourceLocationsFile(event.getDispatcher());
+        LOGGER.debug("Registered GenerateResourceLocationsFile!");
         new ReloadCommand(event.getDispatcher());
+        LOGGER.debug("Registered ReloadCommand!");
 
         ConfigCommand.register(event.getDispatcher());
-        LOGGER.debug("Command registering complete.");
+        LOGGER.info("Command registration complete.");
     }
 }

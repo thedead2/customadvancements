@@ -25,7 +25,7 @@ import java.util.*;
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.16.5-3.3.1";
+    public static final String MOD_VERSION = "1.16.5-3.4.2";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
@@ -52,6 +52,8 @@ public abstract class ModHelper {
     public static final Map<ResourceLocation, ResourceLocation> CHILDREN_PARENT_MAP = new HashMap<>();
     public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
 
+    public static boolean DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
+
 
     public static void clearAll(){
         CUSTOM_ADVANCEMENTS.clear();
@@ -64,6 +66,7 @@ public abstract class ModHelper {
         ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
 
         CustomAdvancementManager.iteration = 0;
+        DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
     }
 
     /** Inner Class VersionManager

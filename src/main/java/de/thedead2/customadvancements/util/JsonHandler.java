@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
@@ -54,7 +55,7 @@ public class JsonHandler implements IFileHandler {
                     JsonObject jsonObject = getJsonObject(file);
 
                     assert jsonObject != null;
-                    if (isCorrectJsonFormat(jsonObject)) {
+                    if (isCorrectJsonFormat(jsonObject, file.toPath())) {
                         if (directory.getPath().contains(CUSTOM_ADVANCEMENTS_PATH)){
                             CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
 
@@ -67,8 +68,8 @@ public class JsonHandler implements IFileHandler {
                         }
                     }
                     else {
-                        LOGGER.error(fileName + " does not match the required '.json' Format!");
-                        throw new IllegalStateException("File does not match the required '.json' Format!");
+                        LOGGER.error(fileName + " does not match the required '.json' format!");
+                        throw new IllegalStateException("File does not match the required '.json' format!");
                     }
 
                 }
@@ -123,7 +124,13 @@ public class JsonHandler implements IFileHandler {
     }
 
 
-    private boolean isCorrectJsonFormat(JsonObject json){
-        return (json.get("parent") != null && json.get("criteria") != null && json.get("display") != null) || (json.get("parent") == null && json.get("display").getAsJsonObject().get("background") != null);
+    private boolean isCorrectJsonFormat(JsonObject json, Path path){
+        if(path.toString().contains("recipes/")){
+            LOGGER.debug("Ignored '.json' format for recipe advancement: " + path.getFileName());
+            return true;
+        }
+        else {
+            return (json.get("parent") != null && json.get("criteria") != null && json.get("display") != null) || (json.get("parent") == null && json.get("display").getAsJsonObject().get("background") != null);
+        }
     }
 }

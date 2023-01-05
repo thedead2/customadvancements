@@ -62,26 +62,29 @@ public class FileHandler implements IFileHandler {
             assert modFolders != null;
             for(File modFolder:modFolders){
                 if(modFolder.isDirectory() && !modFolder.getName().equals("textures")){
+                    if (!modFolder.getName().equals(MOD_ID)){
+                        DISABLE_STANDARD_ADVANCEMENT_LOAD = true;
+                    }
+
                     JSON_HANDLER.readFiles(modFolder);
 
-                    readSubfolders(modFolder);
+                    readSubDirectories(modFolder);
                 }
             }
         }
 
         LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
         LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " Custom Advancements!" : " Custom Advancement!"));
-
         LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " Game Advancements!" : " Game Advancement!"));
 
     }
 
 
-    private void readSubfolders(File folderIn){
+    private void readSubDirectories(File folderIn){
         for(File folder: Objects.requireNonNull(folderIn.listFiles())){
             if(folder.isDirectory()){
                 JSON_HANDLER.readFiles(folder);
-                readSubfolders(folder);
+                readSubDirectories(folder);
             }
         }
     }
@@ -207,10 +210,6 @@ public class FileHandler implements IFileHandler {
             String advancementNamespace = advancement.getNamespace();
             String advancementPath = advancement.getPath();
 
-            if(advancementPath.contains("recipes/")){
-                LOGGER.debug("Skipping recipe advancement: " + advancement);
-                return;
-            }
 
             LOGGER.debug("Generating file: " + advancement);
 
@@ -276,7 +275,7 @@ public class FileHandler implements IFileHandler {
     }
 
 
-    private boolean createDirectory(File directoryIn){
+    private static boolean createDirectory(File directoryIn){
         if (!directoryIn.exists()) {
             if (directoryIn.mkdir()){
                 LOGGER.debug("Created directory: " + directoryIn.toPath());
@@ -294,7 +293,7 @@ public class FileHandler implements IFileHandler {
     }
 
 
-    private void writeFile(InputStream inputStreamIn, Path outputPath){
+    private static void writeFile(InputStream inputStreamIn, Path outputPath){
         InputStream inputStream = null;
         OutputStream fileOut = null;
 
@@ -327,7 +326,7 @@ public class FileHandler implements IFileHandler {
     }
 
 
-    private void copyModFiles(String pathIn, String pathOut, String filter) throws FileCopyException {
+    private static void copyModFiles(String pathIn, String pathOut, String filter) throws FileCopyException {
         Path filespath = THIS_MOD_FILE.findResource(pathIn);
 
         try (Stream<Path> paths = Files.list(filespath)) {
