@@ -23,7 +23,7 @@ public class JsonHandler implements IFileHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-
+    @Override
     public void readFiles(File directory) {
         LOGGER.debug("Starting to read json files in: " + directory.getPath());
 

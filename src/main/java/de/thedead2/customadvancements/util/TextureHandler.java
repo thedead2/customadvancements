@@ -18,7 +18,7 @@ public class TextureHandler implements IFileHandler{
 
     public static final Logger LOGGER = LogManager.getLogger();
 
-
+    @Override
     public void readFiles(File directory) {
         if (FMLEnvironment.dist.isDedicatedServer()){
             LOGGER.debug("Detected dedicated server running! Disabling texture loading...");

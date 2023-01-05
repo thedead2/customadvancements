@@ -51,6 +51,7 @@ public class FileHandler implements IFileHandler {
     }
 
 
+    @Override
     public void readFiles(File main_directory) {
         LOGGER.info("Starting to read files...");
 
