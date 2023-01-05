@@ -30,15 +30,14 @@ public class CustomAdvancementManager {
 
         TEMP_MAP.putAll(mapIn);
 
+        mapIn.clear();
+
         if(DISABLE_STANDARD_ADVANCEMENT_LOAD){
             removeAllAdvancements();
             loadAdvancements(CUSTOM_ADVANCEMENTS);
             loadAdvancements(GAME_ADVANCEMENTS);
+            removeBlacklistedAdvancements();
             removeRecipeAdvancements();
-
-            if(ConfigManager.NO_ADVANCEMENTS.get()){
-                removeAllAdvancements();
-            }
         }
         else {
             loadAdvancements(CUSTOM_ADVANCEMENTS);
@@ -46,7 +45,10 @@ public class CustomAdvancementManager {
             removeBlacklistedAdvancements();
             removeAllAdvancements();
         }
-        return TEMP_MAP;
+
+        mapIn.putAll(TEMP_MAP);
+
+        return mapIn;
     }
 
 
@@ -67,7 +69,7 @@ public class CustomAdvancementManager {
                         ResourceLocation resourceLocation1 = new ResourceLocation(resourceLocation.getNamespace(), resourceLocation.getPath().replace(".json", ""));
 
                         TEMP_MAP.put(resourceLocation1, jsonElement);
-                        LOGGER.debug("Loaded " + advancement.getFileName() + " into Advancement Manager!");
+                        LOGGER.debug("Loaded " + advancement.getResourceLocation() + " into Advancement Manager!");
                         counter++;
                     }
                     else {
@@ -234,7 +236,7 @@ public class CustomAdvancementManager {
                 }
 
                 mapIn.remove(childAdvancement);
-                LOGGER.debug("Removed child advancement {} with parent {} as it's parent couldn't be loaded!", childAdvancement, parent);
+                LOGGER.debug("Removed child advancement {} with parent {} as it's parent wasn't loaded!", childAdvancement, parent);
                 counter++;
             }
             removeChildren(mapIn, childAdvancement);
