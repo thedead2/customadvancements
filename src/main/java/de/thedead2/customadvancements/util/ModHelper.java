@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.GameAdvancement;
+import de.thedead2.customadvancements.advancementsmodifier.CustomAdvancementManager;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
@@ -34,8 +35,8 @@ public abstract class ModHelper {
 
     public static final String GAME_DIR = FMLPaths.GAMEDIR.get().toString();
     public static final String DIR_PATH = GAME_DIR + "/" + MOD_ID;
+    public static final String CUSTOM_ADVANCEMENTS_PATH = DIR_PATH + "/" + MOD_ID;
     public static final String TEXTURES_PATH = DIR_PATH + "/" + "textures";
-    public static final String GAME_ADVANCEMENTS_PATH = DIR_PATH + "/game_advancements";
 
     public static final FileHandler FILE_HANDLER = new FileHandler();
     public static final JsonHandler JSON_HANDLER = new JsonHandler();
@@ -52,9 +53,6 @@ public abstract class ModHelper {
     public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
 
 
-    public static boolean DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
-
-
     public static void clearAll(){
         CUSTOM_ADVANCEMENTS.clear();
         GAME_ADVANCEMENTS.clear();
@@ -65,7 +63,7 @@ public abstract class ModHelper {
         CHILDREN_PARENT_MAP.clear();
         ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
 
-        DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
+        CustomAdvancementManager.iteration = 0;
     }
 
     /** Inner Class VersionManager
@@ -79,16 +77,16 @@ public abstract class ModHelper {
 
         public static void sendChatMessage(PlayerEntity player){
             if (RESULT.status.equals(VersionChecker.Status.OUTDATED)){
-                player.sendMessage(new StringTextComponent(PREFIX + "Mod is outdated! Please update using the link below:"), Util.DUMMY_UUID);
-                player.sendMessage(new StringTextComponent(MOD_UPDATE_LINK), Util.DUMMY_UUID);
+                player.sendMessage(new StringTextComponent("§c" + PREFIX + "Mod is outdated! Please update using the link below:"), Util.DUMMY_UUID);
+                player.sendMessage(new StringTextComponent("§c" + MOD_UPDATE_LINK), Util.DUMMY_UUID);
             }
             else if (RESULT.status.equals(VersionChecker.Status.BETA)) {
-                player.sendMessage(new StringTextComponent(PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.DUMMY_UUID);
+                player.sendMessage(new StringTextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.DUMMY_UUID);
             }
             else if (RESULT.status.equals(VersionChecker.Status.BETA_OUTDATED)) {
-                player.sendMessage(new StringTextComponent(PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.DUMMY_UUID);
-                player.sendMessage(new StringTextComponent(PREFIX + "This Beta Version is outdated! Please update using the link below:"), Util.DUMMY_UUID);
-                player.sendMessage(new StringTextComponent(MOD_UPDATE_LINK), Util.DUMMY_UUID);
+                player.sendMessage(new StringTextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.DUMMY_UUID);
+                player.sendMessage(new StringTextComponent("§c" + PREFIX + "This Beta Version is outdated! Please update using the link below:"), Util.DUMMY_UUID);
+                player.sendMessage(new StringTextComponent("§c" + MOD_UPDATE_LINK), Util.DUMMY_UUID);
             }
         }
 
@@ -152,11 +150,18 @@ public abstract class ModHelper {
 
 
         public static Set<ResourceLocation> getBlacklistedResourceLocations(){
-            List<String> list = (List<String>) ADVANCEMENT_BLACKLIST.get();
+            List<String> list;
+            if(!ADVANCEMENT_BLACKLIST.get().isEmpty() && ADVANCEMENT_BLACKLIST.get().get(0) != null){
+                list = Collections.unmodifiableList(ADVANCEMENT_BLACKLIST.get());
+            }
+            else {
+                list = new ArrayList<>();
+            }
+
             Set<ResourceLocation> blacklistedResourceLocations = new HashSet<>();
 
             if(!list.isEmpty()){
-                list.forEach(inputString -> blacklistedResourceLocations.add(ResourceLocation.tryCreate(inputString)));
+                list.forEach(String -> blacklistedResourceLocations.add(ResourceLocation.tryCreate(String)));
             }
 
             return blacklistedResourceLocations;

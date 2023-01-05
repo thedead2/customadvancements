@@ -22,32 +22,33 @@ public class CustomAdvancementManager {
     private static final Logger LOGGER = LogManager.getLogger();
     private static long counter = 0;
     private static final Map<ResourceLocation, JsonElement> TEMP_MAP = new HashMap<>();
+    public static int iteration = 0;
 
 
     public static Map<ResourceLocation, JsonElement> modifyData(Map<ResourceLocation, JsonElement> mapIn, IResourceManager resourceManager){
-        ALL_DETECTED_GAME_ADVANCEMENTS.putAll(mapIn);
-        ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.addAll(resourceManager.getAllResourceLocations("advancements", resourceLocation -> resourceLocation.endsWith(".json")));
+        if(iteration == 0){
+            ALL_DETECTED_GAME_ADVANCEMENTS.putAll(mapIn);
+            ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.addAll(resourceManager.getAllResourceLocations("advancements", resourceLocation -> resourceLocation.endsWith(".json")));
 
-        TEMP_MAP.putAll(mapIn);
+            TEMP_MAP.putAll(mapIn);
 
-        mapIn.clear();
+            mapIn.clear();
 
-        if(DISABLE_STANDARD_ADVANCEMENT_LOAD){
+
             removeAllAdvancements();
             loadAdvancements(CUSTOM_ADVANCEMENTS);
             loadAdvancements(GAME_ADVANCEMENTS);
             removeBlacklistedAdvancements();
             removeRecipeAdvancements();
+
+
+            mapIn.putAll(TEMP_MAP);
+            iteration++;
         }
         else {
-            loadAdvancements(CUSTOM_ADVANCEMENTS);
-            removeRecipeAdvancements();
-            removeBlacklistedAdvancements();
-            removeAllAdvancements();
+            mapIn.clear();
+            mapIn.putAll(TEMP_MAP);
         }
-
-        mapIn.putAll(TEMP_MAP);
-
         return mapIn;
     }
 
@@ -163,7 +164,6 @@ public class CustomAdvancementManager {
     }
 
     private static void removeAllAdvancements(){
-        if(ConfigManager.NO_ADVANCEMENTS.get() || DISABLE_STANDARD_ADVANCEMENT_LOAD) {
             LOGGER.info("Starting to remove all advancements...");
 
             AtomicInteger counter = new AtomicInteger();
@@ -178,7 +178,7 @@ public class CustomAdvancementManager {
             });
             LOGGER.info("Removed {} Advancements!", counter.get());
             counter.set(0);
-        }
+
     }
 
 
@@ -274,5 +274,6 @@ public class CustomAdvancementManager {
                 removeChildren(mapIn, advancement);
             }
         }
+        missingAdvancements.clear();
     }
 }

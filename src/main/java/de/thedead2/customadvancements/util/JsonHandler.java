@@ -28,7 +28,11 @@ public class JsonHandler implements IFileHandler {
 
         File[] fileList = directory.listFiles();
 
-        assert fileList != null;
+        if (fileList == null){
+            LOGGER.warn("Skipped directory {} as the fileList was null!", directory);
+            return;
+        }
+
         for(File file : fileList) {
             String fileName = file.getName();
 
@@ -51,7 +55,7 @@ public class JsonHandler implements IFileHandler {
 
                     assert jsonObject != null;
                     if (isCorrectJsonFormat(jsonObject)) {
-                        if (!directory.getPath().contains(GAME_ADVANCEMENTS_PATH)){
+                        if (directory.getPath().contains(CUSTOM_ADVANCEMENTS_PATH)){
                             CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
 
                             CUSTOM_ADVANCEMENTS.put(customadvancement.getResourceLocation(), customadvancement);

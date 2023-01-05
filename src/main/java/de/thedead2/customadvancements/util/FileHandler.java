@@ -14,8 +14,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -24,11 +23,13 @@ import static de.thedead2.customadvancements.util.ModHelper.*;
 public class FileHandler implements IFileHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final List<String> STRINGS = new ArrayList<>();
 
     public void checkForMainDirectories() {
-        if(createDirectory(new File(DIR_PATH))){
+        createDirectory(new File(DIR_PATH));
+        if(createDirectory(new File(CUSTOM_ADVANCEMENTS_PATH))){
             try {
-                copyModFiles("examples/advancements", DIR_PATH, ".json");
+                copyModFiles("examples/advancements", CUSTOM_ADVANCEMENTS_PATH, ".json");
                 LOGGER.debug("Created example advancements!");
             }
             catch (FileCopyException e){
@@ -54,37 +55,33 @@ public class FileHandler implements IFileHandler {
         LOGGER.info("Starting to read files...");
 
         TEXTURE_HANDLER.readFiles(new File(TEXTURES_PATH));
-        JSON_HANDLER.readFiles(main_directory);
 
-        try (Stream<File> fileStream = Arrays.stream(Objects.requireNonNull(main_directory.listFiles()))) {
-            fileStream.filter(file -> file.isDirectory() && !file.getName().equals("textures") && !file.getName().equals("game_advancements")).forEach(JSON_HANDLER::readFiles);
-        }
-        readGameAdvancements();
-
-        LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
-        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " Custom Advancements!" : " Custom Advancement!"));
-        if(DISABLE_STANDARD_ADVANCEMENT_LOAD){
-            LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " Game Advancements!" : " Game Advancement!"));
-        }
-    }
-
-
-    private void readGameAdvancements(){
-        File gameAdvancementsDirectory = new File(GAME_ADVANCEMENTS_PATH);
-
-        if (gameAdvancementsDirectory.exists()){
-            File[] modFolders = gameAdvancementsDirectory.listFiles();
-            DISABLE_STANDARD_ADVANCEMENT_LOAD = true;
+        if (main_directory.exists()){
+            File[] modFolders = main_directory.listFiles();
 
             assert modFolders != null;
             for(File modFolder:modFolders){
-                if(modFolder.isDirectory()){
+                if(modFolder.isDirectory() && !modFolder.getName().equals("textures")){
                     JSON_HANDLER.readFiles(modFolder);
 
-                    try (Stream<File> fileStream = Arrays.stream(Objects.requireNonNull(modFolder.listFiles()))) {
-                        fileStream.filter(File::isDirectory).forEach(JSON_HANDLER::readFiles);
-                    }
+                    readSubfolders(modFolder);
                 }
+            }
+        }
+
+        LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
+        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " Custom Advancements!" : " Custom Advancement!"));
+
+        LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " Game Advancements!" : " Game Advancement!"));
+
+    }
+
+
+    private void readSubfolders(File folderIn){
+        for(File folder: Objects.requireNonNull(folderIn.listFiles())){
+            if(folder.isDirectory()){
+                JSON_HANDLER.readFiles(folder);
+                readSubfolders(folder);
             }
         }
     }
@@ -203,9 +200,10 @@ public class FileHandler implements IFileHandler {
         LOGGER.info("Starting to generate files for game advancements...");
         source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Starting to generate files for game advancements..."), false);
 
-        createDirectory(new File(ModHelper.GAME_ADVANCEMENTS_PATH));
+        createDirectory(new File(DIR_PATH));
 
         ALL_DETECTED_GAME_ADVANCEMENTS.forEach((advancement, advancementData) -> {
+            STRINGS.clear();
             String advancementNamespace = advancement.getNamespace();
             String advancementPath = advancement.getPath();
 
@@ -216,24 +214,40 @@ public class FileHandler implements IFileHandler {
 
             LOGGER.debug("Generating file: " + advancement);
 
-            createDirectory(new File(GAME_ADVANCEMENTS_PATH + "/" + advancementNamespace));
+            createDirectory(new File(DIR_PATH + "/" + advancementNamespace));
 
             File advancementJson;
 
             if(advancementPath.contains("/")){
                 String subStringDirectory = advancementPath.replaceAll(advancementPath.substring(advancementPath.indexOf("/")), "");
-                String modSubDirectory = GAME_ADVANCEMENTS_PATH + "/" + advancementNamespace + "/" + subStringDirectory;
+                STRINGS.add(subStringDirectory);
+                discoverSubDirectories(subStringDirectory);
 
-                createDirectory(new File(modSubDirectory));
+                String basePath = DIR_PATH + "/" + advancementNamespace;
 
-                advancementJson = new File(modSubDirectory + "/" + advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
+                for(String folderName: STRINGS){
+                    basePath = basePath + "/" + folderName;
+                    createDirectory(new File(basePath));
+                }
+
+                advancementJson = new File(basePath + advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
             }
             else {
-                advancementJson = new File(GAME_ADVANCEMENTS_PATH + "/" + advancementNamespace + "/" + advancementPath + ".json");
+                advancementJson = new File(DIR_PATH + "/" + advancementNamespace + "/" + advancementPath + ".json");
             }
 
+            StringBuilder stringBuilder = new StringBuilder();
 
-            InputStream inputStream = new ByteArrayInputStream(advancementData.toString().getBytes());
+            for (char character:advancementData.toString().toCharArray()){
+                if (character == '{' || character == ',' || character == '['){
+                    stringBuilder.append(character).append('\n');
+                }
+                else {
+                    stringBuilder.append(character);
+                }
+            }
+            String temp = stringBuilder.toString();
+            InputStream inputStream = new ByteArrayInputStream(temp.getBytes());
 
             try {
                 writeFile(inputStream, advancementJson.toPath());
@@ -248,6 +262,17 @@ public class FileHandler implements IFileHandler {
         source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Generated " + counter.get() + " files for game advancements successfully!"), true);
         counter.set(0);
         return 1;
+    }
+
+
+    private void discoverSubDirectories(String pathIn){
+        if (pathIn.contains("/")){
+            String first = pathIn.replace(pathIn.substring(pathIn.indexOf("/")), "");
+            String second = pathIn.replace(first + "/", "");
+            String temp = second.replace(second.substring(second.indexOf("/")), "");
+            STRINGS.add(temp);
+            discoverSubDirectories(temp);
+        }
     }
 
 
