@@ -3,13 +3,12 @@ package de.thedead2.customadvancements.util;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.gson.JsonElement;
+import com.mojang.blaze3d.platform.NativeImage;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.GameAdvancement;
 import de.thedead2.customadvancements.advancementsmodifier.CustomAdvancementManager;
-import com.mojang.blaze3d.platform.NativeImage;
-import net.minecraft.Util;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModContainer;
@@ -25,7 +24,7 @@ import java.util.*;
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.18.2-4.0.0";
+    public static final String MOD_VERSION = "1.19.2-5.0.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
@@ -80,16 +79,16 @@ public abstract class ModHelper {
 
         public static void sendChatMessage(Player player){
             if (RESULT.status().equals(VersionChecker.Status.OUTDATED)){
-                player.sendMessage(new TextComponent("§c" + PREFIX + "Mod is outdated! Please update using the link below:"), Util.NIL_UUID);
-                player.sendMessage(new TextComponent("§c" + MOD_UPDATE_LINK), Util.NIL_UUID);
+                player.sendSystemMessage(Component.literal("§c" + PREFIX + "Mod is outdated! Please update using the link below:"));
+                player.sendSystemMessage(Component.literal("§c" + MOD_UPDATE_LINK));
             }
             else if (RESULT.status().equals(VersionChecker.Status.BETA)) {
-                player.sendMessage(new TextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.NIL_UUID);
+                player.sendSystemMessage(Component.literal("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"));
             }
             else if (RESULT.status().equals(VersionChecker.Status.BETA_OUTDATED)) {
-                player.sendMessage(new TextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.NIL_UUID);
-                player.sendMessage(new TextComponent("§c" + PREFIX + "This Beta Version is outdated! Please update using the link below:"), Util.NIL_UUID);
-                player.sendMessage(new TextComponent("§c" + MOD_UPDATE_LINK), Util.NIL_UUID);
+                player.sendSystemMessage(Component.literal("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"));
+                player.sendSystemMessage(Component.literal("§c" + PREFIX + "This Beta Version is outdated! Please update using the link below:"));
+                player.sendSystemMessage(Component.literal("§c" + MOD_UPDATE_LINK));
             }
         }
 
