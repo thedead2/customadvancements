@@ -23,7 +23,7 @@ import static de.thedead2.customadvancements.util.ModHelper.*;
 
 @Mod(MOD_ID)
 public class CustomAdvancements {
-    private static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
 
 
     public CustomAdvancements() {
@@ -62,7 +62,7 @@ public class CustomAdvancements {
 
     private void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
         if(ConfigManager.OUT_DATED_MESSAGE.get()){
-            VersionManager.sendChatMessage(event.getPlayer());
+            VersionManager.sendChatMessage(event.getEntity());
         }
     }
 

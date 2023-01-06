@@ -1,23 +1,19 @@
 package de.thedead2.customadvancements.util;
 
+import de.thedead2.customadvancements.commands.GenerateAdvancementsCommand;
 import de.thedead2.customadvancements.util.miscellaneous.FileCopyException;
 import de.thedead2.customadvancements.util.miscellaneous.FileWriteException;
-import net.minecraft.client.Minecraft;
-
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.resources.ResourceLocation;
-
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
@@ -25,7 +21,6 @@ import static de.thedead2.customadvancements.util.ModHelper.*;
 public class FileHandler implements IFileHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final List<String> FOLDER_NAMES = new ArrayList<>();
 
     public void checkForMainDirectories() {
         createDirectory(new File(DIR_PATH));
@@ -93,188 +88,12 @@ public class FileHandler implements IFileHandler {
     }
 
 
-    public int printResourceLocations(CommandSourceStack source) {
-
-        source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Starting to write resource locations to file..."), false);
-        LOGGER.info("Starting to write resource locations to file...");
-
-        OutputStream fileOut = null;
-        try {
-            Path outputPath = Paths.get(DIR_PATH + "/resource_locations.txt");
-            fileOut = Files.newOutputStream(outputPath);
-
-            for (ResourceLocation resourceLocation: ALL_DETECTED_GAME_ADVANCEMENTS.keySet()) {
-                String resourceLocation_as_String = resourceLocation.toString() + ",\n";
-
-                InputStream inputStream = new ByteArrayInputStream(resourceLocation_as_String.getBytes());
-
-                try {
-                    int input;
-                    while ((input = inputStream.read()) != -1){
-                        fileOut.write(input);
-                    }
-                }
-                catch (IOException e) {
-                    LOGGER.error("Unable to write file: " + outputPath.getFileName());
-                    source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
-                    e.printStackTrace();
-                }
-                finally {
-                    try {
-                        inputStream.close();
-                    }
-                    catch (IOException e){
-                        LOGGER.warn("Unable to close InputStream!");
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            for (ResourceLocation resourceLocation: CUSTOM_ADVANCEMENTS.keySet()){
-                String resourceLocation_as_String = resourceLocation.toString().replace(".json", "") + ",\n";
-
-                InputStream inputStream = new ByteArrayInputStream(resourceLocation_as_String.getBytes());
-
-                try {
-                    int input;
-                    while ((input = inputStream.read()) != -1){
-                        fileOut.write(input);
-                    }
-                }
-                catch (IOException e) {
-                    LOGGER.error("Unable to write file: " + outputPath.getFileName());
-                    source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
-                    e.printStackTrace();
-                }
-                finally {
-                    try {
-                        inputStream.close();
-                    }
-                    catch (IOException e){
-                        LOGGER.warn("Unable to close InputStream!");
-                        e.printStackTrace();
-                    }
-                }
-            }
-            source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Finished!"), false);
-            return 1;
-        }
-        catch (IOException e){
-            LOGGER.error("Unable to write resource locations to file!");
-            source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
-            e.printStackTrace();
-            return -1;
-        }
-        finally {
-            try {
-                assert fileOut != null;
-                fileOut.close();
-            }
-            catch (IOException e) {
-                LOGGER.warn("Unable to close OutputStream!");
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    public int reload(CommandSourceStack source) {
-        source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Starting to reload data..."), false);
-        LOGGER.info("Starting to reload data...");
-
-        clearAll();
-
-        checkForMainDirectories();
-        readFiles(new File(DIR_PATH));
-
-        if(FMLEnvironment.dist.isClient()){
-            assert Minecraft.getInstance().player != null;
-            Minecraft.getInstance().player.chat("/reload");
-            source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Reload completed!"), false);
-        }
-        else {
-            source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Reload completed! Please use /reload to reload all advancements"), false);
-        }
-        LOGGER.info("Reload complete.");
-        return 1;
-    }
-
-
-    public int generateGameAdvancements(CommandSourceStack source) {
-        AtomicInteger counter = new AtomicInteger();
-
-        LOGGER.info("Starting to generate files for game advancements...");
-        source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Starting to generate files for game advancements..."), false);
-
-        createDirectory(new File(DIR_PATH));
-
-        ALL_DETECTED_GAME_ADVANCEMENTS.forEach((advancement, advancementData) -> {
-            FOLDER_NAMES.clear();
-            String advancementNamespace = advancement.getNamespace();
-            String advancementPath = advancement.getPath();
-
-
-            LOGGER.debug("Generating file: " + advancement);
-
-            createDirectory(new File(DIR_PATH + "/" + advancementNamespace));
-
-            File advancementJson;
-
-            if(advancementPath.contains("/")){
-                String subStringDirectory = advancementPath.replaceAll(advancementPath.substring(advancementPath.indexOf("/")), "");
-                FOLDER_NAMES.add(subStringDirectory);
-
-                String nextSubString = advancementPath.replace(subStringDirectory + "/", "");
-                discoverSubDirectories(nextSubString);
-
-                String basePath = DIR_PATH + "/" + advancementNamespace;
-
-                for(String folderName: FOLDER_NAMES){
-                    basePath = basePath + "/" + folderName;
-                    createDirectory(new File(basePath));
-                }
-
-                advancementJson = new File(basePath + advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
-            }
-            else {
-                advancementJson = new File(DIR_PATH + "/" + advancementNamespace + "/" + advancementPath + ".json");
-            }
-
-            StringBuilder stringBuilder = new StringBuilder();
-
-            for (char character:advancementData.toString().toCharArray()){
-                if (character == '{' || character == ',' || character == '['){
-                    stringBuilder.append(character).append('\n');
-                }
-                else {
-                    stringBuilder.append(character);
-                }
-            }
-            String temp = stringBuilder.toString();
-            InputStream inputStream = new ByteArrayInputStream(temp.getBytes());
-
-            try {
-                writeFile(inputStream, advancementJson.toPath());
-                counter.getAndIncrement();
-            }
-            catch (FileWriteException e){
-                source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write advancement " + advancement + " to file!"));
-                LOGGER.error("Unable to write advancement {} to file!", advancement);
-            }
-        });
-        LOGGER.info("Generated {} files for game advancements", counter.get());
-        source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Generated " + counter.get() + " files for game advancements successfully!"), true);
-        counter.set(0);
-        return 1;
-    }
-
-
-    private void discoverSubDirectories(String pathIn){
+    public void discoverSubDirectories(String pathIn){
         if (pathIn.contains("/")){
             String temp1 = pathIn.substring(pathIn.indexOf("/"));
             String temp2 = pathIn.replace(temp1 + "/", "");
             String temp3 = temp2.replace(temp2.substring(temp2.indexOf("/")), "");
-            FOLDER_NAMES.add(temp3);
+            GenerateAdvancementsCommand.FOLDER_NAMES.add(temp3);
 
             String next = pathIn.replace((temp3 + "/"), "");
             discoverSubDirectories(next);
@@ -282,7 +101,7 @@ public class FileHandler implements IFileHandler {
     }
 
 
-    private static boolean createDirectory(File directoryIn){
+    public static boolean createDirectory(File directoryIn){
         if (!directoryIn.exists()) {
             if (directoryIn.mkdir()){
                 LOGGER.debug("Created directory: " + directoryIn.toPath());
@@ -300,7 +119,7 @@ public class FileHandler implements IFileHandler {
     }
 
 
-    private static void writeFile(InputStream inputStreamIn, Path outputPath){
+    public static void writeFile(InputStream inputStreamIn, Path outputPath){
         InputStream inputStream = null;
         OutputStream fileOut = null;
 
