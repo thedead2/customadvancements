@@ -1,8 +1,8 @@
 package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonObject;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.ResourceLocationException;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.ResourceLocationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,7 +21,7 @@ public interface IAdvancement {
     String toString();
 
     static ResourceLocation createResourceLocation(String id, String fileName, boolean parent){
-        ResourceLocation resourceLocation1 = ResourceLocation.tryCreate(id);
+        ResourceLocation resourceLocation1 = ResourceLocation.tryParse(id);
         if(!parent){
             LOGGER.debug("Resource Location for " + fileName + ": " + resourceLocation1);
         }

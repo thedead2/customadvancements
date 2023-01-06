@@ -6,17 +6,17 @@ import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.GameAdvancement;
 import de.thedead2.customadvancements.advancementsmodifier.CustomAdvancementManager;
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.StringTextComponent;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.Util;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.VersionChecker;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.loading.moddiscovery.ModFile;
+import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,12 +25,12 @@ import java.util.*;
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.16.5-3.4.2-final";
+    public static final String MOD_VERSION = "1.18.2-4.0.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
 
-    public static final ModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
+    public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
     public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(RuntimeException::new);
 
     public static final String GAME_DIR = FMLPaths.GAMEDIR.get().toString();
@@ -78,37 +78,37 @@ public abstract class ModHelper {
         private static final String PREFIX = "[" + MOD_NAME + "]: ";
 
 
-        public static void sendChatMessage(PlayerEntity player){
-            if (RESULT.status.equals(VersionChecker.Status.OUTDATED)){
-                player.sendMessage(new StringTextComponent("§c" + PREFIX + "Mod is outdated! Please update using the link below:"), Util.DUMMY_UUID);
-                player.sendMessage(new StringTextComponent("§c" + MOD_UPDATE_LINK), Util.DUMMY_UUID);
+        public static void sendChatMessage(Player player){
+            if (RESULT.status().equals(VersionChecker.Status.OUTDATED)){
+                player.sendMessage(new TextComponent("§c" + PREFIX + "Mod is outdated! Please update using the link below:"), Util.NIL_UUID);
+                player.sendMessage(new TextComponent("§c" + MOD_UPDATE_LINK), Util.NIL_UUID);
             }
-            else if (RESULT.status.equals(VersionChecker.Status.BETA)) {
-                player.sendMessage(new StringTextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.DUMMY_UUID);
+            else if (RESULT.status().equals(VersionChecker.Status.BETA)) {
+                player.sendMessage(new TextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.NIL_UUID);
             }
-            else if (RESULT.status.equals(VersionChecker.Status.BETA_OUTDATED)) {
-                player.sendMessage(new StringTextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.DUMMY_UUID);
-                player.sendMessage(new StringTextComponent("§c" + PREFIX + "This Beta Version is outdated! Please update using the link below:"), Util.DUMMY_UUID);
-                player.sendMessage(new StringTextComponent("§c" + MOD_UPDATE_LINK), Util.DUMMY_UUID);
+            else if (RESULT.status().equals(VersionChecker.Status.BETA_OUTDATED)) {
+                player.sendMessage(new TextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.NIL_UUID);
+                player.sendMessage(new TextComponent("§c" + PREFIX + "This Beta Version is outdated! Please update using the link below:"), Util.NIL_UUID);
+                player.sendMessage(new TextComponent("§c" + MOD_UPDATE_LINK), Util.NIL_UUID);
             }
         }
 
         public static void sendLoggerMessage(){
-            if (RESULT.status.equals(VersionChecker.Status.OUTDATED)) {
-                LOGGER.warn(PREFIX + "Mod is outdated! Current Version: " + MOD_VERSION + " Latest Version: " + RESULT.target);
+            if (RESULT.status().equals(VersionChecker.Status.OUTDATED)) {
+                LOGGER.warn(PREFIX + "Mod is outdated! Current Version: " + MOD_VERSION + " Latest Version: " + RESULT.target());
                 LOGGER.warn(PREFIX + "Please update " + MOD_NAME + " using this link: " + MOD_UPDATE_LINK);
             }
-            else if (RESULT.status.equals(VersionChecker.Status.FAILED)) {
+            else if (RESULT.status().equals(VersionChecker.Status.FAILED)) {
                 LOGGER.error(PREFIX + "Failed to check for updates! Please check your internet connection!");
             }
-            else if (RESULT.status.equals(VersionChecker.Status.BETA)) {
+            else if (RESULT.status().equals(VersionChecker.Status.BETA)) {
                 LOGGER.warn(PREFIX + "You're currently using a Beta of " + MOD_NAME + "! Please note that using this beta is at your own risk!");
-                LOGGER.info(PREFIX + "Beta Status: " + RESULT.status);
+                LOGGER.info(PREFIX + "Beta Status: " + RESULT.status());
             }
-            else if (RESULT.status.equals(VersionChecker.Status.BETA_OUTDATED)) {
+            else if (RESULT.status().equals(VersionChecker.Status.BETA_OUTDATED)) {
                 LOGGER.warn(PREFIX + "You're currently using a Beta of " + MOD_NAME + "! Please note that using this beta is at your own risk!");
                 LOGGER.warn(PREFIX + "This Beta is outdated! Please update " + MOD_NAME + " using this link: " + MOD_UPDATE_LINK);
-                LOGGER.warn(PREFIX + "Beta Status: " + RESULT.status);
+                LOGGER.warn(PREFIX + "Beta Status: " + RESULT.status());
             }
         }
     }
@@ -164,7 +164,7 @@ public abstract class ModHelper {
             Set<ResourceLocation> blacklistedResourceLocations = new HashSet<>();
 
             if(!list.isEmpty()){
-                list.forEach(String -> blacklistedResourceLocations.add(ResourceLocation.tryCreate(String)));
+                list.forEach(String -> blacklistedResourceLocations.add(ResourceLocation.tryParse(String)));
             }
 
             return blacklistedResourceLocations;

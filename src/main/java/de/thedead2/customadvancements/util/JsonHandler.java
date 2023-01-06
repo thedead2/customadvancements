@@ -7,7 +7,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.GameAdvancement;
-import net.minecraft.util.ResourceLocationException;
+import net.minecraft.ResourceLocationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -98,11 +98,10 @@ public class JsonHandler implements IFileHandler {
 
 
     private JsonObject getJsonObject(File file){
-        final JsonParser parser = new JsonParser();
         final String fileName = file.getName();
 
         try{
-            final Object object = parser.parse(new FileReader(file));
+            final Object object = JsonParser.parseReader(new FileReader(file));
 
             return (JsonObject) object;
         }

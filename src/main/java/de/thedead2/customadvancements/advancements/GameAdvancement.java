@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonObject;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 import static de.thedead2.customadvancements.util.IFileHandler.getId;
 

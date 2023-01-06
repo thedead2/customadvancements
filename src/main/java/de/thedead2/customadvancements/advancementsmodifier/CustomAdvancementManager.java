@@ -2,9 +2,9 @@ package de.thedead2.customadvancements.advancementsmodifier;
 
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.IAdvancement;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.ResourceLocationException;
+import net.minecraft.ResourceLocationException;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,10 +25,10 @@ public class CustomAdvancementManager {
     public static int iteration = 0;
 
 
-    public static Map<ResourceLocation, JsonElement> modifyData(Map<ResourceLocation, JsonElement> mapIn, IResourceManager resourceManager){
+    public static Map<ResourceLocation, JsonElement> modifyData(Map<ResourceLocation, JsonElement> mapIn, ResourceManager resourceManager){
         if(iteration == 0){
             ALL_DETECTED_GAME_ADVANCEMENTS.putAll(mapIn);
-            ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.addAll(resourceManager.getAllResourceLocations("advancements", resourceLocation -> resourceLocation.endsWith(".json")));
+            ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.addAll(resourceManager.listResources("advancements", resourceLocation -> resourceLocation.endsWith(".json")));
 
             TEMP_MAP.putAll(mapIn);
 
@@ -196,7 +196,7 @@ public class CustomAdvancementManager {
 
             if (mapIn.get(resourceLocation) instanceof JsonElement) {
                 JsonElement parentField = ((JsonElement) mapIn.get(resourceLocation)).getAsJsonObject().get("parent");
-                parent = parentField != null ? ResourceLocation.tryCreate(parentField.getAsString()) : null;
+                parent = parentField != null ? ResourceLocation.tryParse(parentField.getAsString()) : null;
             }
             else if (mapIn.get(resourceLocation) instanceof IAdvancement) {
                 parent = ((IAdvancement) mapIn.get(resourceLocation)).getParentAdvancement();
@@ -216,7 +216,7 @@ public class CustomAdvancementManager {
         JsonElement parent = TEMP_MAP.get(resourceLocation).getAsJsonObject().get("parent");
 
         if(parent != null && (ConfigManager.getBlacklistedResourceLocations().contains(resourceLocation) || !checkForBlacklist)){
-            ResourceLocation parentResourceLocation = ResourceLocation.tryCreate(parent.getAsString());
+            ResourceLocation parentResourceLocation = ResourceLocation.tryParse(parent.getAsString());
 
             CHILDREN_PARENT_MAP.put(resourceLocation, parentResourceLocation);
 
@@ -235,7 +235,7 @@ public class CustomAdvancementManager {
                 }
                 else if(mapIn.get(childAdvancement) instanceof JsonElement){
                     JsonElement parentField = ((JsonElement) mapIn.get(childAdvancement)).getAsJsonObject().get("parent");
-                    parent = parentField != null ? ResourceLocation.tryCreate(parentField.getAsString()) : null;
+                    parent = parentField != null ? ResourceLocation.tryParse(parentField.getAsString()) : null;
                 }
                 else {
                     throw new RuntimeException("Unexpected input: Map<ResourceLocation, " + mapIn.get(childAdvancement).getClass() + ">!");

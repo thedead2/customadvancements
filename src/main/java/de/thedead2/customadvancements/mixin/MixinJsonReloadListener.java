@@ -2,10 +2,10 @@ package de.thedead2.customadvancements.mixin;
 
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancementsmodifier.CustomAdvancementManager;
-import net.minecraft.client.resources.JsonReloadListener;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,14 +17,15 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Map;
 import java.util.Objects;
 
-@Mixin(JsonReloadListener.class)
+@Mixin(SimpleJsonResourceReloadListener.class)
 public abstract class MixinJsonReloadListener {
 
-    @Shadow @Final private String folder;
 
-    @Inject(at = @At(value = "RETURN"), method = "prepare(Lnet/minecraft/resources/IResourceManager;Lnet/minecraft/profiler/IProfiler;)Ljava/util/Map;", locals = LocalCapture.CAPTURE_FAILSOFT)
-    private void prepare(IResourceManager resourceManagerIn, IProfiler profilerIn, CallbackInfoReturnable<Map<ResourceLocation, JsonElement>> cir, Map<ResourceLocation, JsonElement> map) {
-        if (Objects.equals(this.folder, "advancements")) {
+    @Shadow @Final private String directory;
+
+    @Inject(at = @At(value = "RETURN"), method = "prepare(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)Ljava/util/Map;", locals = LocalCapture.CAPTURE_FAILSOFT)
+    private void prepare(ResourceManager resourceManagerIn, ProfilerFiller pProfiler, CallbackInfoReturnable<Map<ResourceLocation, JsonElement>> cir, Map<ResourceLocation, JsonElement> map) {
+        if (Objects.equals(this.directory, "advancements")) {
             map = CustomAdvancementManager.modifyData(map, resourceManagerIn);
         }
     }

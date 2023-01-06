@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.util;
 
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.util.ResourceLocation;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +42,7 @@ public class TextureHandler implements IFileHandler{
                 try {
                     InputStream inputStream = Files.newInputStream(texture.toPath());
                     NativeImage image = NativeImage.read(inputStream);
-                    ResourceLocation textureLocation = ResourceLocation.tryCreate(MOD_ID + ":" + "textures" + "/" + texture.getName());
+                    ResourceLocation textureLocation = ResourceLocation.tryParse(MOD_ID + ":" + "textures" + "/" + texture.getName());
 
                     LOGGER.debug("Texture Location for " + texture.getName() + ": " + textureLocation);
 

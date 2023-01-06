@@ -3,10 +3,10 @@ package de.thedead2.customadvancements.mixin;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.TextureHandler;
-import net.minecraft.client.renderer.texture.NativeImage;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.SimpleTexture;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,34 +20,33 @@ import static de.thedead2.customadvancements.util.ModHelper.TEXTURES;
 @Mixin(SimpleTexture.class)
 public abstract class MixinSimpleTexture {
 
-    @Shadow @Final protected ResourceLocation textureLocation;
-    @Shadow protected abstract void loadImage(NativeImage imageIn, boolean blurIn, boolean clampIn);
+    @Shadow protected abstract void doLoad(NativeImage pImage, boolean pBlur, boolean pClamp);
+    @Shadow @Final protected ResourceLocation location;
 
-
-    @Inject(at = @At("HEAD"), method = "loadTexture", cancellable = true)
-    public void loadTexture(IResourceManager resourceManager, CallbackInfo ci) {
-        if(this.textureLocation.getNamespace().equals(ModHelper.MOD_ID) && TEXTURES.containsKey(this.textureLocation) && !ModHelper.ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
+    @Inject(at = @At("HEAD"), method = "load", cancellable = true)
+    public void load(ResourceManager pResourceManager, CallbackInfo ci) {
+        if(this.location.getNamespace().equals(ModHelper.MOD_ID) && TEXTURES.containsKey(this.location) && !ModHelper.ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
             ci.cancel();
 
             boolean blurIn = false;
             boolean clampIn = false;
 
-            NativeImage nativeimage = TEXTURES.get(this.textureLocation);
+            NativeImage nativeimage = TEXTURES.get(this.location);
 
             if(nativeimage != null) {
                 if (!RenderSystem.isOnRenderThreadOrInit()) {
-                    RenderSystem.recordRenderCall(() -> this.loadImage(nativeimage, blurIn, clampIn));
+                    RenderSystem.recordRenderCall(() -> this.doLoad(nativeimage, blurIn, clampIn));
                 }
                 else {
-                    this.loadImage(nativeimage, blurIn, clampIn);
+                    this.doLoad(nativeimage, blurIn, clampIn);
                 }
             }
             else {
-                TextureHandler.LOGGER.error("Could not load texture for: " + this.textureLocation);
+                TextureHandler.LOGGER.error("Could not load texture for: " + this.location);
             }
         }
-        else if (this.textureLocation.getNamespace().equals(ModHelper.MOD_ID) && !TEXTURES.containsKey(this.textureLocation)){
-            TextureHandler.LOGGER.debug("Couldn't find texture location {} in textures map! Using normal method to load texture!", this.textureLocation);
+        else if (this.location.getNamespace().equals(ModHelper.MOD_ID) && !TEXTURES.containsKey(this.location)){
+            TextureHandler.LOGGER.debug("Couldn't find texture location {} in textures map! Using normal method to load texture!", this.location);
         }
     }
 }
