@@ -25,7 +25,7 @@ import java.util.*;
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.16.5-3.4.2-final";
+    public static final String MOD_VERSION = "1.16.5-3.4.3-final";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
