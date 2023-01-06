@@ -23,7 +23,7 @@ import static de.thedead2.customadvancements.util.ModHelper.*;
 public class FileHandler implements IFileHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final List<String> STRINGS = new ArrayList<>();
+    private static final List<String> FOLDER_NAMES = new ArrayList<>();
 
     public void checkForMainDirectories() {
         createDirectory(new File(DIR_PATH));
@@ -207,7 +207,7 @@ public class FileHandler implements IFileHandler {
         createDirectory(new File(DIR_PATH));
 
         ALL_DETECTED_GAME_ADVANCEMENTS.forEach((advancement, advancementData) -> {
-            STRINGS.clear();
+            FOLDER_NAMES.clear();
             String advancementNamespace = advancement.getNamespace();
             String advancementPath = advancement.getPath();
 
@@ -220,12 +220,14 @@ public class FileHandler implements IFileHandler {
 
             if(advancementPath.contains("/")){
                 String subStringDirectory = advancementPath.replaceAll(advancementPath.substring(advancementPath.indexOf("/")), "");
-                STRINGS.add(subStringDirectory);
-                discoverSubDirectories(subStringDirectory);
+                FOLDER_NAMES.add(subStringDirectory);
+
+                String nextSubString = advancementPath.replace(subStringDirectory + "/", "");
+                discoverSubDirectories(nextSubString);
 
                 String basePath = DIR_PATH + "/" + advancementNamespace;
 
-                for(String folderName: STRINGS){
+                for(String folderName: FOLDER_NAMES){
                     basePath = basePath + "/" + folderName;
                     createDirectory(new File(basePath));
                 }
@@ -267,11 +269,13 @@ public class FileHandler implements IFileHandler {
 
     private void discoverSubDirectories(String pathIn){
         if (pathIn.contains("/")){
-            String first = pathIn.replace(pathIn.substring(pathIn.indexOf("/")), "");
-            String second = pathIn.replace(first + "/", "");
-            String temp = second.replace(second.substring(second.indexOf("/")), "");
-            STRINGS.add(temp);
-            discoverSubDirectories(temp);
+            String temp1 = pathIn.substring(pathIn.indexOf("/"));
+            String temp2 = pathIn.replace(temp1 + "/", "");
+            String temp3 = temp2.replace(temp2.substring(temp2.indexOf("/")), "");
+            FOLDER_NAMES.add(temp3);
+
+            String next = pathIn.replace((temp3 + "/"), "");
+            discoverSubDirectories(next);
         }
     }
 
