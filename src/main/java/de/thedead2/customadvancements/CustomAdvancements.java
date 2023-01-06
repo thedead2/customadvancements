@@ -38,8 +38,7 @@ public class CustomAdvancements {
 
 
         Logger rootLogger = LogManager.getRootLogger();
-        if (rootLogger instanceof org.apache.logging.log4j.core.Logger) {
-            org.apache.logging.log4j.core.Logger logger = (org.apache.logging.log4j.core.Logger) rootLogger;
+        if (rootLogger instanceof org.apache.logging.log4j.core.Logger logger) {
             logger.addFilter(new LoggerFilter.MissingAdvancementFilter());
             logger.addFilter(new LoggerFilter.UnknownRecipeCategoryFilter());
         }

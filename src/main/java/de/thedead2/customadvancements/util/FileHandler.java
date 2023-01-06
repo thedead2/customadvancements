@@ -3,9 +3,11 @@ package de.thedead2.customadvancements.util;
 import de.thedead2.customadvancements.util.miscellaneous.FileCopyException;
 import de.thedead2.customadvancements.util.miscellaneous.FileWriteException;
 import net.minecraft.client.Minecraft;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
+
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -91,9 +93,9 @@ public class FileHandler implements IFileHandler {
     }
 
 
-    public int printResourceLocations(CommandSource source) {
+    public int printResourceLocations(CommandSourceStack source) {
 
-        source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Starting to write resource locations to file..."), false);
+        source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Starting to write resource locations to file..."), false);
         LOGGER.info("Starting to write resource locations to file...");
 
         OutputStream fileOut = null;
@@ -114,7 +116,7 @@ public class FileHandler implements IFileHandler {
                 }
                 catch (IOException e) {
                     LOGGER.error("Unable to write file: " + outputPath.getFileName());
-                    source.sendErrorMessage(new StringTextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
+                    source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
                     e.printStackTrace();
                 }
                 finally {
@@ -141,7 +143,7 @@ public class FileHandler implements IFileHandler {
                 }
                 catch (IOException e) {
                     LOGGER.error("Unable to write file: " + outputPath.getFileName());
-                    source.sendErrorMessage(new StringTextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
+                    source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
                     e.printStackTrace();
                 }
                 finally {
@@ -154,12 +156,12 @@ public class FileHandler implements IFileHandler {
                     }
                 }
             }
-            source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Finished!"), false);
+            source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Finished!"), false);
             return 1;
         }
         catch (IOException e){
             LOGGER.error("Unable to write resource locations to file!");
-            source.sendErrorMessage(new StringTextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
+            source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
             e.printStackTrace();
             return -1;
         }
@@ -176,8 +178,8 @@ public class FileHandler implements IFileHandler {
     }
 
 
-    public int reload(CommandSource source) {
-        source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Starting to reload data..."), false);
+    public int reload(CommandSourceStack source) {
+        source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Starting to reload data..."), false);
         LOGGER.info("Starting to reload data...");
 
         clearAll();
@@ -187,22 +189,22 @@ public class FileHandler implements IFileHandler {
 
         if(FMLEnvironment.dist.isClient()){
             assert Minecraft.getInstance().player != null;
-            Minecraft.getInstance().player.sendChatMessage("/reload");
-            source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Reload completed!"), false);
+            Minecraft.getInstance().player.chat("/reload");
+            source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Reload completed!"), false);
         }
         else {
-            source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Reload completed! Please use /reload to reload all advancements"), false);
+            source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Reload completed! Please use /reload to reload all advancements"), false);
         }
         LOGGER.info("Reload complete.");
         return 1;
     }
 
 
-    public int generateGameAdvancements(CommandSource source) {
+    public int generateGameAdvancements(CommandSourceStack source) {
         AtomicInteger counter = new AtomicInteger();
 
         LOGGER.info("Starting to generate files for game advancements...");
-        source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Starting to generate files for game advancements..."), false);
+        source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Starting to generate files for game advancements..."), false);
 
         createDirectory(new File(DIR_PATH));
 
@@ -256,12 +258,12 @@ public class FileHandler implements IFileHandler {
                 counter.getAndIncrement();
             }
             catch (FileWriteException e){
-                source.sendErrorMessage(new StringTextComponent("[" + MOD_NAME + "]: Unable to write advancement " + advancement + " to file!"));
+                source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write advancement " + advancement + " to file!"));
                 LOGGER.error("Unable to write advancement {} to file!", advancement);
             }
         });
         LOGGER.info("Generated {} files for game advancements", counter.get());
-        source.sendFeedback(new StringTextComponent("[" + MOD_NAME + "]: Generated " + counter.get() + " files for game advancements successfully!"), true);
+        source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Generated " + counter.get() + " files for game advancements successfully!"), true);
         counter.set(0);
         return 1;
     }
