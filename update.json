@@ -3,8 +3,14 @@
   "1.16.5": {
     "1.16.5-3.4.2-final": "You can now edit advancements."
   },
+  "1.18.2": {
+    "1.18.2-4.1.0": "Initial port to 1.18.2."
+  },
   "promos": {
     "1.16.5-latest": "1.16.5-3.4.2-final",
-    "1.16.5-recommended": "1.16.5-3.4.2-final"
+    "1.16.5-recommended": "1.16.5-3.4.2-final",
+    
+    "1.18.2-latest": "1.18.2-4.1.0",
+    "1.18.2-recommended": "1.18.2-4.1.0"
   }
 }
