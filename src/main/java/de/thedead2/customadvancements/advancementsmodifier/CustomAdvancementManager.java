@@ -29,11 +29,9 @@ public class CustomAdvancementManager {
         if(iteration == 0){
             ALL_DETECTED_GAME_ADVANCEMENTS.putAll(mapIn);
             ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.addAll(resourceManager.listResources("advancements", resourceLocation -> resourceLocation.toString().endsWith(".json")).keySet());
-
             TEMP_MAP.putAll(mapIn);
 
             mapIn.clear();
-
 
             removeAllAdvancements();
             removeRecipeAdvancements();
