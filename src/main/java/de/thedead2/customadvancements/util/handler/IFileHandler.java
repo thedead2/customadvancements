@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.util;
+package de.thedead2.customadvancements.util.handler;
 
 import java.io.File;
 

@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.util.miscellaneous;
+package de.thedead2.customadvancements.util.exceptions;
 
 public class FileCopyException extends RuntimeException {
 

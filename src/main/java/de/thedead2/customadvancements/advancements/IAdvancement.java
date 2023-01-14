@@ -1,14 +1,12 @@
 package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonObject;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.ResourceLocationException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.resources.ResourceLocation;
+
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
 
 public interface IAdvancement {
-
-    Logger LOGGER = LogManager.getLogger();
 
     JsonObject getJsonObject();
 

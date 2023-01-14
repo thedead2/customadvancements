@@ -1,10 +1,8 @@
-package de.thedead2.customadvancements.util;
+package de.thedead2.customadvancements.util.handler;
 
-import de.thedead2.customadvancements.commands.GenerateAdvancementsCommand;
-import de.thedead2.customadvancements.util.miscellaneous.FileCopyException;
-import de.thedead2.customadvancements.util.miscellaneous.FileWriteException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import de.thedead2.customadvancements.util.exceptions.FileCopyException;
+import de.thedead2.customadvancements.util.exceptions.FileWriteException;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,8 +17,6 @@ import java.util.stream.Stream;
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
 public class FileHandler implements IFileHandler {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     public void checkForMainDirectories() {
         createDirectory(new File(DIR_PATH));
@@ -52,7 +48,12 @@ public class FileHandler implements IFileHandler {
     public void readFiles(File main_directory) {
         LOGGER.info("Starting to read files...");
 
-        TEXTURE_HANDLER.readFiles(new File(TEXTURES_PATH));
+        if (!FMLEnvironment.dist.isDedicatedServer() || !ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
+            TEXTURE_HANDLER.readFiles(new File(TEXTURES_PATH));
+        }
+        else if (ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
+            LOGGER.warn("Enabling compatibility mode for Optifine Shaders! This disables custom background textures for advancements!");
+        }
 
         if (main_directory.exists()){
             File[] modFolders = main_directory.listFiles();
@@ -70,11 +71,9 @@ public class FileHandler implements IFileHandler {
                 }
             }
         }
-
         LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
-        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " Custom Advancements!" : " Custom Advancement!"));
-        LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " Game Advancements!" : " Game Advancement!"));
-
+        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " CustomAdvancements!" : " CustomAdvancement!"));
+        LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " GameAdvancements!" : " GameAdvancement!"));
     }
 
 
@@ -84,19 +83,6 @@ public class FileHandler implements IFileHandler {
                 JSON_HANDLER.readFiles(folder);
                 readSubDirectories(folder);
             }
-        }
-    }
-
-
-    public void discoverSubDirectories(String pathIn){
-        if (pathIn.contains("/")){
-            String temp1 = pathIn.substring(pathIn.indexOf("/"));
-            String temp2 = pathIn.replace(temp1 + "/", "");
-            String temp3 = temp2.replace(temp2.substring(temp2.indexOf("/")), "");
-            GenerateAdvancementsCommand.FOLDER_NAMES.add(temp3);
-
-            String next = pathIn.replace((temp3 + "/"), "");
-            discoverSubDirectories(next);
         }
     }
 
