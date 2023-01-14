@@ -1,14 +1,10 @@
-package de.thedead2.customadvancements.advancementsmodifier;
+package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonElement;
-import de.thedead2.customadvancements.advancements.IAdvancement;
 import net.minecraft.ResourceLocationException;
-import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.server.packs.resources.ResourceManager;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -19,17 +15,14 @@ import static de.thedead2.customadvancements.util.ModHelper.*;
 
 public class CustomAdvancementManager {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static long counter = 0;
-    private static final Map<ResourceLocation, JsonElement> TEMP_MAP = new HashMap<>();
-    public static int iteration = 0;
 
 
     public static Map<ResourceLocation, JsonElement> modifyData(Map<ResourceLocation, JsonElement> mapIn, ResourceManager resourceManager){
-        if(iteration == 0){
+        if(ADVANCEMENTS_TEMP_MAP.isEmpty()){
             ALL_DETECTED_GAME_ADVANCEMENTS.putAll(mapIn);
             ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.addAll(resourceManager.listResources("advancements", resourceLocation -> resourceLocation.toString().endsWith(".json")).keySet());
-            TEMP_MAP.putAll(mapIn);
+            ADVANCEMENTS_TEMP_MAP.putAll(mapIn);
 
             mapIn.clear();
 
@@ -37,15 +30,15 @@ public class CustomAdvancementManager {
             removeRecipeAdvancements();
             loadAdvancements(CUSTOM_ADVANCEMENTS);
             loadAdvancements(GAME_ADVANCEMENTS);
-            removeBlacklistedAdvancements();
+            removeListAdvancements();
 
 
-            mapIn.putAll(TEMP_MAP);
-            iteration++;
+            mapIn.putAll(ADVANCEMENTS_TEMP_MAP);
         }
         else {
             mapIn.clear();
-            mapIn.putAll(TEMP_MAP);
+            mapIn.putAll(ADVANCEMENTS_TEMP_MAP);
+            ADVANCEMENTS_TEMP_MAP.clear();
         }
         return mapIn;
     }
@@ -53,7 +46,10 @@ public class CustomAdvancementManager {
 
     private static void loadAdvancements(Map<ResourceLocation, ? extends IAdvancement> advancementsIn){
         if(!advancementsIn.isEmpty() && !ConfigManager.NO_ADVANCEMENTS.get()) {
-            LOGGER.info("Starting to load advancements of type: {}", advancementsIn.values().toArray()[0].getClass().getName());
+            String clazz = advancementsIn.values().toArray()[0].getClass().getName();
+            String className = clazz.substring(clazz.lastIndexOf(".") + 1);
+
+            LOGGER.info("Starting to load advancements of type: {}", className);
             counter = 0;
 
             getMissingAdvancements(advancementsIn);
@@ -66,13 +62,11 @@ public class CustomAdvancementManager {
 
                 IAdvancement advancement = advancementsIn.get(resourceLocation);
 
-                JsonElement jsonElement = advancement.getJsonObject();
-
                 try{
                     if(!ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.contains(resourceLocation)){
                         ResourceLocation resourceLocation1 = new ResourceLocation(resourceLocation.getNamespace(), resourceLocation.getPath().replace(".json", ""));
 
-                        TEMP_MAP.put(resourceLocation1, jsonElement);
+                        ADVANCEMENTS_TEMP_MAP.put(resourceLocation1, advancement.getJsonObject());
                         LOGGER.debug("Loaded " + advancement.getResourceLocation() + " into Advancement Manager!");
                         counter++;
                     }
@@ -89,7 +83,7 @@ public class CustomAdvancementManager {
                 }
             }
 
-            LOGGER.info("Loaded {} Advancements into Advancement Manager!", counter);
+            LOGGER.info("Loaded {} {} into Advancement Manager!", counter, counter != 1 ? (className + "s") : className);
             counter = 0;
         }
     }
@@ -107,7 +101,7 @@ public class CustomAdvancementManager {
 
                     ResourceLocation resourceLocation1 = new ResourceLocation(resourceLocation.getNamespace(), resourceLocationPath.substring(folderNameLength, resourceLocationPath.length() - jsonExtensionLength));
 
-                    TEMP_MAP.remove(resourceLocation1);
+                    ADVANCEMENTS_TEMP_MAP.remove(resourceLocation1);
 
                     counter++;
                     LOGGER.debug("Removed recipe advancement: " + resourceLocation);
@@ -121,61 +115,72 @@ public class CustomAdvancementManager {
 
 
     private static void removeBlacklistedAdvancements(){
-        if(!ConfigManager.getBlacklistedResourceLocations().isEmpty() && !ConfigManager.NO_ADVANCEMENTS.get() && !ConfigManager.BLACKLIST_IS_WHITELIST.get()){
-            LOGGER.info("Starting to remove blacklisted advancements...");
+        LOGGER.info("Starting to remove blacklisted advancements...");
 
-            getChildren(TEMP_MAP);
+        getChildren(ADVANCEMENTS_TEMP_MAP);
 
-            for(ResourceLocation blacklistedAdvancement:ConfigManager.getBlacklistedResourceLocations()){
-                TEMP_MAP.remove(blacklistedAdvancement);
-                LOGGER.debug("Removed advancement: " + blacklistedAdvancement);
+        for(ResourceLocation blacklistedAdvancement:ConfigManager.getBlacklistedResourceLocations()){
+            ADVANCEMENTS_TEMP_MAP.remove(blacklistedAdvancement);
+            LOGGER.debug("Removed advancement: " + blacklistedAdvancement);
+            counter++;
+
+            REMOVED_ADVANCEMENTS_SET.add(blacklistedAdvancement);
+
+            removeChildren(ADVANCEMENTS_TEMP_MAP, blacklistedAdvancement);
+        }
+
+        LOGGER.info("Removed {} Advancements", counter);
+        counter = 0;
+    }
+
+
+    private static void removeNoneWhitelistedAdvancements(){
+        LOGGER.info("Starting to remove none whitelisted advancements...");
+
+        for (ResourceLocation resourceLocation: ADVANCEMENTS_TEMP_MAP.keySet()) {
+            getParents(resourceLocation, true);
+        }
+
+        Set<ResourceLocation> mapKeySet = new HashSet<>(ADVANCEMENTS_TEMP_MAP.keySet());
+
+        for(ResourceLocation advancement: mapKeySet){
+            if(!ConfigManager.getBlacklistedResourceLocations().contains(advancement) && !CHILDREN_PARENT_MAP.containsValue(advancement)){
+                ADVANCEMENTS_TEMP_MAP.remove(advancement);
+                LOGGER.debug("Removed advancement: " + advancement);
                 counter++;
 
-                REMOVED_ADVANCEMENTS_SET.add(blacklistedAdvancement);
-
-                removeChildren(TEMP_MAP, blacklistedAdvancement);
+                REMOVED_ADVANCEMENTS_SET.add(advancement);
             }
+        }
 
-            LOGGER.info("Removed {} Advancements", counter);
-            counter = 0;
+        LOGGER.info("Removed {} Advancements", counter);
+        counter = 0;
+    }
+
+
+    private static void removeListAdvancements(){
+        if(!ConfigManager.getBlacklistedResourceLocations().isEmpty() && !ConfigManager.NO_ADVANCEMENTS.get() && !ConfigManager.BLACKLIST_IS_WHITELIST.get()){
+            removeBlacklistedAdvancements();
         }
         else if (!ConfigManager.getBlacklistedResourceLocations().isEmpty() && !ConfigManager.NO_ADVANCEMENTS.get() && ConfigManager.BLACKLIST_IS_WHITELIST.get()) {
-            LOGGER.info("Starting to remove none whitelisted advancements...");
-
-            for (ResourceLocation resourceLocation:TEMP_MAP.keySet()) {
-                getParents(resourceLocation, true);
-            }
-
-            Set<ResourceLocation> mapKeySet = new HashSet<>(TEMP_MAP.keySet());
-
-            for(ResourceLocation advancement: mapKeySet){
-                if(!ConfigManager.getBlacklistedResourceLocations().contains(advancement) && !CHILDREN_PARENT_MAP.containsValue(advancement)){
-                    TEMP_MAP.remove(advancement);
-                    LOGGER.debug("Removed advancement: " + advancement);
-                    counter++;
-
-                    REMOVED_ADVANCEMENTS_SET.add(advancement);
-                }
-            }
-
-            LOGGER.info("Removed {} Advancements", counter);
-            counter = 0;
+            removeNoneWhitelistedAdvancements();
         }
         else if(ConfigManager.getBlacklistedResourceLocations().isEmpty() && ConfigManager.BLACKLIST_IS_WHITELIST.get()){
             removeAllAdvancements();
         }
     }
 
+
     private static void removeAllAdvancements() {
         if (ConfigManager.NO_ADVANCEMENTS.get() || DISABLE_STANDARD_ADVANCEMENT_LOAD){
             LOGGER.info("Starting to remove all advancements...");
 
             AtomicInteger counter = new AtomicInteger();
-            Set<ResourceLocation> mapKeySet = new HashSet<>(TEMP_MAP.keySet());
+            Set<ResourceLocation> mapKeySet = new HashSet<>(ADVANCEMENTS_TEMP_MAP.keySet());
 
             mapKeySet.forEach(resourceLocation -> {
                 if (!resourceLocation.toString().contains("recipes/")) {
-                    TEMP_MAP.remove(resourceLocation);
+                    ADVANCEMENTS_TEMP_MAP.remove(resourceLocation);
                     LOGGER.debug("Removed advancement: " + resourceLocation);
                     counter.getAndIncrement();
                 }
@@ -200,7 +205,7 @@ public class CustomAdvancementManager {
                 parent = ((IAdvancement) mapIn.get(resourceLocation)).getParentAdvancement();
             }
             else {
-                throw new RuntimeException("Unexpected input: Map<ResourceLocation, " + mapIn.get(resourceLocation).getClass() + ">!");
+                throw new RuntimeException("Unexpected input: Map<ResourceLocation, " + mapIn.get(resourceLocation).getClass().getName() + ">!");
             }
 
             if (parent != null) {
@@ -211,7 +216,7 @@ public class CustomAdvancementManager {
 
 
     private static void getParents(ResourceLocation resourceLocation, boolean checkForBlacklist){
-        JsonElement parent = TEMP_MAP.get(resourceLocation).getAsJsonObject().get("parent");
+        JsonElement parent = ADVANCEMENTS_TEMP_MAP.get(resourceLocation).getAsJsonObject().get("parent");
 
         if(parent != null && (ConfigManager.getBlacklistedResourceLocations().contains(resourceLocation) || !checkForBlacklist)){
             ResourceLocation parentResourceLocation = ResourceLocation.tryParse(parent.getAsString());
@@ -236,7 +241,7 @@ public class CustomAdvancementManager {
                     parent = parentField != null ? ResourceLocation.tryParse(parentField.getAsString()) : null;
                 }
                 else {
-                    throw new RuntimeException("Unexpected input: Map<ResourceLocation, " + mapIn.get(childAdvancement).getClass() + ">!");
+                    throw new RuntimeException("Unexpected input: Map<ResourceLocation, " + mapIn.get(childAdvancement).getClass().getName() + ">!");
                 }
 
                 mapIn.remove(childAdvancement);

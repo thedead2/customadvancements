@@ -1,9 +1,10 @@
 package de.thedead2.customadvancements;
 
-import de.thedead2.customadvancements.commands.GenerateAdvancementsCommand;
-import de.thedead2.customadvancements.commands.GenerateResourceLocationsFile;
+import de.thedead2.customadvancements.commands.GenerateGameAdvancementsCommand;
+import de.thedead2.customadvancements.commands.GenerateResourceLocationsFileCommand;
 import de.thedead2.customadvancements.commands.ReloadCommand;
-import de.thedead2.customadvancements.util.miscellaneous.LoggerFilter;
+import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
+import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -17,13 +18,10 @@ import net.minecraftforge.server.command.ConfigCommand;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
 @Mod(MOD_ID)
 public class CustomAdvancements {
-    public static final Logger LOGGER = LogManager.getLogger();
 
 
     public CustomAdvancements() {
@@ -39,26 +37,28 @@ public class CustomAdvancements {
 
         Logger rootLogger = LogManager.getRootLogger();
         if (rootLogger instanceof org.apache.logging.log4j.core.Logger logger) {
-            logger.addFilter(new LoggerFilter.MissingAdvancementFilter());
-            logger.addFilter(new LoggerFilter.UnknownRecipeCategoryFilter());
+            logger.addFilter(new MissingAdvancementFilter());
+            logger.addFilter(new UnknownRecipeCategoryFilter());
         }
         else {
             LOGGER.error("Unable to register filter for Logger with class {}", rootLogger.getClass());
         }
     }
 
+
     private void setup(final FMLCommonSetupEvent event) {
         LOGGER.info("Starting " + MOD_NAME + ", Version: " + MOD_VERSION);
 
-        FILE_HANDLER.checkForMainDirectories();
-        FILE_HANDLER.readFiles(new File(DIR_PATH));
+        init();
 
         LOGGER.info("Loading complete.");
     }
 
+
     private void onLoadComplete(final FMLLoadCompleteEvent event){
         VersionManager.sendLoggerMessage();
     }
+
 
     private void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
         if(ConfigManager.OUT_DATED_MESSAGE.get()){
@@ -66,16 +66,14 @@ public class CustomAdvancements {
         }
     }
 
-    private void onCommandsRegister(RegisterCommandsEvent event){
+
+    private void onCommandsRegister(final RegisterCommandsEvent event){
         LOGGER.debug("Registering commands...");
-        new GenerateAdvancementsCommand(event.getDispatcher());
-        LOGGER.debug("Registered GenerateAdvancementsCommand!");
-        new GenerateResourceLocationsFile(event.getDispatcher());
-        LOGGER.debug("Registered GenerateResourceLocationsFile!");
+        new GenerateGameAdvancementsCommand(event.getDispatcher());
+        new GenerateResourceLocationsFileCommand(event.getDispatcher());
         new ReloadCommand(event.getDispatcher());
-        LOGGER.debug("Registered ReloadCommand!");
 
         ConfigCommand.register(event.getDispatcher());
-        LOGGER.info("Command registration complete.");
+        LOGGER.debug("Command registration complete.");
     }
 }

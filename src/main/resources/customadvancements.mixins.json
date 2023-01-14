@@ -5,7 +5,7 @@
   "refmap": "customadvancements.refmap.json",
   "mixins": [
     "MixinJsonReloadListener",
-    "MixinPlayerAdvancements"
+    "MixinAdvancementsScreen"
   ],
   "client": [
     "MixinSimpleTexture"
