@@ -87,7 +87,7 @@ public class CustomAdvancementManager {
                 }
             }
 
-            LOGGER.info("Loaded {} {} Advancements into Advancement Manager!", counter, counter != 1 ? (className + "s") : className);
+            LOGGER.info("Loaded {} {} into Advancement Manager!", counter, counter != 1 ? (className + "s") : className);
             counter = 0;
         }
     }
