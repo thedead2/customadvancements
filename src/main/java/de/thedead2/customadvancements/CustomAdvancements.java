@@ -1,5 +1,7 @@
 package de.thedead2.customadvancements;
 
+import com.mojang.blaze3d.platform.ScreenManager;
+import de.thedead2.customadvancements.commands.AdvancementGeneratorCommand;
 import de.thedead2.customadvancements.commands.GenerateGameAdvancementsCommand;
 import de.thedead2.customadvancements.commands.GenerateResourceLocationsFileCommand;
 import de.thedead2.customadvancements.commands.ReloadCommand;
@@ -72,6 +74,7 @@ public class CustomAdvancements {
         new GenerateGameAdvancementsCommand(event.getDispatcher());
         new GenerateResourceLocationsFileCommand(event.getDispatcher());
         new ReloadCommand(event.getDispatcher());
+        new AdvancementGeneratorCommand(event.getDispatcher());
 
         ConfigCommand.register(event.getDispatcher());
         LOGGER.debug("Command registration complete.");
