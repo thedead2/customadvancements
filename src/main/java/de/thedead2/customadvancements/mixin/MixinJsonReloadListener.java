@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.mixin;
 
 import com.google.gson.JsonElement;
-import de.thedead2.customadvancements.advancementsmodifier.CustomAdvancementManager;
+import de.thedead2.customadvancements.advancements.CustomAdvancementManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;

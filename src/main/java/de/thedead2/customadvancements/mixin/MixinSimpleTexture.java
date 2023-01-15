@@ -1,9 +1,8 @@
 package de.thedead2.customadvancements.mixin;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.thedead2.customadvancements.util.ModHelper;
-import de.thedead2.customadvancements.util.TextureHandler;
-import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -14,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
 import static de.thedead2.customadvancements.util.ModHelper.TEXTURES;
 
 
@@ -42,11 +42,11 @@ public abstract class MixinSimpleTexture {
                 }
             }
             else {
-                TextureHandler.LOGGER.error("Could not load texture for: " + this.location);
+                LOGGER.error("Could not load texture for: " + this.location);
             }
         }
         else if (this.location.getNamespace().equals(ModHelper.MOD_ID) && !TEXTURES.containsKey(this.location)){
-            TextureHandler.LOGGER.debug("Couldn't find texture location {} in textures map! Using normal method to load texture!", this.location);
+            LOGGER.debug("Couldn't find texture location {} in textures map! Using normal method to load texture!", this.location);
         }
     }
 }

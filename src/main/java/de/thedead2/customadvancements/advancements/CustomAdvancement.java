@@ -3,12 +3,9 @@ package de.thedead2.customadvancements.advancements;
 import com.google.gson.JsonObject;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import static de.thedead2.customadvancements.util.IFileHandler.getId;
-import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
-import static de.thedead2.customadvancements.util.ModHelper.TEXTURES;
+import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.handler.IFileHandler.getId;
 
 public class CustomAdvancement implements IAdvancement {
     private final JsonObject jsonObject;
@@ -17,8 +14,6 @@ public class CustomAdvancement implements IAdvancement {
     private final ResourceLocation parentAdvancement;
     private final boolean backgroundImage;
     private ResourceLocation textureLocation;
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
 
     public CustomAdvancement(JsonObject jsonObject, String fileName, String path){

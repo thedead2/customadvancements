@@ -2,14 +2,32 @@ package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import de.thedead2.customadvancements.util.ModHelper;
-
-import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.TextComponent;
 
-import static de.thedead2.customadvancements.util.ModHelper.FILE_HANDLER;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_NAME;
 
 public class ReloadCommand {
     public ReloadCommand(CommandDispatcher<CommandSourceStack> dispatcher){
-        dispatcher.register(Commands.literal(ModHelper.MOD_ID).then(Commands.literal("reload").executes((command) -> FILE_HANDLER.reload(command.getSource()))));
+        dispatcher.register(Commands.literal(ModHelper.MOD_ID).then(Commands.literal("reload").executes((command) -> {
+            CommandSourceStack source = command.getSource();
+
+            Thread backgroundThread = new Thread(MOD_NAME){
+                @Override
+                public void run() {
+                    source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Reloading..."), false);
+
+                    ModHelper.reloadAll(source.getServer());
+
+                    source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Reload complete!"), false);
+                }
+            };
+
+            backgroundThread.setDaemon(true);
+            backgroundThread.setPriority(5);
+            backgroundThread.start();
+            return 1;
+        })));
     }
 }

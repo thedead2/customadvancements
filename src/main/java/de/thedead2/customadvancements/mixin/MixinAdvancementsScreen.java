@@ -9,10 +9,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AdvancementsScreen.class)
-public class MixinPlayerAdvancements {
+public class MixinAdvancementsScreen {
 
     @Inject(at = @At("HEAD"), method = "onUpdateAdvancementProgress", cancellable = true)
-    public void startProgress(Advancement advancementIn, AdvancementProgress progress, CallbackInfo ci){
+    public void onUpdateAdvancementProgress(Advancement advancementIn, AdvancementProgress progress, CallbackInfo ci){
         if (advancementIn == null){
             ci.cancel();
         }

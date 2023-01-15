@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.util;
+package de.thedead2.customadvancements.util.handler;
 
 
 import com.google.common.io.ByteStreams;
@@ -8,8 +8,6 @@ import com.google.gson.JsonSyntaxException;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.GameAdvancement;
 import net.minecraft.ResourceLocationException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -21,19 +19,13 @@ import static de.thedead2.customadvancements.util.ModHelper.*;
 
 public class JsonHandler implements IFileHandler {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
     @Override
     public void readFiles(File directory) {
         LOGGER.debug("Starting to read json files in: " + directory.getPath());
 
         File[] fileList = directory.listFiles();
 
-        if (fileList == null){
-            LOGGER.warn("Skipped directory {} as the fileList was null!", directory);
-            return;
-        }
-
+        assert fileList != null;
         for(File file : fileList) {
             String fileName = file.getName();
 
@@ -41,16 +33,7 @@ public class JsonHandler implements IFileHandler {
                 if (file.isFile() && fileName.endsWith(".json")) {
                     LOGGER.debug("Found file: " + fileName);
 
-                    try {
-                        InputStream fileInput = Files.newInputStream(file.toPath());
-                        String file_data = new String(ByteStreams.toByteArray(fileInput), StandardCharsets.UTF_8);
-                        LOGGER.debug("\n" + file_data);
-                        fileInput.close();
-                    }
-                    catch (IOException e) {
-                        LOGGER.warn("Unable to read File by InputStream!");
-                        e.printStackTrace();
-                    }
+                    printFileDataToConsole(file);
 
                     JsonObject jsonObject = getJsonObject(file);
 
@@ -71,7 +54,6 @@ public class JsonHandler implements IFileHandler {
                         LOGGER.error(fileName + " does not match the required '.json' format!");
                         throw new IllegalStateException("File does not match the required '.json' format!");
                     }
-
                 }
                 else if(file.isFile() && !fileName.equals("resource_locations.txt")) {
                     LOGGER.warn("File '" + fileName + "' is not a '.json' file, ignoring it!");
@@ -93,6 +75,19 @@ public class JsonHandler implements IFileHandler {
                 LOGGER.fatal("Something went wrong: " + e);
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    private void printFileDataToConsole(File file){
+        try {
+            InputStream fileInput = Files.newInputStream(file.toPath());
+            String file_data = new String(ByteStreams.toByteArray(fileInput), StandardCharsets.UTF_8);
+            LOGGER.debug("\n" + file_data);
+            fileInput.close();
+        }
+        catch (IOException e) {
+            LOGGER.warn("Unable to read File by InputStream!");
+            e.printStackTrace();
         }
     }
 

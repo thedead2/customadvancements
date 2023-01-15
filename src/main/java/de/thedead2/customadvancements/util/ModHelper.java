@@ -1,16 +1,22 @@
 package de.thedead2.customadvancements.util;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.GameAdvancement;
-import de.thedead2.customadvancements.advancementsmodifier.CustomAdvancementManager;
 import com.mojang.blaze3d.platform.NativeImage;
+import de.thedead2.customadvancements.util.handler.FileHandler;
+import de.thedead2.customadvancements.util.handler.JsonHandler;
+import de.thedead2.customadvancements.util.handler.TextureHandler;
 import net.minecraft.Util;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.WorldData;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
@@ -20,19 +26,19 @@ import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.util.*;
 
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.18.2-4.0.0";
+    public static final String MOD_VERSION = "1.18.2-4.2.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
 
     public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
-    public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(RuntimeException::new);
-
+    public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
     public static final String GAME_DIR = FMLPaths.GAMEDIR.get().toString();
     public static final String DIR_PATH = GAME_DIR + "/" + MOD_ID;
     public static final String CUSTOM_ADVANCEMENTS_PATH = DIR_PATH + "/" + MOD_ID;
@@ -47,6 +53,7 @@ public abstract class ModHelper {
     public static final Map<ResourceLocation, NativeImage> TEXTURES = new HashMap<>();
     public static final Set<ResourceLocation> REMOVED_ADVANCEMENTS_SET = new HashSet<>();
     public static final Map<ResourceLocation, JsonElement> ALL_DETECTED_GAME_ADVANCEMENTS = new HashMap<>();
+    public static final Map<ResourceLocation, JsonElement> ADVANCEMENTS_TEMP_MAP = new HashMap<>();
 
     public static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
     public static final Map<ResourceLocation, ResourceLocation> CHILDREN_PARENT_MAP = new HashMap<>();
@@ -55,7 +62,28 @@ public abstract class ModHelper {
     public static boolean DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
 
 
-    public static void clearAll(){
+    public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
+
+
+
+    public static void reloadAll(MinecraftServer server){
+        LOGGER.info("Reloading...");
+
+        init();
+        reloadGameData(server);
+
+        LOGGER.info("Reload complete!");
+    }
+
+
+    public static void init(){
+        clearAll();
+        FILE_HANDLER.checkForMainDirectories();
+        FILE_HANDLER.readFiles(new File(DIR_PATH));
+    }
+
+
+    private static void clearAll(){
         CUSTOM_ADVANCEMENTS.clear();
         GAME_ADVANCEMENTS.clear();
         TEXTURES.clear();
@@ -64,16 +92,38 @@ public abstract class ModHelper {
         PARENT_CHILDREN_MAP.clear();
         CHILDREN_PARENT_MAP.clear();
         ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
+        ADVANCEMENTS_TEMP_MAP.clear();
 
-        CustomAdvancementManager.iteration = 0;
         DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
     }
+
+
+    private static void reloadGameData(MinecraftServer server){
+        PackRepository packRepository = server.getPackRepository();
+        WorldData worldData = server.getWorldData();
+
+        packRepository.reload();
+        Collection<String> selectedIds = Lists.newArrayList(packRepository.getSelectedIds());
+        Collection<String> disabledPacks = worldData.getDataPackConfig().getDisabled();
+
+        for(String ids : packRepository.getAvailableIds()) {
+            if (!disabledPacks.contains(ids) && !selectedIds.contains(ids)) {
+                selectedIds.add(ids);
+            }
+        }
+
+        server.reloadResources(selectedIds).exceptionally((throwable) -> {
+            LOGGER.error("Failed to execute reload!", throwable);
+            throwable.printStackTrace();
+            return null;
+        });
+    }
+
 
     /** Inner Class VersionManager
      * handles every Update related action **/
     public abstract static class VersionManager {
 
-        private static final Logger LOGGER = LogManager.getLogger();
         private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(THIS_MOD_CONTAINER.getModInfo());
         private static final String PREFIX = "[" + MOD_NAME + "]: ";
 
@@ -95,20 +145,20 @@ public abstract class ModHelper {
 
         public static void sendLoggerMessage(){
             if (RESULT.status().equals(VersionChecker.Status.OUTDATED)) {
-                LOGGER.warn(PREFIX + "Mod is outdated! Current Version: " + MOD_VERSION + " Latest Version: " + RESULT.target());
-                LOGGER.warn(PREFIX + "Please update " + MOD_NAME + " using this link: " + MOD_UPDATE_LINK);
+                LOGGER.warn("Mod is outdated! Current Version: " + MOD_VERSION + " Latest Version: " + RESULT.target());
+                LOGGER.warn("Please update " + MOD_NAME + " using this link: " + MOD_UPDATE_LINK);
             }
             else if (RESULT.status().equals(VersionChecker.Status.FAILED)) {
-                LOGGER.error(PREFIX + "Failed to check for updates! Please check your internet connection!");
+                LOGGER.error("Failed to check for updates! Please check your internet connection!");
             }
             else if (RESULT.status().equals(VersionChecker.Status.BETA)) {
-                LOGGER.warn(PREFIX + "You're currently using a Beta of " + MOD_NAME + "! Please note that using this beta is at your own risk!");
-                LOGGER.info(PREFIX + "Beta Status: " + RESULT.status());
+                LOGGER.warn("You're currently using a Beta of " + MOD_NAME + "! Please note that using this beta is at your own risk!");
+                LOGGER.info("Beta Status: " + RESULT.status());
             }
             else if (RESULT.status().equals(VersionChecker.Status.BETA_OUTDATED)) {
-                LOGGER.warn(PREFIX + "You're currently using a Beta of " + MOD_NAME + "! Please note that using this beta is at your own risk!");
-                LOGGER.warn(PREFIX + "This Beta is outdated! Please update " + MOD_NAME + " using this link: " + MOD_UPDATE_LINK);
-                LOGGER.warn(PREFIX + "Beta Status: " + RESULT.status());
+                LOGGER.warn("You're currently using a Beta of " + MOD_NAME + "! Please note that using this beta is at your own risk!");
+                LOGGER.warn("This Beta is outdated! Please update " + MOD_NAME + " using this link: " + MOD_UPDATE_LINK);
+                LOGGER.warn("Beta Status: " + RESULT.status());
             }
         }
     }
@@ -136,13 +186,13 @@ public abstract class ModHelper {
 
             OUT_DATED_MESSAGE = CONFIG_BUILDER.comment("Whether the mod should send a chat message if an update is available").define("warnMessage", true);
 
-            OPTIFINE_SHADER_COMPATIBILITY = CONFIG_BUILDER.comment("Whether the compatibility mode for Optifine Shaders should be enabled. Note: This disables custom background textures for advancements! (You need to restart your game for the actions to take effect)").worldRestart().define("optifineShaderCompatibility", false);
+            OPTIFINE_SHADER_COMPATIBILITY = CONFIG_BUILDER.comment("Whether the compatibility mode for Optifine Shaders should be enabled. Note: This disables custom background textures for advancements! (You need to restart your game for the actions to take effect)").define("optifineShaderCompatibility", false);
 
-            NO_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all advancements").worldRestart().define("noAdvancements", false);
+            NO_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all advancements").define("noAdvancements", false);
 
             NO_RECIPE_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all recipe advancements").define("noRecipeAdvancements", false);
 
-            ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod").worldRestart().defineList("advancementsBlacklist" , Collections.emptyList(), it -> it instanceof String);
+            ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod").defineList("advancementsBlacklist" , Collections.emptyList(), it -> it instanceof String);
 
             BLACKLIST_IS_WHITELIST = CONFIG_BUILDER.comment("Whether the Blacklist of Advancements should be a Whitelist").define("blacklistIsWhitelist", false);
 
