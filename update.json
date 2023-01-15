@@ -4,7 +4,7 @@
     "1.16.5-3.4.3-final": "You can now edit advancements."
   },
   "1.18.2": {
-    "1.18.2-4.1.0": "Initial port to 1.18.2."
+    "1.18.2-4.2.0": "Mayor code and performance improvements."
   },
   "1.19.2": {
     "1.19.2-5.2.0": "Mayor code and performance improvements."
@@ -13,8 +13,8 @@
     "1.16.5-latest": "1.16.5-3.4.3-final",
     "1.16.5-recommended": "1.16.5-3.4.3-final",
     
-    "1.18.2-latest": "1.18.2-4.1.0",
-    "1.18.2-recommended": "1.18.2-4.1.0",
+    "1.18.2-latest": "1.18.2-4.2.0",
+    "1.18.2-recommended": "1.18.2-4.2.0",
     
     "1.19.2-latest": "1.19.2-5.2.0",
     "1.19.2-recommended": "1.19.2-5.2.0"
