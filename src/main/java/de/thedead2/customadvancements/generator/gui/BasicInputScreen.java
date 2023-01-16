@@ -8,7 +8,7 @@ import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 
-public class BasicInputScreen extends Screen implements ContainerEventHandler {
+public class BasicInputScreen extends Screen {
 
     protected final Screen parent;
     protected final Minecraft minecraft;
