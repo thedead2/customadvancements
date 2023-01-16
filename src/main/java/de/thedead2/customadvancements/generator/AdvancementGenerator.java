@@ -22,9 +22,9 @@ import java.util.Map;
 import java.util.Set;
 
 import static de.thedead2.customadvancements.util.ModHelper.DIR_PATH;
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
 
 public class AdvancementGenerator {
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Advancement.Builder builder;
     protected ResourceLocation parentId;
