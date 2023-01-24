@@ -1,6 +1,6 @@
-package de.thedead2.customadvancements.generator.gui;
+package de.thedead2.customadvancements.client.generator.gui;
 
-import de.thedead2.customadvancements.generator.AdvancementGenerator;
+import de.thedead2.customadvancements.client.generator.AdvancementGenerator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 

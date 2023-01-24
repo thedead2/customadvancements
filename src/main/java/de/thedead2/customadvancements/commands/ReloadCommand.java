@@ -18,7 +18,7 @@ public class ReloadCommand {
                 public void run() {
                     source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Reloading..."), false);
 
-                    ModHelper.reloadAll(source.getServer());
+                    reloadAll(source.getServer());
 
                     source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Reload complete!"), false);
                 }

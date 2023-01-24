@@ -1,10 +1,9 @@
-package de.thedead2.customadvancements.generator.gui;
+package de.thedead2.customadvancements.client.generator.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.thedead2.customadvancements.generator.AdvancementGenerator;
+import de.thedead2.customadvancements.client.generator.AdvancementGenerator;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,7 +13,7 @@ public class BasicInputScreen extends Screen {
     protected final Minecraft minecraft;
     protected final AdvancementGenerator generator;
 
-    protected BasicInputScreen(Screen parent, Minecraft minecraft, AdvancementGenerator generator) {
+    public BasicInputScreen(Screen parent, Minecraft minecraft, AdvancementGenerator generator) {
         super(GameNarrator.NO_TITLE);
         this.parent = parent;
         this.minecraft = minecraft;
@@ -23,6 +22,7 @@ public class BasicInputScreen extends Screen {
 
     @Override
     public void init() {
+        super.init();
     }
 
     @Override

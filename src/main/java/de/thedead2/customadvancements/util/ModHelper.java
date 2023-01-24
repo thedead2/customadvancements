@@ -5,8 +5,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.gson.JsonElement;
 import com.mojang.blaze3d.platform.NativeImage;
-import de.thedead2.customadvancements.advancements.CustomAdvancement;
-import de.thedead2.customadvancements.advancements.GameAdvancement;
+import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
+import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
@@ -22,16 +22,18 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.VersionChecker;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.locating.IModFile;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.util.*;
+
+import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.ADVANCEMENTS;
 
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.19.2-5.2.0";
+    public static final String MOD_VERSION = "1.19.2-5.3.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
@@ -44,16 +46,11 @@ public abstract class ModHelper {
     public static final String CUSTOM_ADVANCEMENTS_PATH = DIR_PATH + "/" + MOD_ID;
     public static final String TEXTURES_PATH = DIR_PATH + "/" + "textures";
 
-    public static final FileHandler FILE_HANDLER = new FileHandler();
-    public static final JsonHandler JSON_HANDLER = new JsonHandler();
-    public static final TextureHandler TEXTURE_HANDLER = new TextureHandler();
-
     public static final Map<ResourceLocation, CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, GameAdvancement> GAME_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, NativeImage> TEXTURES = new HashMap<>();
     public static final Set<ResourceLocation> REMOVED_ADVANCEMENTS_SET = new HashSet<>();
     public static final Map<ResourceLocation, JsonElement> ALL_DETECTED_GAME_ADVANCEMENTS = new HashMap<>();
-    public static final Map<ResourceLocation, JsonElement> ADVANCEMENTS_TEMP_MAP = new HashMap<>();
 
     public static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
     public static final Map<ResourceLocation, ResourceLocation> CHILDREN_PARENT_MAP = new HashMap<>();
@@ -64,21 +61,30 @@ public abstract class ModHelper {
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
 
-
     public static void reloadAll(MinecraftServer server){
+        StopWatch timer = new StopWatch();
+        timer.start();
         LOGGER.info("Reloading...");
 
         init();
         reloadGameData(server);
 
-        LOGGER.info("Reload complete!");
+        LOGGER.info("Reload completed in {} ms!", timer.getTime());
+        timer.stop();
+        timer.reset();
     }
 
 
     public static void init(){
         clearAll();
-        FILE_HANDLER.checkForMainDirectories();
-        FILE_HANDLER.readFiles(new File(DIR_PATH));
+        FileHandler.checkForMainDirectories();
+
+        new TextureHandler();
+        new JsonHandler();
+
+        LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
+        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " CustomAdvancements!" : " CustomAdvancement!"));
+        LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " GameAdvancements!" : " GameAdvancement!"));
     }
 
 
@@ -91,7 +97,7 @@ public abstract class ModHelper {
         PARENT_CHILDREN_MAP.clear();
         CHILDREN_PARENT_MAP.clear();
         ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
-        ADVANCEMENTS_TEMP_MAP.clear();
+        ADVANCEMENTS.clear();
 
         DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
     }
@@ -111,13 +117,13 @@ public abstract class ModHelper {
             }
         }
 
-        server.reloadResources(selectedIds).exceptionally((throwable) -> {
-            LOGGER.error("Failed to execute reload!", throwable);
-            throwable.printStackTrace();
+        server.reloadResources(selectedIds).exceptionally((e) -> {
+            LOGGER.error("Failed to execute reload!", e);
+            server.sendSystemMessage(Component.literal("Failed to execute reload: " + e));
+            e.printStackTrace();
             return null;
         });
     }
-
 
 
     /** Inner Class VersionManager

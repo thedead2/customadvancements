@@ -1,7 +1,7 @@
-package de.thedead2.customadvancements.generator;
+package de.thedead2.customadvancements.client.generator;
 
 import com.google.gson.JsonElement;
-import de.thedead2.customadvancements.generator.gui.AdvancementCreationScreen;
+import de.thedead2.customadvancements.client.generator.gui.AdvancementCreationScreen;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import net.minecraft.advancements.*;
 import net.minecraft.client.Minecraft;
@@ -11,10 +11,9 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
@@ -137,7 +136,7 @@ public class AdvancementGenerator {
 
             LOGGER.info("Created Advancement {} successfully at: {}", this.advancementId, path);
         }
-        catch (IllegalStateException | NullPointerException e){
+        catch (IllegalStateException | NullPointerException | IOException e){
             LOGGER.error("Couldn't create Advancement {} with Advancement.Builder: {}",this.advancementId, this.builder);
             e.printStackTrace();
         }

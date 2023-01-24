@@ -1,6 +1,8 @@
-package de.thedead2.customadvancements.generator.gui;
+package de.thedead2.customadvancements.client.generator.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.thedead2.customadvancements.client.generator.AdvancementGenerator;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import org.jetbrains.annotations.NotNull;
@@ -8,11 +10,13 @@ import org.jetbrains.annotations.NotNull;
 public class AdvancementGeneratorGUI extends AdvancementsScreen {
 
     //First Screen
-    //private final AdvancementGenerator generator;
+    private final AdvancementGenerator generator;
+    private final Screen parent;
 
-    public AdvancementGeneratorGUI(ClientAdvancements advancementsIn/*, AdvancementGenerator generator*/) {
+    public AdvancementGeneratorGUI(ClientAdvancements advancementsIn, Screen parent, AdvancementGenerator generator) {
         super(advancementsIn);
-//        this.generator = generator;
+        this.parent = parent;
+        this.generator = generator;
     }
 
     public void init() {
@@ -25,7 +29,7 @@ public class AdvancementGeneratorGUI extends AdvancementsScreen {
 
     @Override
     public void onClose() {
-        super.onClose();
+        this.minecraft.setScreen(parent);
     }
 
     public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {

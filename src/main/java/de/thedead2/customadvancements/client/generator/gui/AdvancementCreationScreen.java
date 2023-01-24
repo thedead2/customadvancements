@@ -1,16 +1,13 @@
-package de.thedead2.customadvancements.generator.gui;
+package de.thedead2.customadvancements.client.generator.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.thedead2.customadvancements.generator.AdvancementGenerator;
+import de.thedead2.customadvancements.client.generator.AdvancementGenerator;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
 
 public class AdvancementCreationScreen extends BasicInputScreen {
 
@@ -21,10 +18,11 @@ public class AdvancementCreationScreen extends BasicInputScreen {
 
     @Override
     public void init() {
+        super.init();
+
         EditBox textField = new EditBox(this.font, 50, 50, 450, 25, Component.literal("Test"));
         this.addRenderableWidget(textField);
         this.addRenderableWidget(new Button(50, 100, 450, 35, Component.literal("Press"), Button::onPress));
-        super.init();
     }
 
     @Override

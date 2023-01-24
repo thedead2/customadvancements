@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.advancements;
+package de.thedead2.customadvancements.advancements.advancementtypes;
 
 import com.google.gson.JsonObject;
 import net.minecraft.ResourceLocationException;
@@ -17,6 +17,7 @@ public interface IAdvancement {
     ResourceLocation getParentAdvancement();
 
     String toString();
+
 
     static ResourceLocation createResourceLocation(String id, String fileName, boolean parent){
         ResourceLocation resourceLocation1 = ResourceLocation.tryParse(id);

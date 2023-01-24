@@ -2,21 +2,29 @@ package de.thedead2.customadvancements.util.handler;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+public class TextureHandler extends FileHandler {
 
-public class TextureHandler implements IFileHandler {
+    public TextureHandler(){
+        if (!FMLEnvironment.dist.isDedicatedServer() || !ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
+            this.init(new File(TEXTURES_PATH));
+        }
+        else if (ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
+            LOGGER.warn("Enabling compatibility mode for Optifine Shaders! This disables custom background textures for advancements!");
+        }
+    }
 
     @Override
     public void readFiles(File directory) {
         File[] texture_files = directory.listFiles();
 
-        LOGGER.debug("Starting to read texture files...");
+        LOGGER.debug("Starting to read texture files in: " + directory.getPath());
 
         assert texture_files != null;
         for (File texture : texture_files) {
@@ -44,7 +52,7 @@ public class TextureHandler implements IFileHandler {
             inputStream.close();
         }
         catch (IOException e) {
-            LOGGER.error("Failed to read texture files: " + e);
+            LOGGER.error("Failed to read texture file: " + e);
             e.printStackTrace();
         }
     }
