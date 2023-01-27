@@ -17,6 +17,10 @@ public abstract class AdvancementHandler extends FileHandler {
 
     private static final List<String> FOLDER_NAMES = new ArrayList<>();
 
+    public AdvancementHandler(File directory) {
+        super(directory);
+    }
+
     public static void writeAdvancementToFile(ResourceLocation advancementId, JsonElement advancementData) throws IOException {
         LOGGER.debug("Generating file: " + advancementId);
 
@@ -28,7 +32,7 @@ public abstract class AdvancementHandler extends FileHandler {
         writeFile(getInput(advancementData), resolvePath(basePath, advancementId.getPath()));
     }
 
-    @SuppressWarnings("unused")
+
     public static void writeAdvancementToFile(Advancement advancementIn) throws IOException {
         ResourceLocation advancementId = advancementIn.getId();
         JsonObject advancementData = advancementIn.deconstruct().serializeToJson();

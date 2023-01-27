@@ -52,7 +52,7 @@ public class CustomAdvancements {
         LOGGER.info("Starting " + MOD_NAME + ", Version: " + MOD_VERSION);
 
         init();
-        event.enqueueWork(ModGameRules::register);
+        new ModGameRules();
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());
         timer.stop();

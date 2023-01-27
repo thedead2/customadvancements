@@ -16,6 +16,12 @@ import java.util.stream.Stream;
 
 public abstract class FileHandler extends ModHelper {
 
+    private final File directory;
+
+    public FileHandler(File directory){
+        this.directory = directory;
+    }
+
     public static void checkForMainDirectories() {
         createDirectory(new File(DIR_PATH));
         if(createDirectory(new File(CUSTOM_ADVANCEMENTS_PATH))){
@@ -41,13 +47,13 @@ public abstract class FileHandler extends ModHelper {
         }
     }
 
-    protected void init(File directoryIn) {
-        if (directoryIn.exists()){
-            File[] folders = directoryIn.listFiles();
+    public void start() {
+        if (this.directory.exists()){
+            File[] folders = this.directory.listFiles();
 
             assert folders != null;
             if(Arrays.stream(folders).anyMatch(File::isFile)){
-                this.readFiles(directoryIn);
+                this.readFiles(this.directory);
             }
 
             for(File subfolder : folders){

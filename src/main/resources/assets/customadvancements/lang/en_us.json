@@ -1,4 +1,10 @@
 {
+  "display.customadvancements.fake_advancement_title": "Add Advancement",
+  "display.customadvancements.fake_advancement_description": "Click to add a new Advancement!",
+  "gui.customadvancements.advancement_generator.title": "Advancement Generator",
+
+  "chat.customadvancements.reload_failed_massage": "Failed to execute reload!",
+
   "key.customadvancements.advancement_generator_key": "Advancement Generator Key",
   "key.categories.customadvancements.key_category": "Custom Advancements"
 }
