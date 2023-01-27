@@ -1,7 +1,7 @@
-package de.thedead2.customadvancements.client.generator.gui;
+package de.thedead2.customadvancements.client.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.thedead2.customadvancements.client.generator.AdvancementGenerator;
+import de.thedead2.customadvancements.generator.IAdvancementGenerator;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -11,9 +11,9 @@ public class BasicInputScreen extends Screen {
 
     protected final Screen parent;
     protected final Minecraft minecraft;
-    protected final AdvancementGenerator generator;
+    protected IAdvancementGenerator generator;
 
-    public BasicInputScreen(Screen parent, Minecraft minecraft, AdvancementGenerator generator) {
+    public BasicInputScreen(Screen parent, Minecraft minecraft, IAdvancementGenerator generator) {
         super(GameNarrator.NO_TITLE);
         this.parent = parent;
         this.minecraft = minecraft;
@@ -41,4 +41,6 @@ public class BasicInputScreen extends Screen {
             super.onClose();
         }
     }
+
+    protected void setGenerator(IAdvancementGenerator generatorIn){this.generator = generatorIn;}
 }

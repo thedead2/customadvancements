@@ -11,9 +11,13 @@ import java.nio.file.Files;
 
 public class TextureHandler extends FileHandler {
 
-    public TextureHandler(){
+    private static TextureHandler instance;
+
+    public TextureHandler(File directory){
+        super(directory);
+        instance = this;
         if (!FMLEnvironment.dist.isDedicatedServer() || !ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
-            this.init(new File(TEXTURES_PATH));
+            this.start();
         }
         else if (ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
             LOGGER.warn("Enabling compatibility mode for Optifine Shaders! This disables custom background textures for advancements!");
@@ -56,4 +60,6 @@ public class TextureHandler extends FileHandler {
             e.printStackTrace();
         }
     }
+
+    public static TextureHandler getInstance(){return instance;}
 }

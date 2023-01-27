@@ -19,8 +19,12 @@ import java.nio.file.Path;
 
 public class JsonHandler extends FileHandler {
 
-    public JsonHandler(){
-        this.init(new File(DIR_PATH));
+    private static JsonHandler instance;
+
+    public JsonHandler(File directory){
+        super(directory);
+        instance = this;
+        this.start();
     }
 
     @Override
@@ -138,4 +142,6 @@ public class JsonHandler extends FileHandler {
             return (json.get("parent") != null && json.get("criteria") != null && json.get("display") != null) || (json.get("parent") == null && json.get("display").getAsJsonObject().get("background") != null);
         }
     }
+
+    public static JsonHandler getInstance(){return instance;}
 }

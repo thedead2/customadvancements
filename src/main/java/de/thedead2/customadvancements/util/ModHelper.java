@@ -26,6 +26,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.util.*;
 
 import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.ADVANCEMENTS;
@@ -79,8 +80,18 @@ public abstract class ModHelper {
         clearAll();
         FileHandler.checkForMainDirectories();
 
-        new TextureHandler();
-        new JsonHandler();
+        if(TextureHandler.getInstance() != null){
+            TextureHandler.getInstance().start();
+        }
+        else {
+            new TextureHandler(new File(TEXTURES_PATH));
+        }
+        if (JsonHandler.getInstance() != null){
+            JsonHandler.getInstance().start();
+        }
+        else {
+            new JsonHandler(new File(DIR_PATH));
+        }
 
         LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
         LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " CustomAdvancements!" : " CustomAdvancement!"));
@@ -119,7 +130,7 @@ public abstract class ModHelper {
 
         server.reloadResources(selectedIds).exceptionally((e) -> {
             LOGGER.error("Failed to execute reload!", e);
-            server.sendSystemMessage(Component.literal("Failed to execute reload: " + e));
+            server.sendSystemMessage(Component.translatable("chat.customadvancements.reload_failed_massage"));
             e.printStackTrace();
             return null;
         });
