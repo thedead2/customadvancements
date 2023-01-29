@@ -31,7 +31,7 @@ public class ClientAdvancementGenerator extends BasicInputScreen implements IAdv
     private final Collection<Advancement> advancements;
 
     public ClientAdvancementGenerator(Screen parent, Minecraft minecraft, Advancement editAdvancement) {
-        this(parent, minecraft, Objects.requireNonNull(editAdvancement.getParent()).getId());
+        this(parent, minecraft, editAdvancement.getParent() != null ? editAdvancement.getParent().getId() : null);
         this.display = editAdvancement.getDisplay();
         this.requirements = editAdvancement.getRequirements();
         this.criteria = editAdvancement.getCriteria();
@@ -44,7 +44,7 @@ public class ClientAdvancementGenerator extends BasicInputScreen implements IAdv
         super.setGenerator(this);
         this.builder = Advancement.Builder.advancement();
         this.parentId = parentId;
-        this.advancements = this.minecraft.player.getServer().getAdvancements().getAllAdvancements();
+        this.advancements = this.minecraft.getSingleplayerServer().getAdvancements().getAllAdvancements();
     }
 
     @Override
