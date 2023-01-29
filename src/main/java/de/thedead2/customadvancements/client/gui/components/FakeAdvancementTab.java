@@ -32,6 +32,7 @@ public class FakeAdvancementTab extends GuiComponent {
     private final Component title;
     private final FakeAdvancementWidget root;
     private final Map<Advancement, FakeAdvancementWidget> widgets = Maps.newLinkedHashMap();
+    private FakeAdvancementWidget activeWidget = null;
     private double scrollX;
     private double scrollY;
     private int minX = Integer.MAX_VALUE;
@@ -83,6 +84,8 @@ public class FakeAdvancementTab extends GuiComponent {
     public DisplayInfo getDisplay() {
         return this.display;
     }
+
+    public void setActiveWidget(FakeAdvancementWidget widget){this.activeWidget = widget;}
 
     public void drawTab(PoseStack pPoseStack, int pOffsetX, int pOffsetY, boolean pIsSelected) {
         this.type.draw(pPoseStack, this, pOffsetX, pOffsetY, pIsSelected, this.index);
@@ -141,17 +144,25 @@ public class FakeAdvancementTab extends GuiComponent {
         pPoseStack.translate(0.0D, 0.0D, -200.0D);
         fill(pPoseStack, 0, 0, 234, 113, Mth.floor(this.fade * 255.0F) << 24);
         boolean flag = false;
-        int i = Mth.floor(this.scrollX);
-        int j = Mth.floor(this.scrollY);
-        if (pMouseX > 0 && pMouseX < 234 && pMouseY > 0 && pMouseY < 113) {
+        int pX = Mth.floor(this.scrollX);
+        int pY = Mth.floor(this.scrollY);
+
+        if(this.activeWidget != null){
+            if (this.activeWidget.isMouseOver(pX, pY, pMouseX, pMouseY, pWidth, pHeight)) {
+                flag = true;
+                this.activeWidget.drawHover(pPoseStack, pX, pY, this.fade, pWidth, pHeight, pMouseX, pMouseY, pPartialTick);
+            }
+        }
+        else {
             for(FakeAdvancementWidget advancementwidget : this.widgets.values()) {
-                if (advancementwidget.isMouseOver(i, j, pMouseX, pMouseY)) {
+                if (advancementwidget.isMouseOver(pX, pY, pMouseX, pMouseY, pWidth, pHeight)) {
                     flag = true;
-                    advancementwidget.drawHover(pPoseStack, i, j, this.fade, pWidth, pHeight, pMouseX, pMouseY, pPartialTick);
+                    advancementwidget.drawHover(pPoseStack, pX, pY, this.fade, pWidth, pHeight, pMouseX, pMouseY, pPartialTick);
                     break;
                 }
             }
         }
+
 
         pPoseStack.popPose();
         if (flag) {
@@ -219,6 +230,10 @@ public class FakeAdvancementTab extends GuiComponent {
     @Nullable
     public FakeAdvancementWidget getWidget(Advancement pAdvancement) {
         return this.widgets.get(pAdvancement);
+    }
+
+    public FakeAdvancementWidget getActiveWidget(){
+        return this.activeWidget;
     }
 
     public AdvancementGeneratorGUI getScreen() {
