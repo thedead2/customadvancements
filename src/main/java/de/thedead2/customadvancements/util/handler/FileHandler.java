@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -23,8 +22,8 @@ public abstract class FileHandler extends ModHelper {
     }
 
     public static void checkForMainDirectories() {
-        createDirectory(new File(DIR_PATH));
-        if(createDirectory(new File(CUSTOM_ADVANCEMENTS_PATH))){
+        createDirectory(DIR_PATH.toFile());
+        if(createDirectory(CUSTOM_ADVANCEMENTS_PATH.toFile())) {
             try {
                 copyModFiles("examples/advancements", CUSTOM_ADVANCEMENTS_PATH, ".json");
                 LOGGER.debug("Created example advancements!");
@@ -35,7 +34,7 @@ public abstract class FileHandler extends ModHelper {
             }
         }
 
-        if(createDirectory(new File(TEXTURES_PATH))){
+        if(createDirectory(TEXTURES_PATH.toFile())){
             try {
                 copyModFiles("examples/textures", TEXTURES_PATH, ".png");
                 LOGGER.debug("Created example textures for advancements!");
@@ -58,10 +57,6 @@ public abstract class FileHandler extends ModHelper {
 
             for(File subfolder : folders){
                 if(subfolder.isDirectory()){
-                    if (!subfolder.getName().equals(MOD_ID)){
-                        DISABLE_STANDARD_ADVANCEMENT_LOAD = true;
-                    }
-
                     this.readFiles(subfolder);
 
                     readSubDirectories(subfolder);
@@ -82,8 +77,9 @@ public abstract class FileHandler extends ModHelper {
 
 
     public static String getId(String filePath){
-        String subString = filePath.replace(DIR_PATH + "/", "");
-        return subString.replaceFirst("/", ":");
+        String subString = filePath.replace(DIR_PATH + String.valueOf(PATH_SEPARATOR), "");
+        subString = subString.replaceFirst(String.valueOf(PATH_SEPARATOR), ":");
+        return subString.replaceAll(String.valueOf(PATH_SEPARATOR), "/");
     }
 
 
@@ -124,13 +120,13 @@ public abstract class FileHandler extends ModHelper {
     }
 
 
-    public static void copyModFiles(String pathIn, String pathOut, String filter) throws FileCopyException {
+    public static void copyModFiles(String pathIn, Path pathOut, String filter) throws FileCopyException {
         Path filespath = THIS_MOD_FILE.findResource(pathIn);
 
         try (Stream<Path> paths = Files.list(filespath)) {
             paths.filter(path -> path.toString().endsWith(filter)).forEach(path -> {
                 try {
-                    writeFile(Files.newInputStream(path), Paths.get(pathOut + "/" + path.getFileName()));
+                    writeFile(Files.newInputStream(path), pathOut.resolve(path.getFileName().toString()));
                 }
                 catch (IOException e) {
                     LOGGER.warn("Failed to copy mod files: " + e);

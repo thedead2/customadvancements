@@ -27,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
 
 import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.ADVANCEMENTS;
@@ -42,10 +43,11 @@ public abstract class ModHelper {
     public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
     public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
 
-    public static final String GAME_DIR = FMLPaths.GAMEDIR.get().toString();
-    public static final String DIR_PATH = GAME_DIR + "/" + MOD_ID;
-    public static final String CUSTOM_ADVANCEMENTS_PATH = DIR_PATH + "/" + MOD_ID;
-    public static final String TEXTURES_PATH = DIR_PATH + "/" + "textures";
+    public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
+    public static final char PATH_SEPARATOR = File.separatorChar;
+    public static final Path DIR_PATH = GAME_DIR.resolve(MOD_ID);
+    public static final Path CUSTOM_ADVANCEMENTS_PATH = DIR_PATH.resolve(MOD_ID);
+    public static final Path TEXTURES_PATH = DIR_PATH.resolve("textures");
 
     public static final Map<ResourceLocation, CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, GameAdvancement> GAME_ADVANCEMENTS = new HashMap<>();
@@ -56,8 +58,6 @@ public abstract class ModHelper {
     public static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
     public static final Map<ResourceLocation, ResourceLocation> CHILDREN_PARENT_MAP = new HashMap<>();
     public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
-
-    public static boolean DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
 
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
@@ -84,18 +84,18 @@ public abstract class ModHelper {
             TextureHandler.getInstance().start();
         }
         else {
-            new TextureHandler(new File(TEXTURES_PATH));
+            new TextureHandler(TEXTURES_PATH.toFile());
         }
         if (JsonHandler.getInstance() != null){
             JsonHandler.getInstance().start();
         }
         else {
-            new JsonHandler(new File(DIR_PATH));
+            new JsonHandler(DIR_PATH.toFile());
         }
 
         LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
-        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " CustomAdvancements!" : " CustomAdvancement!"));
-        LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " GameAdvancements!" : " GameAdvancement!"));
+        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " Custom Advancements!" : " Custom Advancement!"));
+        LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " Game Advancements!" : " Game Advancement!"));
     }
 
 
@@ -109,8 +109,6 @@ public abstract class ModHelper {
         CHILDREN_PARENT_MAP.clear();
         ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
         ADVANCEMENTS.clear();
-
-        DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
     }
 
 
@@ -194,6 +192,7 @@ public abstract class ModHelper {
         public static final ForgeConfigSpec.ConfigValue<Boolean> NO_RECIPE_ADVANCEMENTS;
         public static final ForgeConfigSpec.ConfigValue<Boolean> NO_ADVANCEMENTS;
         public static final ForgeConfigSpec.ConfigValue<Boolean> BLACKLIST_IS_WHITELIST;
+        public static final ForgeConfigSpec.ConfigValue<Boolean> DISABLE_STANDARD_ADVANCEMENT_LOAD;
         private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
 
 
@@ -213,6 +212,7 @@ public abstract class ModHelper {
 
             BLACKLIST_IS_WHITELIST = CONFIG_BUILDER.comment("Whether the Blacklist of Advancements should be a Whitelist").define("blacklistIsWhitelist", false);
 
+            DISABLE_STANDARD_ADVANCEMENT_LOAD = CONFIG_BUILDER.comment("Whether the mod should overwrite vanilla advancements with generated ones").define("disableStandardAdvancementLoad", false);
 
             CONFIG_BUILDER.pop();
             CONFIG_SPEC = CONFIG_BUILDER.build();

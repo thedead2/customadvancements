@@ -1,10 +1,7 @@
 package de.thedead2.customadvancements;
 
 import com.mojang.brigadier.CommandDispatcher;
-import de.thedead2.customadvancements.commands.GenerateGameAdvancementsCommand;
-import de.thedead2.customadvancements.commands.GenerateResourceLocationsFileCommand;
-import de.thedead2.customadvancements.commands.ModGameRules;
-import de.thedead2.customadvancements.commands.ReloadCommand;
+import de.thedead2.customadvancements.commands.*;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
 import net.minecraft.commands.CommandSourceStack;
@@ -50,6 +47,7 @@ public class CustomAdvancements {
 
         timer.start();
         LOGGER.info("Starting " + MOD_NAME + ", Version: " + MOD_VERSION);
+        LOGGER.debug("Registered PATH_SEPARATOR with: " + PATH_SEPARATOR);
 
         init();
         new ModGameRules();
@@ -79,6 +77,7 @@ public class CustomAdvancements {
         new GenerateGameAdvancementsCommand(dispatcher);
         new GenerateResourceLocationsFileCommand(dispatcher);
         new ReloadCommand(dispatcher);
+        new GenerateAdvancementCommand(dispatcher);
 
         ConfigCommand.register(dispatcher);
         LOGGER.debug("Command registration complete.");

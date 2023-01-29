@@ -25,9 +25,9 @@ public abstract class AdvancementHandler extends FileHandler {
         LOGGER.debug("Generating file: " + advancementId);
 
         FOLDER_NAMES.clear();
-        String basePath = DIR_PATH + "/" + advancementId.getNamespace();
+        Path basePath = Path.of(String.valueOf(DIR_PATH), advancementId.getNamespace());
 
-        createDirectory(new File(basePath));
+        createDirectory(basePath.toFile());
 
         writeFile(getInput(advancementData), resolvePath(basePath, advancementId.getPath()));
     }
@@ -54,7 +54,7 @@ public abstract class AdvancementHandler extends FileHandler {
     }
 
 
-    private static Path resolvePath(String basePath, String advancementPath){
+    private static Path resolvePath(Path basePath, String advancementPath){
         if(advancementPath.contains("/")){
             String subStringDirectory = advancementPath.replaceAll(advancementPath.substring(advancementPath.indexOf("/")), "");
             FOLDER_NAMES.add(subStringDirectory);
@@ -63,14 +63,14 @@ public abstract class AdvancementHandler extends FileHandler {
             getSubDirectories(nextSubString);
 
             for(String folderName: FOLDER_NAMES){
-                basePath = basePath + "/" + folderName;
-                createDirectory(new File(basePath));
+                basePath = Path.of(String.valueOf(basePath), folderName);
+                createDirectory(basePath.toFile());
             }
 
-            return Path.of(basePath + advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
+            return Path.of(String.valueOf(basePath), advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
         }
         else {
-            return Path.of(basePath + "/" + advancementPath + ".json");
+            return Path.of(String.valueOf(basePath), advancementPath + ".json");
         }
     }
 
