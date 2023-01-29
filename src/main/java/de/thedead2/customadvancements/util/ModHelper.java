@@ -4,15 +4,16 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.gson.JsonElement;
-import de.thedead2.customadvancements.advancements.CustomAdvancement;
-import de.thedead2.customadvancements.advancements.GameAdvancement;
 import com.mojang.blaze3d.platform.NativeImage;
+import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
+import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
 import net.minecraft.Util;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.entity.player.Player;
@@ -23,63 +24,80 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.VersionChecker;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.locating.IModFile;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
+
+import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.ADVANCEMENTS;
 
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.18.2-4.2.0";
+    public static final String MOD_VERSION = "1.19.2-5.3.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
 
     public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
     public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
-    public static final String GAME_DIR = FMLPaths.GAMEDIR.get().toString();
-    public static final String DIR_PATH = GAME_DIR + "/" + MOD_ID;
-    public static final String CUSTOM_ADVANCEMENTS_PATH = DIR_PATH + "/" + MOD_ID;
-    public static final String TEXTURES_PATH = DIR_PATH + "/" + "textures";
 
-    public static final FileHandler FILE_HANDLER = new FileHandler();
-    public static final JsonHandler JSON_HANDLER = new JsonHandler();
-    public static final TextureHandler TEXTURE_HANDLER = new TextureHandler();
+    public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
+    public static final char PATH_SEPARATOR = File.separatorChar;
+    public static final Path DIR_PATH = GAME_DIR.resolve(MOD_ID);
+    public static final Path CUSTOM_ADVANCEMENTS_PATH = DIR_PATH.resolve(MOD_ID);
+    public static final Path TEXTURES_PATH = DIR_PATH.resolve("textures");
 
     public static final Map<ResourceLocation, CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, GameAdvancement> GAME_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, NativeImage> TEXTURES = new HashMap<>();
     public static final Set<ResourceLocation> REMOVED_ADVANCEMENTS_SET = new HashSet<>();
     public static final Map<ResourceLocation, JsonElement> ALL_DETECTED_GAME_ADVANCEMENTS = new HashMap<>();
-    public static final Map<ResourceLocation, JsonElement> ADVANCEMENTS_TEMP_MAP = new HashMap<>();
 
     public static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
     public static final Map<ResourceLocation, ResourceLocation> CHILDREN_PARENT_MAP = new HashMap<>();
     public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
 
-    public static boolean DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
-
-
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
 
-
     public static void reloadAll(MinecraftServer server){
+        StopWatch timer = new StopWatch();
+        timer.start();
         LOGGER.info("Reloading...");
 
         init();
         reloadGameData(server);
 
-        LOGGER.info("Reload complete!");
+        LOGGER.info("Reload completed in {} ms!", timer.getTime());
+        timer.stop();
+        timer.reset();
     }
 
 
     public static void init(){
         clearAll();
-        FILE_HANDLER.checkForMainDirectories();
-        FILE_HANDLER.readFiles(new File(DIR_PATH));
+        FileHandler.checkForMainDirectories();
+
+        if(TextureHandler.getInstance() != null){
+            TextureHandler.getInstance().start();
+        }
+        else {
+            new TextureHandler(TEXTURES_PATH.toFile());
+        }
+        if (JsonHandler.getInstance() != null){
+            JsonHandler.getInstance().start();
+        }
+        else {
+            new JsonHandler(DIR_PATH.toFile());
+        }
+
+        LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
+        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " Custom Advancements!" : " Custom Advancement!"));
+        LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " Game Advancements!" : " Game Advancement!"));
     }
 
 
@@ -92,9 +110,7 @@ public abstract class ModHelper {
         PARENT_CHILDREN_MAP.clear();
         CHILDREN_PARENT_MAP.clear();
         ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
-        ADVANCEMENTS_TEMP_MAP.clear();
-
-        DISABLE_STANDARD_ADVANCEMENT_LOAD = false;
+        ADVANCEMENTS.clear();
     }
 
 
@@ -112,9 +128,10 @@ public abstract class ModHelper {
             }
         }
 
-        server.reloadResources(selectedIds).exceptionally((throwable) -> {
-            LOGGER.error("Failed to execute reload!", throwable);
-            throwable.printStackTrace();
+        server.reloadResources(selectedIds).exceptionally((e) -> {
+            LOGGER.error("Failed to execute reload!", e);
+            server.sendMessage(new TranslatableComponent("chat.customadvancements.reload_failed_massage"), Util.NIL_UUID);
+            e.printStackTrace();
             return null;
         });
     }
@@ -177,6 +194,7 @@ public abstract class ModHelper {
         public static final ForgeConfigSpec.ConfigValue<Boolean> NO_RECIPE_ADVANCEMENTS;
         public static final ForgeConfigSpec.ConfigValue<Boolean> NO_ADVANCEMENTS;
         public static final ForgeConfigSpec.ConfigValue<Boolean> BLACKLIST_IS_WHITELIST;
+        public static final ForgeConfigSpec.ConfigValue<Boolean> DISABLE_STANDARD_ADVANCEMENT_LOAD;
         private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
 
 
@@ -186,16 +204,17 @@ public abstract class ModHelper {
 
             OUT_DATED_MESSAGE = CONFIG_BUILDER.comment("Whether the mod should send a chat message if an update is available").define("warnMessage", true);
 
-            OPTIFINE_SHADER_COMPATIBILITY = CONFIG_BUILDER.comment("Whether the compatibility mode for Optifine Shaders should be enabled. Note: This disables custom background textures for advancements! (You need to restart your game for the actions to take effect)").define("optifineShaderCompatibility", false);
+            OPTIFINE_SHADER_COMPATIBILITY = CONFIG_BUILDER.comment("Whether the compatibility mode for Optifine Shaders should be enabled. Note: This disables custom background textures for advancements! (You need to restart your game for the actions to take effect)").worldRestart().define("optifineShaderCompatibility", false);
 
-            NO_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all advancements").define("noAdvancements", false);
+            NO_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all advancements").worldRestart().define("noAdvancements", false);
 
             NO_RECIPE_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all recipe advancements").define("noRecipeAdvancements", false);
 
-            ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod").defineList("advancementsBlacklist" , Collections.emptyList(), it -> it instanceof String);
+            ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod").worldRestart().defineList("advancementsBlacklist" , Collections.emptyList(), it -> it instanceof String);
 
             BLACKLIST_IS_WHITELIST = CONFIG_BUILDER.comment("Whether the Blacklist of Advancements should be a Whitelist").define("blacklistIsWhitelist", false);
 
+            DISABLE_STANDARD_ADVANCEMENT_LOAD = CONFIG_BUILDER.comment("Whether the mod should overwrite vanilla advancements with generated ones").define("disableStandardAdvancementLoad", false);
 
             CONFIG_BUILDER.pop();
             CONFIG_SPEC = CONFIG_BUILDER.build();

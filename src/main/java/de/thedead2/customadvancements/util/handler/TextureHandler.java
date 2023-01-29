@@ -8,9 +8,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
 
-public class TextureHandler implements IFileHandler{
+public class TextureHandler extends FileHandler{
+
+    private static TextureHandler instance;
+
+    public TextureHandler(File directory) {
+        super(directory);
+        instance = this;
+        this.start();
+    }
 
     @Override
     public void readFiles(File directory) {
@@ -47,4 +54,6 @@ public class TextureHandler implements IFileHandler{
             e.printStackTrace();
         }
     }
+
+    public static TextureHandler getInstance(){return instance;}
 }

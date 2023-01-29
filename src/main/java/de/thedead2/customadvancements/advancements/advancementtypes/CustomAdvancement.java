@@ -1,11 +1,11 @@
-package de.thedead2.customadvancements.advancements;
+package de.thedead2.customadvancements.advancements.advancementtypes;
 
 import com.google.gson.JsonObject;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
-import static de.thedead2.customadvancements.util.handler.IFileHandler.getId;
+import static de.thedead2.customadvancements.util.handler.FileHandler.getId;
 
 public class CustomAdvancement implements IAdvancement {
     private final JsonObject jsonObject;

@@ -1,8 +1,7 @@
 package de.thedead2.customadvancements.util.handler;
 
+import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
-import de.thedead2.customadvancements.util.exceptions.FileWriteException;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,17 +9,21 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+public abstract class FileHandler extends ModHelper {
 
-public class FileHandler implements IFileHandler {
+    private final File directory;
 
-    public void checkForMainDirectories() {
-        createDirectory(new File(DIR_PATH));
-        if(createDirectory(new File(CUSTOM_ADVANCEMENTS_PATH))){
+    public FileHandler(File directory){
+        this.directory = directory;
+    }
+
+    public static void checkForMainDirectories() {
+        createDirectory(DIR_PATH.toFile());
+        if(createDirectory(CUSTOM_ADVANCEMENTS_PATH.toFile())) {
             try {
                 copyModFiles("examples/advancements", CUSTOM_ADVANCEMENTS_PATH, ".json");
                 LOGGER.debug("Created example advancements!");
@@ -31,7 +34,7 @@ public class FileHandler implements IFileHandler {
             }
         }
 
-        if(createDirectory(new File(TEXTURES_PATH))){
+        if(createDirectory(TEXTURES_PATH.toFile())){
             try {
                 copyModFiles("examples/textures", TEXTURES_PATH, ".png");
                 LOGGER.debug("Created example textures for advancements!");
@@ -43,49 +46,40 @@ public class FileHandler implements IFileHandler {
         }
     }
 
+    public void start() {
+        if (this.directory.exists()){
+            File[] folders = this.directory.listFiles();
 
-    @Override
-    public void readFiles(File main_directory) {
-        LOGGER.info("Starting to read files...");
+            assert folders != null;
+            if(Arrays.stream(folders).anyMatch(File::isFile)){
+                this.readFiles(this.directory);
+            }
 
-        if (!FMLEnvironment.dist.isDedicatedServer() || !ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
-            TEXTURE_HANDLER.readFiles(new File(TEXTURES_PATH));
-        }
-        else if (ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
-            LOGGER.warn("Enabling compatibility mode for Optifine Shaders! This disables custom background textures for advancements!");
-        }
+            for(File subfolder : folders){
+                if(subfolder.isDirectory()){
+                    this.readFiles(subfolder);
 
-        if (main_directory.exists()){
-            File[] modFolders = main_directory.listFiles();
-
-            assert modFolders != null;
-            for(File modFolder:modFolders){
-                if(modFolder.isDirectory() && !modFolder.getName().equals("textures")){
-                    if (!modFolder.getName().equals(MOD_ID)){
-                        DISABLE_STANDARD_ADVANCEMENT_LOAD = true;
-                    }
-
-                    JSON_HANDLER.readFiles(modFolder);
-
-                    readSubDirectories(modFolder);
+                    readSubDirectories(subfolder);
                 }
             }
         }
-
-        LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
-        LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " CustomAdvancements!" : " CustomAdvancement!"));
-        LOGGER.info("Loaded " + GAME_ADVANCEMENTS.size() + (GAME_ADVANCEMENTS.size() != 1 ? " GameAdvancements!" : " GameAdvancement!"));
-
     }
 
 
     private void readSubDirectories(File folderIn){
         for(File folder: Objects.requireNonNull(folderIn.listFiles())){
             if(folder.isDirectory()){
-                JSON_HANDLER.readFiles(folder);
+                this.readFiles(folder);
                 readSubDirectories(folder);
             }
         }
+    }
+
+
+    public static String getId(String filePath){
+        String subString = filePath.replace(DIR_PATH + String.valueOf(PATH_SEPARATOR), "");
+        subString = subString.replaceFirst(String.valueOf(PATH_SEPARATOR), ":");
+        return subString.replaceAll(String.valueOf(PATH_SEPARATOR), "/");
     }
 
 
@@ -107,50 +101,37 @@ public class FileHandler implements IFileHandler {
     }
 
 
-    public static void writeFile(InputStream inputStreamIn, Path outputPath){
-        InputStream inputStream = null;
-        OutputStream fileOut = null;
+    public static void writeFile(InputStream inputStream, Path outputPath) throws IOException {
+        OutputStream fileOut = Files.newOutputStream(outputPath);
 
-        try {
-            inputStream = inputStreamIn;
-            fileOut = Files.newOutputStream(outputPath);
+        writeToFile(inputStream, fileOut);
 
-            int input;
-            while ((input = inputStream.read()) != -1){
-                fileOut.write(input);
-            }
-        }
-        catch (IOException e) {
-            LOGGER.error("Unable to write file: " + outputPath.getFileName());
-            e.printStackTrace();
-            throw new FileWriteException("Unable to write file: " + outputPath.getFileName());
-        }
-        finally {
-            try {
-                assert inputStream != null;
-                inputStream.close();
-                assert fileOut != null;
-                fileOut.close();
-            }
-            catch (IOException e) {
-                LOGGER.warn("Unable to close InputStream/ OutputStream!");
-                e.printStackTrace();
-            }
-        }
+        fileOut.close();
     }
 
 
-    public static void copyModFiles(String pathIn, String pathOut, String filter) throws FileCopyException {
+    public static void writeToFile(InputStream inputStream, OutputStream fileOut) throws IOException {
+        int input;
+        while ((input = inputStream.read()) != -1){
+            fileOut.write(input);
+        }
+
+        inputStream.close();
+    }
+
+
+    public static void copyModFiles(String pathIn, Path pathOut, String filter) throws FileCopyException {
         Path filespath = THIS_MOD_FILE.findResource(pathIn);
 
         try (Stream<Path> paths = Files.list(filespath)) {
             paths.filter(path -> path.toString().endsWith(filter)).forEach(path -> {
                 try {
-                    writeFile(Files.newInputStream(path), Paths.get(pathOut + "/" + path.getFileName()));
+                    writeFile(Files.newInputStream(path), pathOut.resolve(path.getFileName().toString()));
                 }
-                catch (FileWriteException | IOException e){
+                catch (IOException e) {
                     LOGGER.warn("Failed to copy mod files: " + e);
                     e.printStackTrace();
+
                     throw new FileCopyException("Failed to copy files: " + e);
                 }
             });
@@ -159,7 +140,10 @@ public class FileHandler implements IFileHandler {
         catch (IOException e) {
             LOGGER.warn("Unable to locate directory: " + MOD_ID + ":" + pathIn);
             e.printStackTrace();
+
             throw new FileCopyException("Unable to locate directory: " + MOD_ID + ":" + pathIn);
         }
     }
+
+    protected abstract void readFiles(File directory);
 }

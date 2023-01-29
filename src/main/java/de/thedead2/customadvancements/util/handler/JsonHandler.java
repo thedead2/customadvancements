@@ -2,31 +2,46 @@ package de.thedead2.customadvancements.util.handler;
 
 
 import com.google.common.io.ByteStreams;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
-import de.thedead2.customadvancements.advancements.CustomAdvancement;
-import de.thedead2.customadvancements.advancements.GameAdvancement;
+import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
+import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import net.minecraft.ResourceLocationException;
+import org.apache.commons.lang3.time.StopWatch;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
 
+public class JsonHandler extends FileHandler {
 
-public class JsonHandler implements IFileHandler {
+    private static JsonHandler instance;
+
+    public JsonHandler(File directory){
+        super(directory);
+        instance = this;
+        this.start();
+    }
 
     @Override
     public void readFiles(File directory) {
+        StopWatch timer = new StopWatch();
+        if(directory.getPath().contains(String.valueOf(TEXTURES_PATH))){
+            return;
+        }
+
         LOGGER.debug("Starting to read json files in: " + directory.getPath());
 
         File[] fileList = directory.listFiles();
 
         assert fileList != null;
         for(File file : fileList) {
+            timer.start();
             String fileName = file.getName();
 
             try {
@@ -35,11 +50,11 @@ public class JsonHandler implements IFileHandler {
 
                     printFileDataToConsole(file);
 
-                    JsonObject jsonObject = getJsonObject(file);
+                    JsonObject jsonObject = (JsonObject) getJsonObject(file);
 
                     assert jsonObject != null;
                     if (isCorrectJsonFormat(jsonObject, file.toPath())) {
-                        if (directory.getPath().contains(CUSTOM_ADVANCEMENTS_PATH)){
+                        if (directory.getPath().contains(String.valueOf(CUSTOM_ADVANCEMENTS_PATH))){
                             CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
 
                             CUSTOM_ADVANCEMENTS.put(customadvancement.getResourceLocation(), customadvancement);
@@ -55,7 +70,7 @@ public class JsonHandler implements IFileHandler {
                         throw new IllegalStateException("File does not match the required '.json' format!");
                     }
                 }
-                else if(file.isFile() && !fileName.equals("resource_locations.txt")) {
+                else if(file.isFile() && !fileName.equals("resource_locations.txt") && !fileName.endsWith(".png")) {
                     LOGGER.warn("File '" + fileName + "' is not a '.json' file, ignoring it!");
                 }
             }
@@ -75,8 +90,16 @@ public class JsonHandler implements IFileHandler {
                 LOGGER.fatal("Something went wrong: " + e);
                 throw new RuntimeException(e);
             }
+
+            if (timer.getTime() >= 500){
+                LOGGER.warn("Reading file {} took {} ms! Max. is 500 ms!",fileName, timer.getTime());
+                throw new RuntimeException("Reading one single file took over 500 ms!");
+            }
+            timer.stop();
+            timer.reset();
         }
     }
+
 
     private void printFileDataToConsole(File file){
         try {
@@ -92,39 +115,42 @@ public class JsonHandler implements IFileHandler {
     }
 
 
-    private JsonObject getJsonObject(File file){
+    private JsonElement getJsonObject(File file){
         final String fileName = file.getName();
 
         try{
-            final Object object = JsonParser.parseReader(new FileReader(file));
-
-            return (JsonObject) object;
+            return JsonParser.parseReader(new FileReader(file));
         }
         catch (FileNotFoundException e) {
             LOGGER.error("Unable to parse " + fileName + " to JsonObject: " + e);
             e.printStackTrace();
             return null;
         }
-        catch (ClassCastException e){
-            LOGGER.error("Failed to cast {} to JsonObject! Maybe it's empty...", fileName);
-            e.printStackTrace();
-            return null;
-        }
-        catch (JsonSyntaxException e){
-            LOGGER.error("Failed to read {}! Make sure you have the right syntax for '.json' files!", fileName);
+        catch (JsonParseException e){
+            LOGGER.error("Error parsing {} to JsonObject! Make sure you have the right syntax for '.json' files!", fileName);
             e.printStackTrace();
             return null;
         }
     }
 
 
-    private boolean isCorrectJsonFormat(JsonObject json, Path path){
-        if(path.toString().contains("recipes/")){
+    private boolean isCorrectJsonFormat(@NotNull JsonObject json, Path path){
+        if(path.toString().contains("recipes" + PATH_SEPARATOR)) {
             LOGGER.debug("Ignored '.json' format for recipe advancement: " + path.getFileName());
             return true;
         }
         else {
-            return (json.get("parent") != null && json.get("criteria") != null && json.get("display") != null) || (json.get("parent") == null && json.get("display").getAsJsonObject().get("background") != null);
+            if(json.get("parent") != null && json.get("criteria") != null && json.get("display") != null){
+                return true;
+            }
+            else if(json.get("parent") == null && json.get("display") != null){
+                return json.get("display").getAsJsonObject().get("background") != null;
+            }
+            else {
+                return false;
+            }
         }
     }
+
+    public static JsonHandler getInstance(){return instance;}
 }
