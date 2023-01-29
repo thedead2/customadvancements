@@ -9,7 +9,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.time.StopWatch;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,7 +22,7 @@ public class GenerateGameAdvancementsCommand {
 
 
     public GenerateGameAdvancementsCommand(CommandDispatcher<CommandSourceStack> dispatcher){
-        dispatcher.register(Commands.literal(ModHelper.MOD_ID).then(Commands.literal("generate").then(Commands.literal("game_advancements").executes((command) -> generateGameAdvancements(command.getSource())))));
+        dispatcher.register(Commands.literal(ModHelper.MOD_ID).then(Commands.literal("generate").then(Commands.literal("advancements").executes((command) -> generateGameAdvancements(command.getSource())))));
     }
 
 
@@ -36,7 +35,7 @@ public class GenerateGameAdvancementsCommand {
                 LOGGER.info("Starting to generate files for game advancements...");
                 source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Starting to generate files for game advancements..."), false);
 
-                FileHandler.createDirectory(new File(DIR_PATH));
+                FileHandler.createDirectory(DIR_PATH.toFile());
 
                 ALL_DETECTED_GAME_ADVANCEMENTS.forEach((advancement, advancementData) -> {
                     try {

@@ -24,12 +24,15 @@ public class CustomAdvancementManager {
     public static Map<ResourceLocation, JsonElement> modifyData(Map<ResourceLocation, JsonElement> mapIn) {
         TIMER.start();
         if (ADVANCEMENTS.isEmpty()){
-            ADVANCEMENTS.putAll(mapIn);
-            removeAllAdvancements();
-            removeRecipeAdvancements();
+            if(!ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()){
+                ADVANCEMENTS.putAll(mapIn);
+            }
+
             loadAdvancements(CUSTOM_ADVANCEMENTS);
             loadAdvancements(GAME_ADVANCEMENTS);
             removeListAdvancements();
+            removeRecipeAdvancements();
+            removeAllAdvancements();
 
             mapIn.clear();
             mapIn.putAll(ADVANCEMENTS);
@@ -55,7 +58,9 @@ public class CustomAdvancementManager {
             LOGGER.info("Starting to load advancements of type: {}", className);
             counter = 0;
 
-            getMissingAdvancements(advancementsIn);
+            if(ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()){
+                getMissingAdvancements(advancementsIn);
+            }
 
             for(ResourceLocation resourceLocation:advancementsIn.keySet()){
                 if(resourceLocation.toString().contains("recipes/") && ConfigManager.NO_RECIPE_ADVANCEMENTS.get()){
@@ -69,6 +74,10 @@ public class CustomAdvancementManager {
                     if(!ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.contains(resourceLocation)){
                         ResourceLocation resourceLocation1 = new ResourceLocation(resourceLocation.getNamespace(), resourceLocation.getPath().replace(".json", ""));
 
+                        if(ADVANCEMENTS.containsKey(resourceLocation1)){
+                            ADVANCEMENTS.remove(resourceLocation1);
+                            LOGGER.debug("Overwriting advancement: " + resourceLocation1);
+                        }
                         ADVANCEMENTS.put(resourceLocation1, advancement.getJsonObject());
                         LOGGER.debug("Loaded " + advancement.getResourceLocation() + " into Advancement Manager!");
                         counter++;
@@ -93,7 +102,7 @@ public class CustomAdvancementManager {
 
 
     private static void removeRecipeAdvancements(){
-        if(ConfigManager.NO_RECIPE_ADVANCEMENTS.get() || ConfigManager.NO_ADVANCEMENTS.get() || DISABLE_STANDARD_ADVANCEMENT_LOAD){
+        if(ConfigManager.NO_RECIPE_ADVANCEMENTS.get() || ConfigManager.NO_ADVANCEMENTS.get()){
             LOGGER.info("Starting to remove recipe advancements...");
 
             for (ResourceLocation resourceLocation : ALL_ADVANCEMENTS_RESOURCE_LOCATIONS){
@@ -175,7 +184,7 @@ public class CustomAdvancementManager {
 
 
     private static void removeAllAdvancements() {
-        if (ConfigManager.NO_ADVANCEMENTS.get() || DISABLE_STANDARD_ADVANCEMENT_LOAD){
+        if (ConfigManager.NO_ADVANCEMENTS.get() || ConfigManager.getBlacklistedResourceLocations().isEmpty() && ConfigManager.BLACKLIST_IS_WHITELIST.get()){
             LOGGER.info("Starting to remove all advancements...");
 
             AtomicInteger counter = new AtomicInteger();

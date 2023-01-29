@@ -10,6 +10,7 @@ import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvanc
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import net.minecraft.ResourceLocationException;
 import org.apache.commons.lang3.time.StopWatch;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +31,7 @@ public class JsonHandler extends FileHandler {
     @Override
     public void readFiles(File directory) {
         StopWatch timer = new StopWatch();
-        if(directory.getPath().contains(TEXTURES_PATH)){
+        if(directory.getPath().contains(String.valueOf(TEXTURES_PATH))){
             return;
         }
 
@@ -53,7 +54,7 @@ public class JsonHandler extends FileHandler {
 
                     assert jsonObject != null;
                     if (isCorrectJsonFormat(jsonObject, file.toPath())) {
-                        if (directory.getPath().contains(CUSTOM_ADVANCEMENTS_PATH)){
+                        if (directory.getPath().contains(String.valueOf(CUSTOM_ADVANCEMENTS_PATH))){
                             CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
 
                             CUSTOM_ADVANCEMENTS.put(customadvancement.getResourceLocation(), customadvancement);
@@ -126,20 +127,28 @@ public class JsonHandler extends FileHandler {
             return null;
         }
         catch (JsonParseException e){
-            LOGGER.error("Error parsing {} to JsonObject! Make sure you have the right syntax for 'Json' files!", fileName);
+            LOGGER.error("Error parsing {} to JsonObject! Make sure you have the right syntax for '.json' files!", fileName);
             e.printStackTrace();
             return null;
         }
     }
 
 
-    private boolean isCorrectJsonFormat(JsonObject json, Path path){
-        if(path.toString().contains("recipes/")){
+    private boolean isCorrectJsonFormat(@NotNull JsonObject json, Path path){
+        if(path.toString().contains("recipes" + PATH_SEPARATOR)) {
             LOGGER.debug("Ignored '.json' format for recipe advancement: " + path.getFileName());
             return true;
         }
         else {
-            return (json.get("parent") != null && json.get("criteria") != null && json.get("display") != null) || (json.get("parent") == null && json.get("display").getAsJsonObject().get("background") != null);
+            if(json.get("parent") != null && json.get("criteria") != null && json.get("display") != null){
+                return true;
+            }
+            else if(json.get("parent") == null && json.get("display") != null){
+                return json.get("display").getAsJsonObject().get("background") != null;
+            }
+            else {
+                return false;
+            }
         }
     }
 
