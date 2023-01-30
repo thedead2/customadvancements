@@ -7,7 +7,7 @@
     "1.18.2-4.2.0": "Mayor code and performance improvements."
   },
   "1.19.2": {
-    "1.19.2-5.2.0": "Mayor code and performance improvements."
+    "1.19.2-5.3.2": "Fixed a bug when on windows (issue #1) causing advancements not being loaded!"
   },
   "promos": {
     "1.16.5-latest": "1.16.5-3.4.3-final",
@@ -16,7 +16,7 @@
     "1.18.2-latest": "1.18.2-4.2.0",
     "1.18.2-recommended": "1.18.2-4.2.0",
     
-    "1.19.2-latest": "1.19.2-5.2.0",
-    "1.19.2-recommended": "1.19.2-5.2.0"
+    "1.19.2-latest": "1.19.2-5.3.2",
+    "1.19.2-recommended": "1.19.2-5.3.2"
   }
 }
