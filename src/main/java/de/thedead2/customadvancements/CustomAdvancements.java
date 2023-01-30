@@ -50,7 +50,6 @@ public class CustomAdvancements {
         LOGGER.debug("Registered PATH_SEPARATOR with: " + PATH_SEPARATOR);
 
         init();
-        new ModGameRules();
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());
         timer.stop();
