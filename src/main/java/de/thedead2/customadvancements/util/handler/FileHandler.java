@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
 public abstract class FileHandler extends ModHelper {
@@ -77,9 +78,11 @@ public abstract class FileHandler extends ModHelper {
 
 
     public static String getId(String filePath){
-        String subString = filePath.replace(DIR_PATH + String.valueOf(PATH_SEPARATOR), "");
-        subString = subString.replaceFirst(String.valueOf(PATH_SEPARATOR), ":");
-        return subString.replaceAll(String.valueOf(PATH_SEPARATOR), "/");
+        String subString = filePath.replace(String.valueOf(DIR_PATH), "");
+        subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
+        subString = subString.replaceFirst("/", "");
+        subString = subString.replaceFirst("/", ":");
+        return subString;
     }
 
 
