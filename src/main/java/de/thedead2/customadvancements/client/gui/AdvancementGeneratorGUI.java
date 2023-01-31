@@ -109,7 +109,6 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
             double buttonMouseX = pMouseX - OFFSET_X - 9;
             double buttonMouseY = pMouseY - OFFSET_Y - 18;
             if (this.selectedTab.getActiveWidget() != null && this.selectedTab.getActiveWidget().editButton.isMouseOver(buttonMouseX, buttonMouseY)){
-                ModHelper.LOGGER.debug("Test!");
                 this.selectedTab.getActiveWidget().editButton.onClick(buttonMouseX, buttonMouseY);
             }
             else if(this.selectedTab.getActiveWidget() != null && this.selectedTab.getActiveWidget().addButton.isMouseOver(buttonMouseX, buttonMouseY)){

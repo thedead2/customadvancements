@@ -304,7 +304,7 @@ public class FakeAdvancementWidget extends GuiComponent {
         int xPos = pX + this.x;
 
         if ((pMouseX > 0 && pMouseX < 234 && pMouseY > 0 && pMouseY < 113) || drawingTooltip) {
-            if (drawingTooltip) { //check for orientation of the displayed hover text
+            if (drawingTooltip) {
                 leftXCorner = tooltipWiderThanScreen ? (xPos - this.tooltipWidth + ICON_WIDTH + 6) : xPos;
                 rightXCorner = leftXCorner + this.tooltipWidth;
                 topYCorner = tooltipLongerThanScreen ? (yPos + HEIGHT - this.tooltipHeight) : yPos;

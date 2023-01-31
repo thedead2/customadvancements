@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -37,6 +38,7 @@ public class ClientAdvancementGenerator extends BasicInputScreen implements IAdv
         this.criteria = editAdvancement.getCriteria();
         this.rewards = editAdvancement.getRewards();
         this.advancementId = editAdvancement.getId();
+        loginfos();
     }
 
     public ClientAdvancementGenerator(Screen parent, Minecraft minecraft, ResourceLocation parentId) {
@@ -45,6 +47,23 @@ public class ClientAdvancementGenerator extends BasicInputScreen implements IAdv
         this.builder = Advancement.Builder.advancement();
         this.parentId = parentId;
         this.advancements = this.minecraft.getSingleplayerServer().getAdvancements().getAllAdvancements();
+
+        if(this.advancementId == null){
+            loginfos();
+        }
+    }
+
+    private void loginfos(){
+        LOGGER.debug("parent screen: " + this.parent);
+        LOGGER.debug("minecraft: " + this.minecraft);
+        LOGGER.debug("advancement builder" + this.builder);
+        LOGGER.debug("parent id: " + this.parentId);
+        //LOGGER.debug("advancements collection: " + this.advancements);
+        LOGGER.debug("display info: " + this.display);
+        LOGGER.debug("requirements: " + Arrays.deepToString(this.requirements));
+        LOGGER.debug("criteria: " + this.criteria);
+        LOGGER.debug("rewards: " + this.rewards);
+        LOGGER.debug("id: " + this.advancementId);
     }
 
     @Override
