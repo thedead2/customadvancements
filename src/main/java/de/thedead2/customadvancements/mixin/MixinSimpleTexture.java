@@ -45,8 +45,5 @@ public abstract class MixinSimpleTexture {
                 LOGGER.error("Could not load texture for: " + this.location);
             }
         }
-        else if (this.location.getNamespace().equals(ModHelper.MOD_ID) && !TEXTURES.containsKey(this.location)){
-            LOGGER.debug("Couldn't find texture location {} in textures map! Using normal method to load texture!", this.location);
-        }
     }
 }

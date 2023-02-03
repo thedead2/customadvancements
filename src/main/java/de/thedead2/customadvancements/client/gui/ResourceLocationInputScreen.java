@@ -7,7 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 public class ResourceLocationInputScreen extends BasicInputScreen {
 
 
-    protected ResourceLocationInputScreen(Screen parent, Minecraft minecraft, ServerAdvancementGenerator generator) {
+    protected ResourceLocationInputScreen(AdvancementGeneratorGUI parent, Minecraft minecraft, ServerAdvancementGenerator generator) {
         super(parent, minecraft, generator);
     }
 }

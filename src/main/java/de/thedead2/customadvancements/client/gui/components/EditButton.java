@@ -12,14 +12,19 @@ import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 public class EditButton extends Button {
 
-    private final FakeAdvancementWidget widget;
+    private FakeAdvancementWidget widget;
     private static final ResourceLocation EDIT_ICON = new ResourceLocation(MOD_ID, "textures/gui/edit_icon.png");
     private static final ResourceLocation EDIT_ICON_HOVERED = new ResourceLocation(MOD_ID, "textures/gui/edit_icon_hovered.png");
 
     public EditButton(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress, FakeAdvancementWidget widget) {
-        super(pX, pY, pWidth, pHeight, pMessage, pOnPress);
+        this(pX, pY, pWidth, pHeight, pMessage, pOnPress);
         this.widget = widget;
     }
+
+    public EditButton(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress) {
+        super(pX, pY, pWidth, pHeight, pMessage, pOnPress);
+    }
+
 
     @Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
@@ -38,10 +43,6 @@ public class EditButton extends Button {
         blit(poseStack, iconX, iconY, this.getBlitOffset(), 0, 0, this.width, this.height, this.height, this.width);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-
-        /*if(this.isMouseOver(mouseX, mouseY)){
-            this.renderToolTip(poseStack, mouseX, mouseY);
-        }*/
     }
 
     @Override
@@ -56,7 +57,10 @@ public class EditButton extends Button {
 
     @Override
     public void onClick(double pMouseX, double pMouseY) {
-        if(this.isMouseOver(pMouseX, pMouseY) && this.widget.drawingTooltip && this.active){
+        if(this.isMouseOver(pMouseX, pMouseY) && this.widget != null && this.widget.drawingTooltip && this.active){
+            this.onPress();
+        }
+        else if(this.isMouseOver(pMouseX, pMouseY) && this.widget == null && this.active){
             this.onPress();
         }
     }

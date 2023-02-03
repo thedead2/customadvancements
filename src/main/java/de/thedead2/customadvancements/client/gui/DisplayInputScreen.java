@@ -7,7 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 public class DisplayInputScreen extends BasicInputScreen {
 
 
-    protected DisplayInputScreen(Screen parent, Minecraft minecraft, ServerAdvancementGenerator generator) {
+    protected DisplayInputScreen(AdvancementGeneratorGUI parent, Minecraft minecraft, ServerAdvancementGenerator generator) {
         super(parent, minecraft, generator);
     }
 }

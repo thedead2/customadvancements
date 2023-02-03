@@ -7,7 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 public class RewardsInputScreen extends BasicInputScreen {
 
 
-    protected RewardsInputScreen(Screen parent, Minecraft minecraft, ServerAdvancementGenerator generator) {
+    protected RewardsInputScreen(AdvancementGeneratorGUI parent, Minecraft minecraft, ServerAdvancementGenerator generator) {
         super(parent, minecraft, generator);
     }
 }

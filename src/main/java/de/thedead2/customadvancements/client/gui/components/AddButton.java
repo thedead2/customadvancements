@@ -23,6 +23,7 @@ public class AddButton extends Button {
         this.widget = widget;
     }
 
+
     @Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
@@ -42,6 +43,7 @@ public class AddButton extends Button {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
     }
 
+
     @Override
     public boolean isMouseOver(double pMouseX, double pMouseY) {
         int leftXCorner = this.x;
@@ -51,6 +53,7 @@ public class AddButton extends Button {
 
         return pMouseX >= leftXCorner && pMouseX <= rightXCorner && pMouseY >= topYCorner && pMouseY <= bottomYCorner;
     }
+
 
     @Override
     public void onClick(double pMouseX, double pMouseY) {

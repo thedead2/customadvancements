@@ -7,7 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 public class RequirementsInputScreen extends BasicInputScreen {
 
 
-    protected RequirementsInputScreen(Screen parent, Minecraft minecraft, ServerAdvancementGenerator generator) {
+    protected RequirementsInputScreen(AdvancementGeneratorGUI parent, Minecraft minecraft, ServerAdvancementGenerator generator) {
         super(parent, minecraft, generator);
     }
 }
