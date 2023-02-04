@@ -1,14 +1,15 @@
-package de.thedead2.customadvancements.generator;
+package de.thedead2.customadvancements.client.gui.generator;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.thedead2.customadvancements.client.gui.AdvancementGeneratorGUI;
 import de.thedead2.customadvancements.client.gui.components.EditButton;
 import de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.advancements.*;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.advancements.AdvancementWidgetType;
@@ -25,12 +26,12 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import static de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget.ICON_X;
 import static de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget.ICON_Y;
-import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.ModHelper.*;
 
 public class ClientAdvancementGenerator extends Screen {
 
@@ -46,8 +47,9 @@ public class ClientAdvancementGenerator extends Screen {
     private final int[] screenBottomLeftCorner = {screenTopLeftCorner[0], screenTopLeftCorner[1] + this.screenHeight};
     private final int[] screenBottomRightCorner = {screenTopLeftCorner[0] + this.screenWidth, screenTopLeftCorner[1] + this.screenHeight};
     private final int[] EDIT_BOX = {screenTopLeftCorner[0], this.minecraft.font.lineHeight + 4};
+    private final int textPaddingUp = this.minecraft.font.lineHeight + PADDING;
 
-    private final Advancement.Builder builder;
+    private Advancement.Builder builder;
     protected ResourceLocation parentId;
     protected DisplayInfo display;
     protected AdvancementRewards rewards;
@@ -55,17 +57,18 @@ public class ClientAdvancementGenerator extends Screen {
     protected String[][] requirements;
 
     protected ResourceLocation advancementId;
-    private final Collection<Advancement> advancements;
+    private final Map<ResourceLocation, Advancement> advancements = new HashMap<>();
     private final FakeAdvancementWidget widget;
     private boolean editTitle = false;
     private boolean editDescription = false;
     private boolean editId = false;
-    private boolean editParentId = false;
-    private Component advancementTitle;
+    private boolean editBgId = false;
+    private boolean isSaved = false;
     private final Component defaultDescription = Component.literal("Example Description");
     private final Component defaultTitle = Component.literal("Example Title");
 
     private final AdvancementGeneratorGUI parent;
+    private Advancement original;
 
     public ClientAdvancementGenerator(AdvancementGeneratorGUI parent, Advancement editAdvancement, FakeAdvancementWidget widget) {
         this(parent, editAdvancement.getParent() != null ? editAdvancement.getParent().getId() : null, widget);
@@ -74,6 +77,7 @@ public class ClientAdvancementGenerator extends Screen {
         this.criteria = editAdvancement.getCriteria();
         this.rewards = editAdvancement.getRewards();
         this.advancementId = editAdvancement.getId();
+        this.original = editAdvancement;
         loginfos();
     }
 
@@ -82,7 +86,7 @@ public class ClientAdvancementGenerator extends Screen {
         this.parent = parent;
         this.builder = Advancement.Builder.advancement();
         this.parentId = parentId;
-        this.advancements = this.minecraft.getSingleplayerServer().getAdvancements().getAllAdvancements();
+        this.minecraft.getSingleplayerServer().getAdvancements().getAllAdvancements().forEach(advancement -> this.advancements.put(advancement.getId(), advancement));
         this.widget = widget;
 
         if(this.advancementId == null){
@@ -106,14 +110,19 @@ public class ClientAdvancementGenerator extends Screen {
     }
 
     public void updateDisplayInfo(ItemStack itemStack, Component title, Component description, ResourceLocation background, FrameType frame, boolean showToast, boolean announceToChat, boolean hidden) {
+        LOGGER.info(background);
         if(this.display != null){
-            this.display = new DisplayInfo(itemStack == null ? this.display.getIcon() : itemStack, title == null ? this.display.getTitle() : title, description == null ? this.display.getDescription() : description, background == null ? null : (this.parentId != null ? null: this.display.getBackground()), frame == null ? this.display.getFrame() : frame, showToast, announceToChat, hidden);
+            this.display = new DisplayInfo(itemStack == null ? this.display.getIcon() : itemStack, title == null ? this.display.getTitle() : title, description == null ? this.display.getDescription() : description, background == null ? (this.parentId != null ? null: this.display.getBackground()) : background, frame == null ? this.display.getFrame() : frame, showToast, announceToChat, hidden);
         }
         else {
-            this.display = new DisplayInfo(itemStack == null ? new ItemStack(Items.DIAMOND) : itemStack, title == null ? defaultTitle : title, description == null ? defaultDescription : description, background == null ? null : (this.parentId != null ? null: new ResourceLocation( "textures/gui/advancements/stone.png")), frame == null ? FrameType.TASK : frame, showToast, announceToChat, hidden);
+            this.display = new DisplayInfo(itemStack == null ? new ItemStack(Items.DIAMOND) : itemStack, title == null ? defaultTitle : title, description == null ? defaultDescription : description, background == null ? (this.parentId != null ? null: new ResourceLocation( "textures/gui/advancements/stone.png")) : background, frame == null ? FrameType.TASK : frame, showToast, announceToChat, hidden);
+        }
+        if(this.advancementId == null){
+            this.advancementId = new ResourceLocation(MOD_ID, this.display.getTitle().getString().toLowerCase().replace(" ", "_"));
         }
         LOGGER.debug("Updated DisplayInfo with: {}, {}, {}, {}, {}, {}, {}, {}", this.display.getIcon(), this.display.getTitle(), this.display.getDescription(), this.display.getBackground(), this.display.getFrame(), this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
     }
+
 
     public <T, R, V extends Boolean> void updateDisplayInfo(@NotNull T t, @Nullable R r, @Nullable V v){
         if(this.display != null){
@@ -167,6 +176,30 @@ public class ClientAdvancementGenerator extends Screen {
     }
 
 
+    public int getFontWidth(String in){
+        return this.minecraft.font.width(in);
+    }
+
+    public void reset(){
+        if(this.original != null){
+            this.display = this.original.getDisplay();
+            this.requirements = this.original.getRequirements();
+            this.criteria = this.original.getCriteria();
+            this.rewards = this.original.getRewards();
+            this.advancementId = this.original.getId();
+        }
+        else {
+            this.display = null;
+            this.requirements = null;
+            this.criteria = null;
+            this.rewards = null;
+            this.advancementId = null;
+        }
+        this.builder = Advancement.Builder.advancement();
+        this.isSaved = false;
+    }
+
+
     public void createRewards() {
         AdvancementRewards.Builder rewardsBuilder = new AdvancementRewards.Builder();
 
@@ -198,18 +231,61 @@ public class ClientAdvancementGenerator extends Screen {
 
     }
 
+    public boolean areEqual(){
+        if(this.original != null){
+            boolean a = this.original.getParent() == null || this.parentId.equals(this.original.getParent().getId());
+            //boolean b = this.display.getTitle().equals(this.original.getDisplay().getTitle());
+            //boolean c = this.display.getDescription().equals(this.original.getDisplay().getDescription());
+            boolean d = this.display.equals(this.original.getDisplay());
+            boolean e = this.rewards.equals(this.original.getRewards());
+            boolean f = this.criteria.equals(this.original.getCriteria());
+            boolean g = Arrays.deepEquals(this.requirements, this.original.getRequirements());
+
+            boolean h = this.advancementId.equals(this.original.getId());
+
+            return a && d && e && f && g;
+        }
+        return false;
+    }
+
+    public void save(){
+        if(!areEqual()){
+            if(this.parentId != null){
+                this.builder.parent(this.parentId);
+                this.builder.parent(this.advancements.get(this.parentId));
+            }
+
+            if(this.display != null){
+                this.builder.display(this.display);
+            }
+
+            if(this.rewards == null){
+                this.rewards = AdvancementRewards.EMPTY;
+                LOGGER.debug("Rewards are null!" + this.rewards);
+            }
+            this.builder.rewards(this.rewards);
+
+            if(this.criteria != null){
+                this.criteria.forEach(builder::addCriterion);
+            }
+
+            if(this.requirements != null){
+                this.builder.requirements(this.requirements);
+            }
+
+            this.isSaved = true;
+        }
+    }
+
 
     public void build() {
         try {
-            this.builder.parent(this.parentId);
-            this.builder.display(this.display);
-            this.builder.rewards(this.rewards);
-            this.criteria.forEach(builder::addCriterion);
-            this.builder.requirements(this.requirements);
-
+            if(!this.isSaved){
+                this.save();
+            }
             Advancement finishedAdvancement = this.builder.build(this.advancementId);
 
-            AdvancementHandler.writeAdvancementToFile(finishedAdvancement);
+            AdvancementHandler.writeAdvancementToFile(finishedAdvancement.getId(), this.builder.serializeToJson());
 
             LOGGER.info("Created Advancement {} successfully!", finishedAdvancement.getId());
         }
@@ -223,7 +299,7 @@ public class ClientAdvancementGenerator extends Screen {
     public void init() {
         //Edit Box: for Title, Description, id, parentId, if parentID is null : background rs?
 
-        EditBox titleInput = new EditBox(this.font, screenTopLeftCorner[0] + FRAME_WIDTH + PADDING, screenTopLeftCorner[1] + 6, EDIT_BOX[0], EDIT_BOX[1], Component.literal("Title"));
+        EditBox titleInput = new EditBox(this.font, screenTopLeftCorner[0] + FRAME_WIDTH + PADDING, screenTopLeftCorner[1] + 6, this.display != null ? getFontWidth(this.display.getTitle().getString()) + 10 : EDIT_BOX[0], EDIT_BOX[1], Component.literal("Title"));
         titleInput.setMaxLength(Integer.MAX_VALUE);
         if(this.display != null){
             titleInput.setValue(this.display.getTitle().getString());
@@ -237,62 +313,93 @@ public class ClientAdvancementGenerator extends Screen {
                 titleInput.visible = true;
             }
             else {
-                this.advancementTitle = Component.literal(titleInput.getValue());
-                this.updateDisplayInfo(this.advancementTitle, this.display != null ? this.display.getDescription() : defaultDescription);
+                Component advancementTitle = Component.literal(titleInput.getValue());
+                this.updateDisplayInfo(advancementTitle, this.display != null ? this.display.getDescription() : defaultDescription);
                 this.editTitle = false;
                 titleInput.visible = false;
             }
         }));
 
+        EditBox descriptionInput = new EditBox(this.font, screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenTopLeftCorner[1] + 26 + PADDING - 2 /* - Half EditBox Offset*/, EDIT_BOX[0], EDIT_BOX[1], Component.literal("Description"));
+        descriptionInput.setMaxLength(Integer.MAX_VALUE);
+        if(this.display != null){
+            descriptionInput.setValue(this.display.getDescription().getString());
+        }
 
-        if(editDescription){
-            EditBox descriptionInput = new EditBox(this.font, screenTopLeftCorner[0], screenTopLeftCorner[1], EDIT_BOX[0], EDIT_BOX[1], Component.literal("Description"));
-            descriptionInput.setMaxLength(Integer.MAX_VALUE);
-            if(this.display != null){
-                descriptionInput.setValue(this.display.getDescription().getString());
+        this.addRenderableWidget(new EditButton(screenTopRightCorner[0] - EDIT_BUTTON_LENGTH - PADDING_RIGHT, screenTopRightCorner[1] + PADDING + 1 + 26/2, EDIT_BUTTON_LENGTH, EDIT_BUTTON_LENGTH, Component.literal("Edit"), pButton -> {
+            if(!this.editDescription){
+                this.addRenderableWidget(descriptionInput);
+                this.editDescription = true;
+                descriptionInput.visible = true;
             }
-            this.addRenderableWidget(descriptionInput);
-        }
-        else {
-            //Description EditButton
-            this.addRenderableWidget(new EditButton(screenTopLeftCorner[0] + PADDING, 90, EDIT_BUTTON_LENGTH, EDIT_BUTTON_LENGTH, Component.literal("Edit"), pButton -> {editDescription = true;}));
-        }
-        this.addRenderableWidget(new EditButton(screenTopLeftCorner[0] + PADDING, 90, EDIT_BUTTON_LENGTH, EDIT_BUTTON_LENGTH, Component.literal("Edit"), pButton -> {editDescription = true;}));
-
-        if(editId){
-            EditBox advancementIdInput = new EditBox(this.font, screenTopLeftCorner[0], screenTopLeftCorner[1], EDIT_BOX[0], EDIT_BOX[1], Component.literal("Advancement id"));
-            advancementIdInput.setMaxLength(Integer.MAX_VALUE);
-            if(this.advancementId != null){
-                advancementIdInput.setValue(this.advancementId.toString());
+            else {
+                Component advancementDescription = Component.literal(descriptionInput.getValue());
+                this.updateDisplayInfo(this.display != null ? this.display.getTitle() : defaultTitle, advancementDescription);
+                this.editDescription = false;
+                descriptionInput.visible = false;
             }
-            this.addRenderableWidget(advancementIdInput);
-        }
-        else {
-            //Id EditButton
-            this.addRenderableWidget(new EditButton(screenTopLeftCorner[0] + PADDING, 110, EDIT_BUTTON_LENGTH, EDIT_BUTTON_LENGTH, Component.literal("Edit"), pButton -> {editId = true;}));
-        }
-        this.addRenderableWidget(new EditButton(screenTopLeftCorner[0] + PADDING, 110, EDIT_BUTTON_LENGTH, EDIT_BUTTON_LENGTH, Component.literal("Edit"), pButton -> {editId = true;}));
+        }));
 
-
-        if(this.parentId != null && editParentId){
-            EditBox parentIdInput = new EditBox(this.font, screenTopLeftCorner[0] + 50, screenTopLeftCorner[1] + 60, EDIT_BOX[0], EDIT_BOX[1], Component.literal("Parent id"));
-            parentIdInput.setValue(this.parentId.toString());
-            parentIdInput.setMaxLength(Integer.MAX_VALUE);
-            this.addRenderableWidget(parentIdInput);
+        //ID
+        EditBox advancementIdInput = new EditBox(this.font, screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2 + (this.advancementId != null ? getFontWidth(this.advancementId.getNamespace()) : getFontWidth(MOD_ID)) + getFontWidth(":") + 2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp - 2, this.advancementId != null ? getFontWidth(this.advancementId.getPath()) + 10 : EDIT_BOX[0], EDIT_BOX[1], Component.literal("Advancement id"));
+        advancementIdInput.setMaxLength(Integer.MAX_VALUE);
+        if(this.advancementId != null){
+            advancementIdInput.setValue(this.advancementId.getPath());
         }
-        else if(this.parentId == null) {
-            EditBox backgroundInput = new EditBox(this.font, screenTopLeftCorner[0] + 50, screenTopLeftCorner[1] + 60, EDIT_BOX[0], EDIT_BOX[1], Component.literal("Parent id"));
+
+        this.addRenderableWidget(new EditButton(screenTopRightCorner[0] - EDIT_BUTTON_LENGTH - PADDING_RIGHT, screenTopRightCorner[1] + PADDING + 1 + 26/2 + textPaddingUp, EDIT_BUTTON_LENGTH, EDIT_BUTTON_LENGTH, Component.literal("Edit"), pButton -> {
+            if(!this.editId) {
+                this.addRenderableWidget(advancementIdInput);
+                this.editId = true;
+                advancementIdInput.visible = true;
+            }
+            else {
+                try {
+                    this.advancementId = new ResourceLocation(this.advancementId != null ? this.advancementId.getNamespace() : MOD_ID, advancementIdInput.getValue());
+                }
+                catch (ResourceLocationException e){
+                    LOGGER.error("Unable to create ResourceLocation with input: " + advancementIdInput.getValue());
+                }
+                this.editId = false;
+                advancementIdInput.visible = false;
+            }
+        }));
+
+        if(this.parentId == null) {
+            EditBox backgroundInput = new EditBox(this.font, screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp * 3 -2, EDIT_BOX[0], EDIT_BOX[1], Component.literal("Background Id"));
             backgroundInput.setMaxLength(Integer.MAX_VALUE);
             if(this.display != null && this.display.getBackground() != null){
                 backgroundInput.setValue(this.display.getBackground().toString());
             }
-            this.addRenderableWidget(backgroundInput);
+            this.addRenderableWidget(new EditButton(screenTopRightCorner[0] - EDIT_BUTTON_LENGTH - PADDING_RIGHT, screenTopRightCorner[1] + PADDING + 1 + 26/2 + textPaddingUp * 3, EDIT_BUTTON_LENGTH, EDIT_BUTTON_LENGTH, Component.literal("Edit"), pButton -> {
+                if(!this.editBgId){
+                    this.addRenderableWidget(backgroundInput);
+                    this.editBgId = true;
+                    backgroundInput.visible = true;
+                }
+                else {
+                    try {
+                        this.updateDisplayInfo(new ResourceLocation(backgroundInput.getValue()));
+                    }
+                    catch (ResourceLocationException e){
+                        LOGGER.error("Unable to create ResourceLocation with input: " + advancementIdInput.getValue());
+                    }
+                    this.editBgId = false;
+                    backgroundInput.visible = false;
+                }
+            }));
         }
-        else {
-            //parentId EditButton
-            }
-        this.addRenderableWidget(new EditButton(screenTopLeftCorner[0] + PADDING, 130, EDIT_BUTTON_LENGTH, EDIT_BUTTON_LENGTH, Component.literal("Edit"), pButton -> {editParentId = true;}));
 
+        int[] mainButton = {98, 20};
+
+        this.addRenderableWidget(new Button(screenBottomLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenBottomLeftCorner[1] - mainButton[1] - 15, mainButton[0], mainButton[1], Component.literal("Save"), button -> {
+            this.save();
+            this.onClose();
+        }));
+
+        this.addRenderableWidget(new Button(screenBottomLeftCorner[0] + PADDING + FRAME_WIDTH/2 + mainButton[0] + 2, screenBottomLeftCorner[1] - mainButton[1] - 15, mainButton[0], mainButton[1], Component.literal("Reset"), button -> {
+            this.reset();
+        }));
 
         //Edit Button: Title, Description, id, parentId, rewards, criteria, requirements
 
@@ -324,15 +431,22 @@ public class ClientAdvancementGenerator extends Screen {
             this.renderRectangleFromImage(poseStack, screenTopLeftCorner[0], screenTopLeftCorner[1], screenWidth, 26, 10, 200, 26, 0, 0);
 
             this.drawIcon(poseStack, screenTopLeftCorner[0] - 1, screenTopLeftCorner[1], this.display);
-            int textPaddingUp = this.minecraft.font.lineHeight + PADDING;
 
             if(!this.editTitle){
-                this.minecraft.font.drawShadow(poseStack, this.display != null ? this.display.getTitle() : Component.literal("Example Title"), screenTopLeftCorner[0] + FRAME_WIDTH + PADDING, screenTopLeftCorner[1] + 9, -1);
+                this.minecraft.font.drawShadow(poseStack, this.display != null ? this.display.getTitle() : defaultTitle, screenTopLeftCorner[0] + FRAME_WIDTH + PADDING, screenTopLeftCorner[1] + 9, -1);
             }
-            this.minecraft.font.drawShadow(poseStack, this.display != null ? this.display.getDescription() : Component.literal("Example Description"), screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenTopLeftCorner[1] + 26 + PADDING, this.display != null ? this.display.getFrame().getChatColor().getColor() : -5592406);
-            this.minecraft.font.drawShadow(poseStack, this.advancementId != null ? Component.literal(this.advancementId.toString()) : Component.literal("No ID!"), screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp, Color.CYAN.getRGB()); //renders resource location
+            if(!this.editDescription){
+                this.minecraft.font.drawShadow(poseStack, this.display != null ? this.display.getDescription() : defaultDescription, screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenTopLeftCorner[1] + 26 + PADDING, this.display != null ? this.display.getFrame().getChatColor().getColor() : -5592406);
+            }
+            this.minecraft.font.drawShadow(poseStack, this.advancementId != null ? Component.literal(this.advancementId.getNamespace() + ":") : Component.literal(MOD_ID + ":"), screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp, Color.CYAN.getRGB()); //renders resource location
+            if(!this.editId){
+                this.minecraft.font.drawShadow(poseStack, this.advancementId != null ? Component.literal(this.advancementId.getPath()) : (this.display != null ? Component.literal(this.display.getTitle().getString().toLowerCase().replace(" ", "_")) : Component.empty()), screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2 + (this.advancementId != null ? getFontWidth(this.advancementId.getNamespace()) : getFontWidth(MOD_ID)) + getFontWidth(":"), screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp, Color.CYAN.getRGB()); //renders resource location
+            }
             this.minecraft.font.drawShadow(poseStack, this.parentId != null ? Component.literal(this.parentId.toString()) : Component.empty(), screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp * 2, Color.PINK.getRGB()); //renders resource location
-            this.minecraft.font.drawShadow(poseStack, this.parentId == null && this.display != null && this.display.getBackground() != null ? Component.literal(this.display.getBackground().toString()) : Component.empty(), screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp * 3, Color.blue.getRGB()); //renders resource location
+
+            if(!this.editBgId){
+                this.minecraft.font.drawShadow(poseStack, this.parentId == null && this.display != null && this.display.getBackground() != null ? Component.literal(this.display.getBackground().toString()) : Component.empty(), screenTopLeftCorner[0] + PADDING + FRAME_WIDTH/2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp * 3, Color.blue.getRGB()); //renders resource location
+            }
 
             super.render(poseStack, mouseX, mouseY, partialTick);
         }
@@ -375,13 +489,11 @@ public class ClientAdvancementGenerator extends Screen {
         }
     }
 
-    private void renderDisplayInfo(PoseStack poseStack){
-
-    }
-
     @Override
     public void onClose() {
         this.parent.setRenderTooltips(true);
+        this.build();
+        reloadAll(this.minecraft.getSingleplayerServer());
         this.minecraft.setScreen(this.parent);
         super.onClose();
     }

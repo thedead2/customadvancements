@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.generator;
+package de.thedead2.customadvancements.client.gui.generator;
 
 public interface IAdvancementGenerator {
 

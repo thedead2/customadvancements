@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.generator;
+package de.thedead2.customadvancements.client.gui.generator;
 
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
 import net.minecraft.advancements.Advancement;

@@ -3,7 +3,7 @@ package de.thedead2.customadvancements.client.gui.components;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.thedead2.customadvancements.client.gui.AdvancementGeneratorGUI;
+import de.thedead2.customadvancements.client.gui.generator.AdvancementGeneratorGUI;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.Minecraft;
@@ -67,13 +67,13 @@ public class FakeAdvancementTab extends GuiComponent {
         return page;
     }
 
-    public AdvancementTabType getType() {
+    /*public AdvancementTabType getType() {
         return this.type;
     }
 
     public int getIndex() {
         return this.index;
-    }
+    }*/
 
     public Advancement getAdvancement() {
         return this.advancement;
@@ -99,8 +99,8 @@ public class FakeAdvancementTab extends GuiComponent {
 
     public void drawContents(PoseStack pPoseStack) {
         if (!this.centered) {
-            this.scrollX = 117 - (this.maxX + this.minX) / 2;
-            this.scrollY = 56 - (this.maxY + this.minY) / 2;
+            this.scrollX = 117 - (double) (this.maxX + this.minX) / 2;
+            this.scrollY = 56 - (double) (this.maxY + this.minY) / 2;
             this.centered = true;
         }
 
@@ -160,10 +160,10 @@ public class FakeAdvancementTab extends GuiComponent {
             }
         }
         else {
-            for(FakeAdvancementWidget advancementwidget : this.widgets.values()) {
-                if (advancementwidget.isMouseOver(pX, pY, pMouseX, pMouseY, pWidth) && this.screen.isMouseOver(pMouseX, pMouseY)) {
+            for(FakeAdvancementWidget advancementWidget : this.widgets.values()) {
+                if (advancementWidget.isMouseOver(pX, pY, pMouseX, pMouseY, pWidth) && this.screen.isMouseOver(pMouseX, pMouseY)) {
                     flag = true;
-                    advancementwidget.drawHover(pPoseStack, pX, pY, this.fade, pWidth, pHeight, pMouseX, pMouseY, pPartialTick);
+                    advancementWidget.drawHover(pPoseStack, pX, pY, this.fade, pWidth, pHeight, pMouseX, pMouseY, pPartialTick);
                     break;
                 }
             }
@@ -206,8 +206,8 @@ public class FakeAdvancementTab extends GuiComponent {
 
     public void addAdvancement(Advancement pAdvancement) {
         if (pAdvancement.getDisplay() != null) {
-            FakeAdvancementWidget advancementwidget = new FakeAdvancementWidget(this, this.minecraft, pAdvancement, pAdvancement.getDisplay());
-            this.addWidget(advancementwidget, pAdvancement);
+            FakeAdvancementWidget advancementWidget = new FakeAdvancementWidget(this, this.minecraft, pAdvancement, pAdvancement.getDisplay());
+            this.addWidget(advancementWidget, pAdvancement);
         }
     }
 
@@ -222,8 +222,8 @@ public class FakeAdvancementTab extends GuiComponent {
         this.minY = Math.min(this.minY, widgetY);
         this.maxY = Math.max(this.maxY, l);
 
-        for(FakeAdvancementWidget advancementwidget : this.widgets.values()) {
-            advancementwidget.attachToParent();
+        for(FakeAdvancementWidget advancementWidget : this.widgets.values()) {
+            advancementWidget.attachToParent();
         }
 
     }

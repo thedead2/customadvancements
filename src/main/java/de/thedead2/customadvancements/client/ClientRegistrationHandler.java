@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import de.thedead2.customadvancements.client.gui.AdvancementGeneratorGUI;
+import de.thedead2.customadvancements.client.gui.generator.AdvancementGeneratorGUI;
 import de.thedead2.customadvancements.commands.ModGameRules;
 import de.thedead2.customadvancements.util.ModHelper;
 import net.minecraft.advancements.Advancement;

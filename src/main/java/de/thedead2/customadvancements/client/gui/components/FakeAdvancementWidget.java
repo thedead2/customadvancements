@@ -3,7 +3,7 @@ package de.thedead2.customadvancements.client.gui.components;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.thedead2.customadvancements.generator.ClientAdvancementGenerator;
+import de.thedead2.customadvancements.client.gui.generator.ClientAdvancementGenerator;
 import de.thedead2.customadvancements.util.ModHelper;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.DisplayInfo;
@@ -150,8 +150,8 @@ public class FakeAdvancementWidget extends GuiComponent {
             }
         }
 
-        for(FakeAdvancementWidget advancementwidget : this.children) {
-            advancementwidget.drawConnectivity(pPoseStack, pX, pY, pDropShadow);
+        for(FakeAdvancementWidget advancementWidget : this.children) {
+            advancementWidget.drawConnectivity(pPoseStack, pX, pY, pDropShadow);
         }
 
     }
@@ -161,8 +161,8 @@ public class FakeAdvancementWidget extends GuiComponent {
             RenderSystem.setShaderTexture(BOX_X, WIDGETS_LOCATION);
             drawIcon(pPoseStack, pX, pY);
 
-        for(FakeAdvancementWidget advancementwidget : this.children) {
-            advancementwidget.draw(pPoseStack, pX, pY);
+        for(FakeAdvancementWidget advancementWidget : this.children) {
+            advancementWidget.draw(pPoseStack, pX, pY);
         }
 
     }

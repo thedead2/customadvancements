@@ -1,16 +1,12 @@
 package de.thedead2.customadvancements.client.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.thedead2.customadvancements.generator.IAdvancementGenerator;
-import net.minecraft.advancements.DisplayInfo;
+import de.thedead2.customadvancements.client.gui.generator.AdvancementGeneratorGUI;
+import de.thedead2.customadvancements.client.gui.generator.IAdvancementGenerator;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.advancements.AdvancementWidgetType;
 import org.jetbrains.annotations.NotNull;
-
-import static de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget.ICON_X;
-import static de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget.ICON_Y;
 
 public class BasicInputScreen extends Screen {
 

@@ -1,11 +1,11 @@
-package de.thedead2.customadvancements.client.gui;
+package de.thedead2.customadvancements.client.gui.generator;
 
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.thedead2.customadvancements.client.ClientRegistrationHandler;
 import de.thedead2.customadvancements.client.gui.components.FakeAdvancementTab;
-import de.thedead2.customadvancements.generator.ClientAdvancementGenerator;
+import de.thedead2.customadvancements.client.gui.generator.ClientAdvancementGenerator;
 import de.thedead2.customadvancements.util.ModHelper;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
