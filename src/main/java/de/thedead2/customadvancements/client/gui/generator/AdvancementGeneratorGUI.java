@@ -183,7 +183,7 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
             for(FakeAdvancementTab advancementtab : this.tabs.values()) {
                 if (advancementtab.getPage() == tabPage && advancementtab.isMouseOver(offsetX, offsetY, pMouseX, pMouseY)) {
                     if(advancementtab.getAdvancement().getId().toString().equals(ModHelper.MOD_ID + ":" + "fake_root_advancement")){
-                        this.minecraft.setScreen(new ClientAdvancementGenerator(this, (ResourceLocation) null, null));
+                        this.minecraft.setScreen(new ClientAdvancementGenerator(this, null, null, null));
                     }
                     else {
                         this.advancements.setSelectedTab(advancementtab.getAdvancement(), true);

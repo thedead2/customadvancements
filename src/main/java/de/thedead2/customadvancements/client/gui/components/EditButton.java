@@ -13,8 +13,8 @@ import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 public class EditButton extends Button {
 
     private FakeAdvancementWidget widget;
-    private static final ResourceLocation EDIT_ICON = new ResourceLocation(MOD_ID, "textures/gui/edit_icon.png");
-    private static final ResourceLocation EDIT_ICON_HOVERED = new ResourceLocation(MOD_ID, "textures/gui/edit_icon_hovered.png");
+    private static final ResourceLocation EDIT_BUTTON = new ResourceLocation(MOD_ID, "textures/gui/button/edit_button.png");
+    private static final ResourceLocation EDIT_BUTTON_HOVERED = new ResourceLocation(MOD_ID, "textures/gui/button/edit_button_hovered.png");
 
     public EditButton(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress, FakeAdvancementWidget widget) {
         this(pX, pY, pWidth, pHeight, pMessage, pOnPress);
@@ -29,7 +29,7 @@ public class EditButton extends Button {
     @Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, isHoveredOrFocused() ? EDIT_ICON_HOVERED : EDIT_ICON);
+        RenderSystem.setShaderTexture(0, isHoveredOrFocused() ? EDIT_BUTTON_HOVERED : EDIT_BUTTON);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();

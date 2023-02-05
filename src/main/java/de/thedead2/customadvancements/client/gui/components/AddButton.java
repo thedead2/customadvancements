@@ -3,20 +3,18 @@ package de.thedead2.customadvancements.client.gui.components;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 
 import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 public class AddButton extends Button {
 
     private final FakeAdvancementWidget widget;
-    private static final ResourceLocation ADD_ICON = new ResourceLocation(MOD_ID, "textures/gui/add_icon.png");
-    private static final ResourceLocation ADD_ICON_HOVERED = new ResourceLocation(MOD_ID, "textures/gui/add_icon_hovered.png");
+    private static final ResourceLocation ADD_BUTTON = new ResourceLocation(MOD_ID, "textures/gui/button/add_button.png");
+    private static final ResourceLocation ADD_BUTTON_HOVERED = new ResourceLocation(MOD_ID, "textures/gui/button/add_button_hovered.png");
 
     public AddButton(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress, FakeAdvancementWidget widget) {
         super(pX, pY, pWidth, pHeight, pMessage, pOnPress);
@@ -27,7 +25,7 @@ public class AddButton extends Button {
     @Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, isHoveredOrFocused() ? ADD_ICON_HOVERED : ADD_ICON);
+        RenderSystem.setShaderTexture(0, isHoveredOrFocused() ? ADD_BUTTON_HOVERED : ADD_BUTTON);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();

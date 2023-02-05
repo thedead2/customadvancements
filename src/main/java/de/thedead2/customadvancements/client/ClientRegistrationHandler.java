@@ -68,7 +68,7 @@ public class ClientRegistrationHandler {
         }
     }
 
-    private static ClientAdvancements getFakeAdvancements(){
+    public static ClientAdvancements getFakeAdvancements(){
         Map<ResourceLocation, Advancement.Builder> temp = new HashMap<>();
         Objects.requireNonNull(MINECRAFT.getSingleplayerServer()).getAdvancements().getAllAdvancements().forEach((advancement -> {
             ResourceLocation id = advancement.getId();

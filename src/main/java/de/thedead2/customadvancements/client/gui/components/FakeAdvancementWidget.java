@@ -205,7 +205,7 @@ public class FakeAdvancementWidget extends GuiComponent {
         int addButtonOffset = 4;
 
         this.editButton = new EditButton((tooltipStartPosition + TITLE_PADDING_RIGHT), (int) (yPosDescription + heightOffset + BUTTON_HEIGHT), BUTTON_HEIGHT, BUTTON_HEIGHT, Component.literal("Edit"), pButton -> this.minecraft.setScreen(new ClientAdvancementGenerator(this.tab.getScreen(), this.advancement, this)), this);
-        this.addButton = new AddButton((tooltipStartPosition + TITLE_PADDING_RIGHT + BUTTON_HEIGHT), (int) (yPosDescription + heightOffset + BUTTON_HEIGHT - addButtonOffset/2), BUTTON_HEIGHT + addButtonOffset, BUTTON_HEIGHT + addButtonOffset, Component.literal("Add"), pButton -> this.minecraft.setScreen(new ClientAdvancementGenerator(this.tab.getScreen(), this.advancement.getId(), this)), this);
+        this.addButton = new AddButton((tooltipStartPosition + TITLE_PADDING_RIGHT + BUTTON_HEIGHT), (int) (yPosDescription + heightOffset + BUTTON_HEIGHT - addButtonOffset/2), BUTTON_HEIGHT + addButtonOffset, BUTTON_HEIGHT + addButtonOffset, Component.literal("Add"), pButton -> this.minecraft.setScreen(new ClientAdvancementGenerator(this.tab.getScreen(), null, this.advancement.getId(), this)), this);
 
 
         this.minecraft.font.draw(pPoseStack, this.resourceLocation.toString(), (float)(tooltipStartPosition + TITLE_PADDING_RIGHT), yPosDescription + 10F, Color.CYAN.getRGB()); //renders resource location
