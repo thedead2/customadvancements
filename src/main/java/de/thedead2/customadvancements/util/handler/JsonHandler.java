@@ -43,6 +43,7 @@ public class JsonHandler extends FileHandler {
         for(File file : fileList) {
             timer.start();
             String fileName = file.getName();
+            CrashExtensionHandler.getInstance().setActiveFile(file);
 
             try {
                 if (file.isFile() && fileName.endsWith(".json")) {
@@ -56,12 +57,12 @@ public class JsonHandler extends FileHandler {
                     if (isCorrectJsonFormat(jsonObject, file.toPath())) {
                         if (directory.getPath().contains(String.valueOf(CUSTOM_ADVANCEMENTS_PATH))){
                             CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
-
+                            CrashExtensionHandler.getInstance().setActiveAdvancement(customadvancement);
                             CUSTOM_ADVANCEMENTS.put(customadvancement.getResourceLocation(), customadvancement);
                         }
                         else {
                             GameAdvancement gameAdvancement = new GameAdvancement(jsonObject, fileName, file.getPath());
-
+                            CrashExtensionHandler.getInstance().setActiveAdvancement(gameAdvancement);
                             GAME_ADVANCEMENTS.put(gameAdvancement.getResourceLocation(), gameAdvancement);
                         }
                     }
@@ -98,6 +99,8 @@ public class JsonHandler extends FileHandler {
             timer.stop();
             timer.reset();
         }
+        CrashExtensionHandler.getInstance().setActiveAdvancement(null);
+        CrashExtensionHandler.getInstance().setActiveFile(null);
     }
 
 

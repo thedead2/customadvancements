@@ -1,24 +1,27 @@
 package de.thedead2.customadvancements.client.gui.generator;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.thedead2.customadvancements.client.gui.BasicInputScreen;
+import de.thedead2.customadvancements.client.gui.FrameAndItemSelectionScreen;
 import de.thedead2.customadvancements.client.gui.components.CheckBox;
 import de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.advancements.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.ItemLike;
+import net.minecraftforge.fml.CrashReportCallables;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
@@ -26,7 +29,7 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
 
     private final int textPaddingUp = this.minecraft.font.lineHeight + PADDING;
 
-    private Advancement.Builder builder;
+    protected Advancement.Builder builder;
     protected ResourceLocation parentId;
     protected AdvancementRewards rewards;
     protected Map<String, Criterion> criteria;
@@ -35,8 +38,6 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
     protected ResourceLocation advancementId;
     private final Map<ResourceLocation, Advancement> advancements = new HashMap<>();
     private boolean isSaved = false;
-    private final Component defaultDescription = Component.literal("Example Description");
-    private final Component defaultTitle = Component.literal("Example Title");
 
     private Advancement original;
 
@@ -52,7 +53,7 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
     }
 
     public ClientAdvancementGenerator(AdvancementGeneratorGUI parent, DisplayInfo display, ResourceLocation parentId, FakeAdvancementWidget widget) {
-        super(parent, display, widget, Minecraft.getInstance().screen.width - Minecraft.getInstance().screen.width/3 - 2, Minecraft.getInstance().screen.height - 2, new int[]{Minecraft.getInstance().screen.width / 3, 2});
+        super(parent, display, widget, () -> Minecraft.getInstance().screen.width - Minecraft.getInstance().screen.width/3 - 2, () -> Minecraft.getInstance().screen.height - 2, () -> new int[]{Minecraft.getInstance().screen.width / 3, 2});
         this.builder = Advancement.Builder.advancement();
         this.parentId = parentId;
         this.minecraft.getSingleplayerServer().getAdvancements().getAllAdvancements().forEach(advancement -> this.advancements.put(advancement.getId(), advancement));
@@ -60,6 +61,7 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
         if(this.advancementId == null){
             loginfos();
         }
+
     }
 
     private void loginfos(){
@@ -77,72 +79,30 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
         LOGGER.debug("id: " + this.advancementId);
     }
 
+    @Override
     public void updateDisplayInfo(ItemStack itemStack, Component title, Component description, ResourceLocation background, FrameType frame, boolean showToast, boolean announceToChat, boolean hidden) {
-        if(this.display != null){
-            this.display = new DisplayInfo(itemStack == null ? this.display.getIcon() : itemStack, title == null ? this.display.getTitle() : title, description == null ? this.display.getDescription() : description, background == null ? (this.parentId != null ? null: this.display.getBackground()) : background, frame == null ? this.display.getFrame() : frame, showToast, announceToChat, hidden);
-        }
-        else {
-            this.display = new DisplayInfo(itemStack == null ? new ItemStack(Items.DIAMOND) : itemStack, title == null ? defaultTitle : title, description == null ? defaultDescription : description, background == null ? (this.parentId != null ? null: new ResourceLocation( "textures/gui/advancements/stone.png")) : background, frame == null ? FrameType.TASK : frame, showToast, announceToChat, hidden);
-        }
+        super.updateDisplayInfo(itemStack, title, description, background, frame, showToast, announceToChat, hidden);
         if(this.advancementId == null){
             this.advancementId = new ResourceLocation(MOD_ID, this.display.getTitle().getString().toLowerCase().replace(" ", "_"));
         }
-        LOGGER.debug("Updated DisplayInfo with: {}, {}, {}, {}, {}, {}, {}, {}", this.display.getIcon(), this.display.getTitle(), this.display.getDescription(), this.display.getBackground(), this.display.getFrame(), this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
     }
 
+    public boolean isMouseOverFrame(double mouseX, double mouseY){
+        int leftXCorner = this.framePos[0];
+        int rightXCorner = leftXCorner + FRAME_LENGTH;
+        int topYCorner = this.framePos[1];
+        int bottomYCorner = topYCorner + FRAME_LENGTH;
 
-    public <T, R, V extends Boolean> void updateDisplayInfo(@NotNull T t, @Nullable R r, @Nullable V v){
-        if(this.display != null){
-            if(t instanceof ItemStack){
-                this.updateDisplayInfo((ItemStack) t, null, null, null, null, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
-            }
-            else if (t instanceof Items) {
-                this.updateDisplayInfo(new ItemStack((ItemLike) t), null, null, null, null, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
-            }
-            else if (t instanceof ResourceLocation) {
-                this.updateDisplayInfo(null, null, null, (ResourceLocation) t, null, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
-            }
-            else if (t instanceof FrameType) {
-                this.updateDisplayInfo(null, null, null, null, (FrameType) t, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
-            }
-            else if (t instanceof Component && r instanceof Component) {
-                this.updateDisplayInfo(null, (Component) t, (Component) r, null, null, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
-            }
-            else if (t instanceof Boolean && r instanceof Boolean && v != null) {
-                this.updateDisplayInfo(null, null, null, null, null, (Boolean) t, (Boolean) r, v);
-            }
+        return mouseX >= leftXCorner && mouseX <= rightXCorner && mouseY >= topYCorner && mouseY <= bottomYCorner;
+    }
+
+    @Override
+    public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
+        if(this.isMouseOverFrame(pMouseX, pMouseY)){
+            this.minecraft.setScreen(new FrameAndItemSelectionScreen(this, this.display, this.widget, () -> this.screenWidth, () -> this.screenHeight, () -> this.screenTopLeftCorner));
         }
-        else {
-            if(t instanceof ItemStack){
-                this.updateDisplayInfo((ItemStack) t, null, null, null, null, true, true, false);
-            }
-            else if (t instanceof Items) {
-                this.updateDisplayInfo(new ItemStack((ItemLike) t), null, null, null, null, true, true, false);
-            }
-            else if (t instanceof ResourceLocation) {
-                this.updateDisplayInfo(null, null, null, (ResourceLocation) t, null, true, true, false);
-            }
-            else if (t instanceof FrameType) {
-                this.updateDisplayInfo(null, null, null, null, (FrameType) t, true, true, false);
-            }
-            else if (t instanceof Component && r instanceof Component) {
-                this.updateDisplayInfo(null, (Component) t, (Component) r, null, null, true, true, false);
-            }
-            else if (t instanceof Boolean && r instanceof Boolean && v != null) {
-                this.updateDisplayInfo(null, null, null, null, null, (Boolean) t, (Boolean) r, v);
-            }
-        }
+        return super.mouseClicked(pMouseX, pMouseY, pButton);
     }
-
-    public <T> void updateDisplayInfo(@NotNull T t){
-        this.updateDisplayInfo(t, null, null);
-    }
-
-    public <T, R> void updateDisplayInfo(@NotNull T t, @Nullable R r){
-        this.updateDisplayInfo(t, r, null);
-    }
-
-
 
     @Override
     public void reset(){
@@ -251,11 +211,11 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
     public void initEditBoxes(){
         this.addEditBox(screenTopLeftCorner[0] + FRAME_LENGTH + PADDING, screenTopLeftCorner[1] + 6, "title", () -> this.display.getTitle().getString(), ((editBox) -> {
             Component advancementTitle = Component.literal(editBox.getValue());
-            this.updateDisplayInfo(advancementTitle, this.display != null ? this.display.getDescription() : defaultDescription);
+            this.updateDisplayInfo(advancementTitle, this.display != null ? this.display.getDescription() : DEFAULT_DESCRIPTION);
         }));
         this.addEditBox(screenTopLeftCorner[0] + PADDING + FRAME_LENGTH /2, screenTopLeftCorner[1] + 26 + PADDING - 2, "description", () -> this.display.getDescription().getString(), (editBox) -> {
             Component advancementDescription = Component.literal(editBox.getValue());
-            this.updateDisplayInfo(this.display != null ? this.display.getTitle() : defaultTitle, advancementDescription);
+            this.updateDisplayInfo(this.display != null ? this.display.getTitle() : DEFAULT_TITLE, advancementDescription);
         });
         this.addEditBox(screenTopLeftCorner[0] + PADDING + FRAME_LENGTH /2 + (this.advancementId != null ? getFontWidth(this.advancementId.getNamespace()) : getFontWidth(MOD_ID)) + getFontWidth(":") + 2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp - 2, "id", () -> this.advancementId.getPath(), (editBox) -> {
             try {
@@ -310,9 +270,9 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
 
     @Override
     public void init() {
+        super.init();
         this.initEditBoxes();
         this.initCheckBoxes();
-        super.init();
     }
 
     @Override
@@ -323,10 +283,10 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
 
     public void renderTextComponents(PoseStack poseStack){
         if(!this.editBoxes.get("title").isVisible()){
-            this.minecraft.font.drawShadow(poseStack, this.display != null ? this.display.getTitle() : defaultTitle, screenTopLeftCorner[0] + FRAME_LENGTH + PADDING, screenTopLeftCorner[1] + 9, -1);
+            this.minecraft.font.drawShadow(poseStack, this.display != null ? this.display.getTitle() : DEFAULT_TITLE, screenTopLeftCorner[0] + FRAME_LENGTH + PADDING, screenTopLeftCorner[1] + 9, -1);
         }
         if(!this.editBoxes.get("description").isVisible()){
-            this.minecraft.font.drawShadow(poseStack, this.display != null ? this.display.getDescription() : defaultDescription, screenTopLeftCorner[0] + PADDING + FRAME_LENGTH /2, screenTopLeftCorner[1] + 26 + PADDING, this.display != null ? this.display.getFrame().getChatColor().getColor() : -5592406);
+            this.minecraft.font.drawShadow(poseStack, this.display != null ? this.display.getDescription() : DEFAULT_DESCRIPTION, screenTopLeftCorner[0] + PADDING + FRAME_LENGTH /2, screenTopLeftCorner[1] + 26 + PADDING, this.display != null ? this.display.getFrame().getChatColor().getColor() : -5592406);
         }
 
         this.minecraft.font.drawShadow(poseStack, this.advancementId != null ? Component.literal(this.advancementId.getNamespace() + ":") : Component.literal(MOD_ID + ":"), screenTopLeftCorner[0] + PADDING + FRAME_LENGTH /2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp, Color.CYAN.getRGB()); //renders resource location
@@ -338,6 +298,13 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
 
         if(this.editBoxes.get("bgId") != null && !this.editBoxes.get("bgId").isVisible()){
             this.minecraft.font.drawShadow(poseStack, this.parentId == null && this.display != null && this.display.getBackground() != null ? Component.literal(this.display.getBackground().toString()) : Component.empty(), screenTopLeftCorner[0] + PADDING + FRAME_LENGTH /2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp * 3, Color.blue.getRGB()); //renders resource location
+            if(this.display != null && this.display.getBackground() != null) {
+                RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                RenderSystem.setShaderTexture(0, this.display.getBackground());
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                RenderSystem.enableBlend();
+                //this.blit(poseStack,screenTopLeftCorner[0] + PADDING + FRAME_LENGTH /2, screenTopLeftCorner[1] + 26 + PADDING + textPaddingUp * 3, 0, 0, 25, 25);
+            }
         }
     }
 

@@ -87,9 +87,11 @@ public abstract class FileHandler extends ModHelper {
 
 
     public static boolean createDirectory(File directoryIn){
+        CrashExtensionHandler.getInstance().setActiveFile(directoryIn);
         if (!directoryIn.exists()) {
             if (directoryIn.mkdir()){
                 LOGGER.debug("Created directory: " + directoryIn.toPath());
+                CrashExtensionHandler.getInstance().setActiveFile(null);
                 return true;
             }
             else {
@@ -99,17 +101,20 @@ public abstract class FileHandler extends ModHelper {
         }
         else {
             LOGGER.debug("Found directory {} at {}", directoryIn.getName(), directoryIn.toPath());
+            CrashExtensionHandler.getInstance().setActiveFile(null);
             return false;
         }
     }
 
 
     public static void writeFile(InputStream inputStream, Path outputPath) throws IOException {
+        CrashExtensionHandler.getInstance().setActiveFile(outputPath.toFile());
         OutputStream fileOut = Files.newOutputStream(outputPath);
 
         writeToFile(inputStream, fileOut);
 
         fileOut.close();
+        CrashExtensionHandler.getInstance().setActiveFile(null);
     }
 
 

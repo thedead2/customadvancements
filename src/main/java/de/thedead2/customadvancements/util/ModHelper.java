@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
+import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
@@ -52,7 +53,6 @@ public abstract class ModHelper {
     public static final Map<ResourceLocation, CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, GameAdvancement> GAME_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, NativeImage> TEXTURES = new HashMap<>();
-    public static final Set<ResourceLocation> REMOVED_ADVANCEMENTS_SET = new HashSet<>();
     public static final Map<ResourceLocation, JsonElement> ALL_DETECTED_GAME_ADVANCEMENTS = new HashMap<>();
 
     public static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
@@ -60,7 +60,6 @@ public abstract class ModHelper {
     public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
 
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-
 
     public static void reloadAll(MinecraftServer server){
         StopWatch timer = new StopWatch();
@@ -103,7 +102,6 @@ public abstract class ModHelper {
         CUSTOM_ADVANCEMENTS.clear();
         GAME_ADVANCEMENTS.clear();
         TEXTURES.clear();
-        REMOVED_ADVANCEMENTS_SET.clear();
         ALL_DETECTED_GAME_ADVANCEMENTS.clear();
         PARENT_CHILDREN_MAP.clear();
         CHILDREN_PARENT_MAP.clear();

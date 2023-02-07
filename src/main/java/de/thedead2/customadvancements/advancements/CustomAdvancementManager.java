@@ -2,6 +2,7 @@ package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
+import de.thedead2.customadvancements.util.handler.CrashExtensionHandler;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.time.StopWatch;
@@ -63,6 +64,7 @@ public class CustomAdvancementManager {
             }
 
             for(ResourceLocation resourceLocation:advancementsIn.keySet()){
+                CrashExtensionHandler.getInstance().setActiveAdvancement(advancementsIn.get(resourceLocation));
                 if(resourceLocation.toString().contains("recipes/") && ConfigManager.NO_RECIPE_ADVANCEMENTS.get()){
                     LOGGER.debug("Skipped recipe advancement: " + resourceLocation);
                     continue;
@@ -95,6 +97,7 @@ public class CustomAdvancementManager {
                 }
             }
 
+            CrashExtensionHandler.getInstance().setActiveAdvancement(null);
             LOGGER.info("Loaded {} {} into Advancement Manager!", counter, counter != 1 ? (className + "s") : className);
             counter = 0;
         }
@@ -136,7 +139,7 @@ public class CustomAdvancementManager {
             LOGGER.debug("Removed advancement: " + blacklistedAdvancement);
             counter++;
 
-            REMOVED_ADVANCEMENTS_SET.add(blacklistedAdvancement);
+            CrashExtensionHandler.getInstance().addRemovedAdvancement(blacklistedAdvancement);
 
             removeChildren(ADVANCEMENTS, blacklistedAdvancement);
         }
@@ -161,7 +164,7 @@ public class CustomAdvancementManager {
                 LOGGER.debug("Removed advancement: " + advancement);
                 counter++;
 
-                REMOVED_ADVANCEMENTS_SET.add(advancement);
+                CrashExtensionHandler.getInstance().addRemovedAdvancement(advancement);
             }
         }
 
@@ -290,7 +293,7 @@ public class CustomAdvancementManager {
                 LOGGER.debug("Skipped advancement {} with parent {} as it's parent wasn't found!", advancement, parent);
                 counter++;
 
-                REMOVED_ADVANCEMENTS_SET.add(advancement);
+                CrashExtensionHandler.getInstance().addRemovedAdvancement(advancement);
 
                 removeChildren(mapIn, advancement);
             }

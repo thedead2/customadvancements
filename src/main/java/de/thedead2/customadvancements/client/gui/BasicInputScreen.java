@@ -16,60 +16,133 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.advancements.AdvancementWidgetType;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget.ICON_X;
 import static de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget.ICON_Y;
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 public class BasicInputScreen extends Screen {
 
-    protected final AdvancementGeneratorGUI parent;
+    protected final Screen parent;
     protected final Minecraft minecraft = Minecraft.getInstance();
     protected final Set<CheckBox> checkBoxes = new HashSet<>();
     protected final Map<String, EditBox> editBoxes = new HashMap<>();
-    protected DisplayInfo display;
     protected final FakeAdvancementWidget widget;
 
-    protected final int screenWidth;
-    protected final int screenHeight;
-    protected final int[] screenTopLeftCorner;
-    protected final int[] screenTopRightCorner;
-    protected final int[] screenBottomLeftCorner;
-    protected final int[] screenBottomRightCorner;
+    protected DisplayInfo display;
+    protected ResourceLocation parentId;
 
-    protected final int[] framePos;
-    protected final int[] editBox;
+    protected int screenWidth;
+    protected int screenHeight;
+    protected int[] screenTopLeftCorner;
+    protected int[] screenTopRightCorner;
+    protected int[] screenBottomLeftCorner;
+    protected int[] screenBottomRightCorner;
+
+    protected int[] framePos;
+    protected int[] editBox;
 
     protected static final int EDIT_BUTTON_LENGTH = 20;
     protected static final int PADDING_RIGHT = 10;
     protected static final int PADDING = 2;
     protected static final int FRAME_LENGTH = 26;
+    protected static final int TOP_OFFSET = 26;
+
+    protected static final Component DEFAULT_DESCRIPTION = Component.literal("Example Description");
+    protected static final Component DEFAULT_TITLE = Component.literal("Example Title");
+    protected static final ItemStack DEFAULT_ITEM = new ItemStack(Items.DIAMOND);
+    protected static final FrameType DEFAULT_FRAME = FrameType.TASK;
+    protected static final ResourceLocation DEFAULT_BACKGROUND = new ResourceLocation( "textures/gui/advancements/stone.png");
+
+    protected final Supplier<Integer> screenWidthSupplier;
+    protected final Supplier<Integer> screenHeightSupplier;
+    protected final Supplier<int[]> screenStartPositionSupplier;
 
 
-    public BasicInputScreen(AdvancementGeneratorGUI parent, DisplayInfo display, FakeAdvancementWidget widget, int screenWidth, int screenHeight, int[] screenStartPosition) {
+    public BasicInputScreen(Screen parent, DisplayInfo display, FakeAdvancementWidget widget, Supplier<Integer> screenWidthSupplier, Supplier<Integer> screenHeightSupplier, Supplier<int[]> screenStartPositionSupplier) {
         super(GameNarrator.NO_TITLE);
         this.parent = parent;
         this.display = display;
         this.widget = widget;
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeight;
-        this.screenTopLeftCorner = screenStartPosition;
-        this.screenTopRightCorner = new int[]{screenTopLeftCorner[0] + this.screenWidth, screenTopLeftCorner[1]};
-        this.screenBottomLeftCorner = new int[]{screenTopLeftCorner[0], screenTopLeftCorner[1] + this.screenHeight};
-        this.screenBottomRightCorner = new int[]{screenTopLeftCorner[0] + this.screenWidth, screenTopLeftCorner[1] + this.screenHeight};
-        this.framePos = new int[]{this.screenTopLeftCorner[0] - 1, this.screenTopLeftCorner[1]};
-        this.editBox = new int[]{this.screenTopLeftCorner[0], this.minecraft.font.lineHeight + 4};
+        this.screenWidthSupplier = screenWidthSupplier;
+        this.screenHeightSupplier = screenHeightSupplier;
+        this.screenStartPositionSupplier = screenStartPositionSupplier;
     }
+
+    public void updateDisplayInfo(ItemStack itemStack, Component title, Component description, ResourceLocation background, FrameType frame, boolean showToast, boolean announceToChat, boolean hidden) {
+        if(this.display != null){
+            this.display = new DisplayInfo(itemStack == null ? this.display.getIcon() : itemStack, title == null ? this.display.getTitle() : title, description == null ? this.display.getDescription() : description, background == null ? (this.parentId != null ? null: this.display.getBackground()) : background, frame == null ? this.display.getFrame() : frame, showToast, announceToChat, hidden);
+        }
+        else {
+            this.display = new DisplayInfo(itemStack == null ? DEFAULT_ITEM : itemStack, title == null ? DEFAULT_TITLE : title, description == null ? DEFAULT_DESCRIPTION : description, background == null ? (this.parentId != null ? null: DEFAULT_BACKGROUND) : background, frame == null ? DEFAULT_FRAME : frame, showToast, announceToChat, hidden);
+        }
+        LOGGER.debug("Updated DisplayInfo with: {}, {}, {}, {}, {}, {}, {}, {}", this.display.getIcon(), this.display.getTitle(), this.display.getDescription(), this.display.getBackground(), this.display.getFrame(), this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
+    }
+
+
+    public <T, R, V extends Boolean> void updateDisplayInfo(@NotNull T t, @Nullable R r, @Nullable V v){
+        if(this.display != null){
+            if(t instanceof ItemStack){
+                this.updateDisplayInfo((ItemStack) t, null, null, null, null, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
+            }
+            else if (t instanceof Items) {
+                this.updateDisplayInfo(new ItemStack((ItemLike) t), null, null, null, null, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
+            }
+            else if (t instanceof ResourceLocation) {
+                this.updateDisplayInfo(null, null, null, (ResourceLocation) t, null, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
+            }
+            else if (t instanceof FrameType) {
+                this.updateDisplayInfo(null, null, null, null, (FrameType) t, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
+            }
+            else if (t instanceof Component && r instanceof Component) {
+                this.updateDisplayInfo(null, (Component) t, (Component) r, null, null, this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
+            }
+            else if (t instanceof Boolean && r instanceof Boolean && v != null) {
+                this.updateDisplayInfo(null, null, null, null, null, (Boolean) t, (Boolean) r, v);
+            }
+        }
+        else {
+            if(t instanceof ItemStack){
+                this.updateDisplayInfo((ItemStack) t, null, null, null, null, true, true, false);
+            }
+            else if (t instanceof Items) {
+                this.updateDisplayInfo(new ItemStack((ItemLike) t), null, null, null, null, true, true, false);
+            }
+            else if (t instanceof ResourceLocation) {
+                this.updateDisplayInfo(null, null, null, (ResourceLocation) t, null, true, true, false);
+            }
+            else if (t instanceof FrameType) {
+                this.updateDisplayInfo(null, null, null, null, (FrameType) t, true, true, false);
+            }
+            else if (t instanceof Component && r instanceof Component) {
+                this.updateDisplayInfo(null, (Component) t, (Component) r, null, null, true, true, false);
+            }
+            else if (t instanceof Boolean && r instanceof Boolean && v != null) {
+                this.updateDisplayInfo(null, null, null, null, null, (Boolean) t, (Boolean) r, v);
+            }
+        }
+    }
+
+    public <T> void updateDisplayInfo(@NotNull T t){
+        this.updateDisplayInfo(t, null, null);
+    }
+
+    public <T, R> void updateDisplayInfo(@NotNull T t, @Nullable R r){
+        this.updateDisplayInfo(t, r, null);
+    }
+
 
     public int getFontWidth(String in){
         return this.minecraft.font.width(in);
@@ -103,17 +176,27 @@ public class BasicInputScreen extends Screen {
         this.editBoxes.put(key, editBox);
     }
 
+
     @Override
     public void init() {
+        this.screenWidth = this.screenWidthSupplier.get();
+        this.screenHeight = this.screenHeightSupplier.get();
+        this.screenTopLeftCorner = this.screenStartPositionSupplier.get();
+        this.screenTopRightCorner = new int[]{screenTopLeftCorner[0] + this.screenWidth, screenTopLeftCorner[1]};
+        this.screenBottomLeftCorner = new int[]{screenTopLeftCorner[0], screenTopLeftCorner[1] + this.screenHeight};
+        this.screenBottomRightCorner = new int[]{screenTopLeftCorner[0] + this.screenWidth, screenTopLeftCorner[1] + this.screenHeight};
+        this.framePos = new int[]{this.screenTopLeftCorner[0] - 3, this.screenTopLeftCorner[1]};
+        this.editBox = new int[]{this.screenTopLeftCorner[0], this.minecraft.font.lineHeight + 4};
+
         this.initMainButtons();
     }
 
     @Override
     public void render(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
-        if (this.widget != null) {
+        if (this.widget != null && this.parent instanceof AdvancementGeneratorGUI) {
             int offsetX = -(Mth.floor(this.widget.tab.scrollX) + this.widget.getX() + AdvancementGeneratorGUI.WINDOW_WIDTH / 2 - FakeAdvancementWidget.FRAME_WIDTH - PADDING);
-            this.parent.setScreenOffset(offsetX, 0);
-            this.parent.setRenderTooltips(false);
+            ((AdvancementGeneratorGUI) this.parent).setScreenOffset(offsetX, 0);
+            ((AdvancementGeneratorGUI) this.parent).setRenderTooltips(false);
             this.parent.render(poseStack, mouseX, mouseY, partialTick);
         }
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
@@ -122,7 +205,7 @@ public class BasicInputScreen extends Screen {
         RenderSystem.enableBlend();
 
         this.renderRectangleFromImage(poseStack, screenTopLeftCorner[0], screenTopLeftCorner[1], screenWidth, screenHeight, 10, 200, 26, 0, 52);
-        this.renderRectangleFromImage(poseStack, screenTopLeftCorner[0], screenTopLeftCorner[1], screenWidth, 26, 10, 200, 26, 0, 0);
+        this.renderRectangleFromImage(poseStack, screenTopLeftCorner[0], screenTopLeftCorner[1], screenWidth, TOP_OFFSET, 10, 200, 26, 0, 0);
 
         this.drawIcon(poseStack, this.framePos[0] , this.framePos[1]);
         super.render(poseStack, mouseX, mouseY, partialTick);
@@ -182,7 +265,9 @@ public class BasicInputScreen extends Screen {
     @Override
     public void onClose() {
         if(this.parent != null){
-            this.parent.setRenderTooltips(true);
+            if(this.parent instanceof AdvancementGeneratorGUI){
+                ((AdvancementGeneratorGUI) this.parent).setRenderTooltips(true);
+            }
             this.minecraft.setScreen(this.parent);
         }
         else {

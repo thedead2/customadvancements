@@ -34,6 +34,7 @@ public class TextureHandler extends FileHandler {
         for (File texture : texture_files) {
             if (texture.getName().endsWith(".png")) {
                 LOGGER.debug("Found file: " + texture.getName());
+                CrashExtensionHandler.getInstance().setActiveFile(texture);
 
                 createNativeImage(texture);
             }
@@ -41,6 +42,7 @@ public class TextureHandler extends FileHandler {
                 LOGGER.warn("File '" + texture.getName() + "' is not a '.png' file, ignoring it!");
             }
         }
+        CrashExtensionHandler.getInstance().setActiveFile(null);
     }
 
 
