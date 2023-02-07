@@ -32,9 +32,9 @@ public class TextureHandler extends FileHandler {
 
         assert texture_files != null;
         for (File texture : texture_files) {
+            CrashExtensionHandler.getInstance().setActiveFile(texture);
             if (texture.getName().endsWith(".png")) {
                 LOGGER.debug("Found file: " + texture.getName());
-                CrashExtensionHandler.getInstance().setActiveFile(texture);
 
                 createNativeImage(texture);
             }

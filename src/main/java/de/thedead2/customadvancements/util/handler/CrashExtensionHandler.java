@@ -75,6 +75,10 @@ public class CrashExtensionHandler implements ISystemReportExtender {
         stringBuilder.append("- Currently active file: ");
         if(this.activeFile != null){
             stringBuilder.append(this.activeFile.getName());
+            stringBuilder.append("\n");
+            stringBuilder.append("Is File: ").append(this.activeFile.isFile());
+            stringBuilder.append("\n");
+            stringBuilder.append("Is Readable: ").append(this.activeFile.canRead());
             stringBuilder.append("\n\n");
             try {
                 InputStream fileInput = Files.newInputStream(this.activeFile.toPath());

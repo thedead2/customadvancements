@@ -118,6 +118,7 @@ public class CustomAdvancementManager {
 
                     ADVANCEMENTS.remove(resourceLocation1);
 
+                    CrashExtensionHandler.getInstance().addRemovedAdvancement(resourceLocation1);
                     counter++;
                     LOGGER.debug("Removed recipe advancement: " + resourceLocation);
                 }
@@ -196,6 +197,7 @@ public class CustomAdvancementManager {
             mapKeySet.forEach(resourceLocation -> {
                 if (!resourceLocation.toString().contains("recipes/")) {
                     ADVANCEMENTS.remove(resourceLocation);
+                    CrashExtensionHandler.getInstance().addRemovedAdvancement(resourceLocation);
                     LOGGER.debug("Removed advancement: " + resourceLocation);
                     counter.getAndIncrement();
                 }
