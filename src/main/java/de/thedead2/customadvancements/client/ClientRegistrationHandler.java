@@ -56,7 +56,7 @@ public class ClientRegistrationHandler {
                     LOGGER.info("Testing2!");
                     boolean test = MINECRAFT.level.getGameRules().getBoolean(ModGameRules.ADVANCEMENT_GENERATOR_GAMERULE);
                     LOGGER.info("Value of Gamerule: " + test);
-                    if(!test) { //rule always returns false
+                    if(!test) {//rule always returns false
                         LOGGER.info("Testing3!");
                         MINECRAFT.setScreen(new AdvancementGeneratorGUI(getFakeAdvancements(), MINECRAFT.screen, MINECRAFT));
                         }

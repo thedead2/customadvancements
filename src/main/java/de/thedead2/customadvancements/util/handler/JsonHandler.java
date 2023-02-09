@@ -10,6 +10,7 @@ import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvanc
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import net.minecraft.ResourceLocationException;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -75,9 +76,10 @@ public class JsonHandler extends FileHandler {
                     LOGGER.warn("File '" + fileName + "' is not a '.json' file, ignoring it!");
                 }
             }
-            catch (NullPointerException e){
+            catch (NullPointerException | ClassCastException e){
                 LOGGER.error("Unable to get JsonObject for: " + fileName);
                 e.printStackTrace();
+                CrashExtensionHandler.getInstance().addCrashDetails("Failed to create JsonObject from File!", Level.WARN , e, false);
             }
             catch (IllegalStateException e){
                 LOGGER.error("Unable to create Advancement for: " + fileName);
@@ -87,14 +89,10 @@ public class JsonHandler extends FileHandler {
                 LOGGER.error("Unable to create Resource Location for: " + fileName);
                 e.printStackTrace();
             }
-            catch (Exception e) {
-                LOGGER.fatal("Something went wrong: " + e);
-                throw new RuntimeException(e);
-            }
 
             if (timer.getTime() >= 500){
                 LOGGER.warn("Reading file {} took {} ms! Max. is 500 ms!",fileName, timer.getTime());
-                throw new RuntimeException("Reading one single file took over 500 ms!");
+                throw new RuntimeException();
             }
             timer.stop();
             timer.reset();
@@ -126,11 +124,13 @@ public class JsonHandler extends FileHandler {
         }
         catch (FileNotFoundException e) {
             LOGGER.error("Unable to parse " + fileName + " to JsonObject: " + e);
+            //CrashExtensionHandler.getInstance().addCrashDetails("Generating Advancement", "Parsing Json", e);
             e.printStackTrace();
             return null;
         }
         catch (JsonParseException e){
             LOGGER.error("Error parsing {} to JsonObject! Make sure you have the right syntax for '.json' files!", fileName);
+            //CrashExtensionHandler.getInstance().addCrashDetails("Generating Advancement", "Parsing Json", e);
             e.printStackTrace();
             return null;
         }

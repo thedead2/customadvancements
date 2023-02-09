@@ -2,7 +2,6 @@ package de.thedead2.customadvancements.util.handler;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +15,7 @@ public class TextureHandler extends FileHandler {
     public TextureHandler(File directory){
         super(directory);
         instance = this;
-        if (!FMLEnvironment.dist.isDedicatedServer() || !ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
+        if (!ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
             this.start();
         }
         else if (ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){

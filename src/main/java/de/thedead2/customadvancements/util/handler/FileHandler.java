@@ -2,6 +2,7 @@ package de.thedead2.customadvancements.util.handler;
 
 import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,11 +79,17 @@ public abstract class FileHandler extends ModHelper {
 
 
     public static String getId(String filePath){
-        String subString = filePath.replace(String.valueOf(DIR_PATH), "");
-        subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
-        subString = subString.replaceFirst("/", "");
-        subString = subString.replaceFirst("/", ":");
-        return subString;
+        try{
+            String subString = filePath.replace(String.valueOf(DIR_PATH), "");
+            subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
+            subString = subString.replaceFirst("/", "");
+            subString = subString.replaceFirst("/", ":");
+            return subString;
+        }
+        catch (Throwable throwable){
+            CrashExtensionHandler.getInstance().addCrashDetails("Unable to create ID!", Level.ERROR , throwable, false);
+            throw throwable;
+        }
     }
 
 

@@ -7,7 +7,6 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
-import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
@@ -17,7 +16,9 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.storage.WorldData;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.VersionChecker;
@@ -79,12 +80,14 @@ public abstract class ModHelper {
         clearAll();
         FileHandler.checkForMainDirectories();
 
-        if(TextureHandler.getInstance() != null){
-            TextureHandler.getInstance().start();
-        }
-        else {
-            new TextureHandler(TEXTURES_PATH.toFile());
-        }
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+            if(TextureHandler.getInstance() != null){
+                TextureHandler.getInstance().start();
+            }
+            else {
+                new TextureHandler(TEXTURES_PATH.toFile());
+            }
+        });
         if (JsonHandler.getInstance() != null){
             JsonHandler.getInstance().start();
         }
