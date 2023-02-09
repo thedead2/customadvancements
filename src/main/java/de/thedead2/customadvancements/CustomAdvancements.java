@@ -41,7 +41,7 @@ public class CustomAdvancements {
         forgeEventBus.register(this);
 
         registerLoggerFilter();
-        CrashReportCallables.registerCrashCallable(new CrashExtensionHandler());
+        CrashReportCallables.registerCrashCallable(CrashExtensionHandler.getInstance());
     }
 
 
@@ -53,6 +53,7 @@ public class CustomAdvancements {
         LOGGER.debug("Registered PATH_SEPARATOR with: " + PATH_SEPARATOR);
 
         init();
+
         new ModGameRules();
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());
