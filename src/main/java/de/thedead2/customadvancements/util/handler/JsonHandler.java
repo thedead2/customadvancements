@@ -44,7 +44,7 @@ public class JsonHandler extends FileHandler {
         for(File file : fileList) {
             timer.start();
             String fileName = file.getName();
-            CrashExtensionHandler.getInstance().setActiveFile(file);
+            CrashHandler.getInstance().setActiveFile(file);
 
             try {
                 if (file.isFile() && fileName.endsWith(".json")) {
@@ -58,12 +58,12 @@ public class JsonHandler extends FileHandler {
                     if (isCorrectJsonFormat(jsonObject, file.toPath())) {
                         if (directory.getPath().contains(String.valueOf(CUSTOM_ADVANCEMENTS_PATH))){
                             CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
-                            CrashExtensionHandler.getInstance().setActiveAdvancement(customadvancement);
+                            CrashHandler.getInstance().setActiveAdvancement(customadvancement);
                             CUSTOM_ADVANCEMENTS.put(customadvancement.getResourceLocation(), customadvancement);
                         }
                         else {
                             GameAdvancement gameAdvancement = new GameAdvancement(jsonObject, fileName, file.getPath());
-                            CrashExtensionHandler.getInstance().setActiveAdvancement(gameAdvancement);
+                            CrashHandler.getInstance().setActiveAdvancement(gameAdvancement);
                             GAME_ADVANCEMENTS.put(gameAdvancement.getResourceLocation(), gameAdvancement);
                         }
                     }
@@ -79,11 +79,12 @@ public class JsonHandler extends FileHandler {
             catch (NullPointerException | ClassCastException e){
                 LOGGER.error("Unable to get JsonObject for: " + fileName);
                 e.printStackTrace();
-                CrashExtensionHandler.getInstance().addCrashDetails("Failed to create JsonObject from File!", Level.WARN , e, false);
+                CrashHandler.getInstance().addCrashDetails("Failed to create JsonObject from File!", Level.WARN , e);
             }
             catch (IllegalStateException e){
                 LOGGER.error("Unable to create Advancement for: " + fileName);
                 e.printStackTrace();
+                CrashHandler.getInstance().addCrashDetails("File did not match the required '.json' format!", Level.DEBUG , e);
             }
             catch (ResourceLocationException e) {
                 LOGGER.error("Unable to create Resource Location for: " + fileName);
@@ -92,13 +93,15 @@ public class JsonHandler extends FileHandler {
 
             if (timer.getTime() >= 500){
                 LOGGER.warn("Reading file {} took {} ms! Max. is 500 ms!",fileName, timer.getTime());
-                throw new RuntimeException();
+                RuntimeException runtimeException = new RuntimeException("Reading a file took " + timer.getTime() + " ms! Max. is 500 ms!");
+                CrashHandler.getInstance().addCrashDetails("File reading timeout!", Level.FATAL , runtimeException, true);
+                throw runtimeException;
             }
             timer.stop();
             timer.reset();
         }
-        CrashExtensionHandler.getInstance().setActiveAdvancement(null);
-        CrashExtensionHandler.getInstance().setActiveFile(null);
+        CrashHandler.getInstance().setActiveAdvancement(null);
+        CrashHandler.getInstance().setActiveFile(null);
     }
 
 
@@ -111,6 +114,7 @@ public class JsonHandler extends FileHandler {
         }
         catch (IOException e) {
             LOGGER.warn("Unable to read File by InputStream!");
+            CrashHandler.getInstance().addCrashDetails("Unable to read File by InputStream!", Level.WARN, e);
             e.printStackTrace();
         }
     }
@@ -124,13 +128,13 @@ public class JsonHandler extends FileHandler {
         }
         catch (FileNotFoundException e) {
             LOGGER.error("Unable to parse " + fileName + " to JsonObject: " + e);
-            //CrashExtensionHandler.getInstance().addCrashDetails("Generating Advancement", "Parsing Json", e);
+            CrashHandler.getInstance().addCrashDetails("Couldn't find file " + fileName + "?!", Level.WARN, e);
             e.printStackTrace();
             return null;
         }
         catch (JsonParseException e){
             LOGGER.error("Error parsing {} to JsonObject! Make sure you have the right syntax for '.json' files!", fileName);
-            //CrashExtensionHandler.getInstance().addCrashDetails("Generating Advancement", "Parsing Json", e);
+            CrashHandler.getInstance().addCrashDetails("Couldn't parse file to JsonElement!", Level.ERROR, e);
             e.printStackTrace();
             return null;
         }

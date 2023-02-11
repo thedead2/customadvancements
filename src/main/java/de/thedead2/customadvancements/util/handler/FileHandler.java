@@ -32,6 +32,7 @@ public abstract class FileHandler extends ModHelper {
             }
             catch (FileCopyException e){
                 LOGGER.error("Unable to create example advancements!");
+                CrashHandler.getInstance().addCrashDetails("Unable to create example advancements!", Level.WARN, e);
                 e.printStackTrace();
             }
         }
@@ -43,6 +44,7 @@ public abstract class FileHandler extends ModHelper {
             }
             catch (FileCopyException e){
                 LOGGER.error("Unable to create example textures for advancements!");
+                CrashHandler.getInstance().addCrashDetails("Unable to create example textures!", Level.WARN, e);
                 e.printStackTrace();
             }
         }
@@ -87,41 +89,43 @@ public abstract class FileHandler extends ModHelper {
             return subString;
         }
         catch (Throwable throwable){
-            CrashExtensionHandler.getInstance().addCrashDetails("Unable to create ID!", Level.ERROR , throwable, false);
+            CrashHandler.getInstance().addCrashDetails("Unable to create ID!", Level.ERROR , throwable);
             throw throwable;
         }
     }
 
 
     public static boolean createDirectory(File directoryIn){
-        CrashExtensionHandler.getInstance().setActiveFile(directoryIn);
+        CrashHandler.getInstance().setActiveFile(directoryIn);
         if (!directoryIn.exists()) {
             if (directoryIn.mkdir()){
                 LOGGER.debug("Created directory: " + directoryIn.toPath());
-                CrashExtensionHandler.getInstance().setActiveFile(null);
+                CrashHandler.getInstance().setActiveFile(null);
                 return true;
             }
             else {
                 LOGGER.fatal("Failed to create directory at: " + directoryIn.toPath());
-                throw new RuntimeException("Unable to create directory! Maybe something is blocking file access?!");
+                RuntimeException runtimeException = new RuntimeException("Unable to create directory! Maybe something is blocking file access?!");
+                CrashHandler.getInstance().addCrashDetails("Unable to create directory! Maybe something is blocking file access?!", Level.FATAL, runtimeException, true);
+                throw runtimeException;
             }
         }
         else {
             LOGGER.debug("Found directory {} at {}", directoryIn.getName(), directoryIn.toPath());
-            CrashExtensionHandler.getInstance().setActiveFile(null);
+            CrashHandler.getInstance().setActiveFile(null);
             return false;
         }
     }
 
 
     public static void writeFile(InputStream inputStream, Path outputPath) throws IOException {
-        CrashExtensionHandler.getInstance().setActiveFile(outputPath.toFile());
+        CrashHandler.getInstance().setActiveFile(outputPath.toFile());
         OutputStream fileOut = Files.newOutputStream(outputPath);
 
         writeToFile(inputStream, fileOut);
 
         fileOut.close();
-        CrashExtensionHandler.getInstance().setActiveFile(null);
+        CrashHandler.getInstance().setActiveFile(null);
     }
 
 

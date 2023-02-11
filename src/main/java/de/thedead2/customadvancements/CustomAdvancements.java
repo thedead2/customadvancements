@@ -2,7 +2,7 @@ package de.thedead2.customadvancements;
 
 import com.mojang.brigadier.CommandDispatcher;
 import de.thedead2.customadvancements.commands.*;
-import de.thedead2.customadvancements.util.handler.CrashExtensionHandler;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
 import net.minecraft.commands.CommandSourceStack;
@@ -41,7 +41,7 @@ public class CustomAdvancements {
         forgeEventBus.register(this);
 
         registerLoggerFilter();
-        CrashReportCallables.registerCrashCallable(CrashExtensionHandler.getInstance());
+        CrashReportCallables.registerCrashCallable(CrashHandler.getInstance());
     }
 
 
@@ -53,7 +53,6 @@ public class CustomAdvancements {
         LOGGER.debug("Registered PATH_SEPARATOR with: " + PATH_SEPARATOR);
 
         init();
-
         new ModGameRules();
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());

@@ -2,6 +2,7 @@ package de.thedead2.customadvancements.util.handler;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class TextureHandler extends FileHandler {
 
         assert texture_files != null;
         for (File texture : texture_files) {
-            CrashExtensionHandler.getInstance().setActiveFile(texture);
+            CrashHandler.getInstance().setActiveFile(texture);
             if (texture.getName().endsWith(".png")) {
                 LOGGER.debug("Found file: " + texture.getName());
 
@@ -41,7 +42,7 @@ public class TextureHandler extends FileHandler {
                 LOGGER.warn("File '" + texture.getName() + "' is not a '.png' file, ignoring it!");
             }
         }
-        CrashExtensionHandler.getInstance().setActiveFile(null);
+        CrashHandler.getInstance().setActiveFile(null);
     }
 
 
@@ -58,6 +59,7 @@ public class TextureHandler extends FileHandler {
         }
         catch (IOException e) {
             LOGGER.error("Failed to read texture file: " + e);
+            CrashHandler.getInstance().addCrashDetails("Failed to read texture file", Level.ERROR, e);
             e.printStackTrace();
         }
     }
