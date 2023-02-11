@@ -6,6 +6,7 @@ import de.thedead2.customadvancements.util.handler.CrashHandler;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.logging.log4j.Level;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,35 +22,56 @@ public class CustomAdvancementManager {
     private static long counter = 0;
     public static final Map<ResourceLocation, JsonElement> ADVANCEMENTS = new HashMap<>();
     private static final StopWatch TIMER = new StopWatch();
+    private static boolean safeMode = false;
 
     public static Map<ResourceLocation, JsonElement> modifyData(Map<ResourceLocation, JsonElement> mapIn) {
-        TIMER.start();
-        if (ADVANCEMENTS.isEmpty()){
-            if(!ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()){
-                ADVANCEMENTS.putAll(mapIn);
+        if(!safeMode){
+            TIMER.start();
+            try {
+                if (ADVANCEMENTS.isEmpty()){
+                    if(!ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()){
+                        ADVANCEMENTS.putAll(mapIn);
+                    }
+
+                    loadAdvancements(CUSTOM_ADVANCEMENTS);
+                    loadAdvancements(GAME_ADVANCEMENTS);
+                    removeListAdvancements();
+                    removeRecipeAdvancements();
+                    removeAllAdvancements();
+
+                    mapIn.clear();
+                    mapIn.putAll(ADVANCEMENTS);
+                }
+                else {
+                    mapIn.clear();
+                    mapIn.putAll(ADVANCEMENTS);
+                    ADVANCEMENTS.clear();
+                }
+                LOGGER.debug("Modifying Advancement data took {} ms.", TIMER.getTime());
             }
-
-            loadAdvancements(CUSTOM_ADVANCEMENTS);
-            loadAdvancements(GAME_ADVANCEMENTS);
-            removeListAdvancements();
-            removeRecipeAdvancements();
-            removeAllAdvancements();
-
-            mapIn.clear();
-            mapIn.putAll(ADVANCEMENTS);
+            catch (Throwable e){
+                CrashHandler.getInstance().addCrashDetails("Error while modifying advancement data!", Level.ERROR, e);
+                throw e;
+            }
+            finally {
+                TIMER.stop();
+                TIMER.reset();
+            }
         }
         else {
-            mapIn.clear();
-            mapIn.putAll(ADVANCEMENTS);
-            ADVANCEMENTS.clear();
+            LOGGER.warn("Safe Mode is enabled! Skipping advancement load...");
         }
-        LOGGER.debug("Modifying Advancement data took {} ms.", TIMER.getTime());
-        TIMER.stop();
-        TIMER.reset();
 
         return mapIn;
     }
 
+    public static void enableSafeMode(){
+        safeMode = true;
+    }
+
+    public static void disableSafeMode(){
+        safeMode = false;
+    }
 
     private static void loadAdvancements(Map<ResourceLocation, ? extends IAdvancement> advancementsIn){
         if(!advancementsIn.isEmpty() && !ConfigManager.NO_ADVANCEMENTS.get()) {
@@ -93,6 +115,7 @@ public class CustomAdvancementManager {
                 }
                 catch (ResourceLocationException e){
                     LOGGER.error("Unable to register advancement {} with resource location: {}", advancement.getFileName(), resourceLocation);
+                    CrashHandler.getInstance().addCrashDetails("Unable to register advancement", Level.WARN, e);
                     e.printStackTrace();
                 }
             }

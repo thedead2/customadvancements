@@ -5,6 +5,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -12,6 +13,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -41,6 +43,7 @@ public class GenerateAdvancementCommand {
             catch (IOException e) {
                 context.getSource().sendFailure(Component.literal("Unable to generate file for: " + advancement));
                 LOGGER.error("Unable to generate file for: " + advancement);
+                CrashHandler.getInstance().addCrashDetails("Unable to generate file for advancement", Level.WARN, e);
                 e.printStackTrace();
                 return -1;
             }

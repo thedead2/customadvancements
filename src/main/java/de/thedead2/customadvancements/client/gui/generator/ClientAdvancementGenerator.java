@@ -7,6 +7,7 @@ import de.thedead2.customadvancements.client.gui.FrameAndItemSelectionScreen;
 import de.thedead2.customadvancements.client.gui.components.CheckBox;
 import de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.advancements.*;
 import net.minecraft.client.Minecraft;
@@ -14,7 +15,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.CrashReportCallables;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -204,6 +205,7 @@ public class ClientAdvancementGenerator extends BasicInputScreen {
         }
         catch (IllegalStateException | NullPointerException | IOException e){
             LOGGER.error("Couldn't create Advancement {} with Advancement.Builder: {}", this.advancementId, this.builder);
+            CrashHandler.getInstance().addCrashDetails("Couldn't create advancement from advancement builder!", Level.WARN, e);
             e.printStackTrace();
         }
     }

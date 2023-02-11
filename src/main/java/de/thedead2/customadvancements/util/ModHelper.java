@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
@@ -25,6 +26,7 @@ import net.minecraftforge.fml.VersionChecker;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -130,6 +132,7 @@ public abstract class ModHelper {
         server.reloadResources(selectedIds).exceptionally((e) -> {
             LOGGER.error("Failed to execute reload!", e);
             server.sendSystemMessage(Component.translatable("chat.customadvancements.reload_failed_massage"));
+            CrashHandler.getInstance().addCrashDetails("Failed to execute reload!", Level.ERROR, e);
             e.printStackTrace();
             return null;
         });

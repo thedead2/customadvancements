@@ -48,7 +48,7 @@ public class CrashHandler implements ISystemReportExtender {
         return stringBuilder.toString();
     }
 
-    public void getDetails(StringBuilder stringBuilder){
+    private void getDetails(StringBuilder stringBuilder){
         this.getModInformation(stringBuilder);
         this.getExecutionErrors(stringBuilder);
         this.getActiveAdvancement(stringBuilder);
@@ -57,7 +57,7 @@ public class CrashHandler implements ISystemReportExtender {
         this.getRemovedAdvancements(stringBuilder);
     }
 
-    void getModInformation(StringBuilder stringBuilder){
+    private void getModInformation(StringBuilder stringBuilder){
         stringBuilder.append("\n");
         stringBuilder.append("- Mod ID: ").append(MOD_ID).append("\n");
         stringBuilder.append("- Version: ").append(MOD_VERSION).append("\n");
@@ -68,7 +68,7 @@ public class CrashHandler implements ISystemReportExtender {
 
     private void getExecutionErrors(StringBuilder stringBuilder){
         if(!this.crashDetails.isEmpty()) {
-            stringBuilder.append("All detected execution errors related with " + MOD_NAME + ":").append("\n");
+            stringBuilder.append("All detected execution errors related to " + MOD_NAME + ":").append("\n");
             stringBuilder.append("---------------------------------------------------------------").append("\n\n");
             Set<CrashDetail> temp = new HashSet<>();
             this.crashDetails.forEach((crashDetail) -> {
@@ -99,7 +99,8 @@ public class CrashHandler implements ISystemReportExtender {
 
         }
         else {
-            stringBuilder.append("There was no execution error detected that was caused by ").append(MOD_NAME).append("!\n\n");
+            stringBuilder.append(SEPARATOR);
+            stringBuilder.append("There was no execution error detected related to ").append(MOD_NAME).append("!\n\n");
             stringBuilder.append(SEPARATOR);
         }
     }
@@ -119,7 +120,7 @@ public class CrashHandler implements ISystemReportExtender {
         stringBuilder.append(SEPARATOR);
     }
 
-    public void getActiveFile(StringBuilder stringBuilder) {
+    private void getActiveFile(StringBuilder stringBuilder) {
         stringBuilder.append("Currently active file: ");
         if(this.activeFile != null){
             stringBuilder.append(this.activeFile.getName());
@@ -143,7 +144,7 @@ public class CrashHandler implements ISystemReportExtender {
         stringBuilder.append(SEPARATOR);
     }
 
-    public void getLoadedAdvancements(StringBuilder stringBuilder){
+    private void getLoadedAdvancements(StringBuilder stringBuilder){
         stringBuilder.append("All loaded Advancements: ");
         List<String> temp = new ArrayList<>();
         if(!this.advancements.isEmpty()){
@@ -158,7 +159,7 @@ public class CrashHandler implements ISystemReportExtender {
         stringBuilder.append(SEPARATOR);
     }
 
-    public void getRemovedAdvancements(StringBuilder stringBuilder){
+    private void getRemovedAdvancements(StringBuilder stringBuilder){
         stringBuilder.append("All removed Advancements: ");
         List<String> temp = new ArrayList<>();
         if(!this.removedAdvancements.isEmpty()){
@@ -194,7 +195,7 @@ public class CrashHandler implements ISystemReportExtender {
         this.addCrashDetails(errorDescription, level, throwable, false);
     }
 
-    public void addCrashDetails(String errorDescription, Level level, Throwable throwable, boolean responsibleForCrash){
+    private void addCrashDetails(String errorDescription, Level level, Throwable throwable, boolean responsibleForCrash){
         AtomicBoolean i = new AtomicBoolean(false);
         AtomicBoolean j = new AtomicBoolean(false);
         AtomicBoolean k = new AtomicBoolean(false);
@@ -234,18 +235,18 @@ public class CrashHandler implements ISystemReportExtender {
         this.resolveCrash(throwable);
     }
 
-    public Throwable resolveThrowable(String input){
+    private Throwable resolveThrowable(String input){
         Class<?> exceptionClass;
         Throwable throwable;
 
         if(input != null) {
             int i = input.lastIndexOf(":");
-            String temp = i >= 0 ? input.substring(i) : "";
+            String temp = i != -1 ? input.substring(i) : "";
             String className = input.replaceAll(temp, "");
             try {
                 exceptionClass = Class.forName(className);
 
-                String exceptionMessage = input.substring(input.lastIndexOf(":") + 1);
+                String exceptionMessage = input.substring(i + 1);
                 Object object;
                 try {
                     object = exceptionClass.getDeclaredConstructor(exceptionMessage.getClass()).newInstance(exceptionMessage);
@@ -258,23 +259,23 @@ public class CrashHandler implements ISystemReportExtender {
                     throwable = t;
                 }
                 else {
-                    throw new IllegalArgumentException();
+                    throw new IllegalStateException();
                 }
             }
             catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException |
-                   NoSuchMethodException | IllegalArgumentException e) {
+                   NoSuchMethodException | IllegalStateException ignored) {
                 throwable = new Throwable(input);
             }
         }
         else {
-            throwable = new Throwable("Recreated Error");
+            throwable = new Throwable("Unknown Exception");
         }
         return throwable;
     }
 
-    record CrashDetail(String description, Level level, Throwable throwable, boolean responsibleForCrash) {
+    private record CrashDetail(String description, Level level, Throwable throwable, boolean responsibleForCrash) {
 
-        public void printStackTrace(StringBuilder stringBuilder){
+        private void printStackTrace(StringBuilder stringBuilder){
             stringBuilder.append("Description: ").append(this.description).append("\n");
             Throwable throwable = this.throwable;
             stringBuilder.append("Reported Error: ").append(throwable.getMessage()).append("\n");
@@ -301,7 +302,7 @@ public class CrashHandler implements ISystemReportExtender {
             stringBuilder.append(SEPARATOR);
         }
 
-        public Throwable trimStacktrace(Throwable throwable, int length) {
+        private Throwable trimStacktrace(Throwable throwable, int length) {
             StackTraceElement[] stackTraceElements = throwable.getStackTrace();
             StackTraceElement[] astacktraceelement = new StackTraceElement[length];
             System.arraycopy(stackTraceElements, 0, astacktraceelement, 0, astacktraceelement.length);

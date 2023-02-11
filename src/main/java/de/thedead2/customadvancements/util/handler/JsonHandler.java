@@ -88,14 +88,13 @@ public class JsonHandler extends FileHandler {
             }
             catch (ResourceLocationException e) {
                 LOGGER.error("Unable to create Resource Location for: " + fileName);
+                CrashHandler.getInstance().addCrashDetails("Unable to create resource location for file!", Level.WARN, e);
                 e.printStackTrace();
             }
 
             if (timer.getTime() >= 500){
                 LOGGER.warn("Reading file {} took {} ms! Max. is 500 ms!",fileName, timer.getTime());
-                RuntimeException runtimeException = new RuntimeException("Reading a file took " + timer.getTime() + " ms! Max. is 500 ms!");
-                CrashHandler.getInstance().addCrashDetails("File reading timeout!", Level.FATAL , runtimeException, true);
-                throw runtimeException;
+                throw new RuntimeException("Reading a file took " + timer.getTime() + " ms! Max. is 500 ms!");
             }
             timer.stop();
             timer.reset();

@@ -105,9 +105,7 @@ public abstract class FileHandler extends ModHelper {
             }
             else {
                 LOGGER.fatal("Failed to create directory at: " + directoryIn.toPath());
-                RuntimeException runtimeException = new RuntimeException("Unable to create directory! Maybe something is blocking file access?!");
-                CrashHandler.getInstance().addCrashDetails("Unable to create directory! Maybe something is blocking file access?!", Level.FATAL, runtimeException, true);
-                throw runtimeException;
+                throw new RuntimeException("Unable to create directory! Maybe something is blocking file access?!");
             }
         }
         else {

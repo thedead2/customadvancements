@@ -25,10 +25,10 @@ public class MixinCrashReport {
         crashHandler.resolveCrash(exception);
         details.forEach(crashReportCategory -> {
             AtomicReference<String> errorMessage = new AtomicReference<>();
-            crashReportCategory.entries.forEach(crashReportCatgory$entry -> {
-                String key = crashReportCatgory$entry.getKey();
+            crashReportCategory.entries.forEach(crashReportCategory$Entry -> {
+                String key = crashReportCategory$Entry.getKey();
                 if(key.contains("Exception")){
-                    errorMessage.set(crashReportCatgory$entry.getValue());
+                    errorMessage.set(crashReportCategory$Entry.getValue());
                 }
             });
             crashHandler.resolveCrash(crashReportCategory.getStacktrace(), errorMessage.get());

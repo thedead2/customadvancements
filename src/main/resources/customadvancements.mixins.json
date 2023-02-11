@@ -9,7 +9,8 @@
   ],
   "client": [
     "MixinAdvancementsScreen",
-    "MixinSimpleTexture"
+    "MixinSimpleTexture",
+    "MixinWorldOpenFlows"
   ],
   "server": [
   ],

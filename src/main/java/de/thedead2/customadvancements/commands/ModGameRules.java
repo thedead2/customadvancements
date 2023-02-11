@@ -2,7 +2,11 @@ package de.thedead2.customadvancements.commands;
 
 import net.minecraft.world.level.GameRules;
 
-public class ModGameRules {
+public abstract class ModGameRules {
 
-    public static final GameRules.Key<GameRules.BooleanValue> ADVANCEMENT_GENERATOR_GAMERULE = GameRules.register("enableAdvancementGenerator", GameRules.Category.MISC, GameRules.BooleanValue.create(false));
+    public static GameRules.Key<GameRules.BooleanValue> ADVANCEMENT_GENERATOR_GAMERULE;
+
+    public static void register(){
+        ADVANCEMENT_GENERATOR_GAMERULE = GameRules.register("enableAdvancementGenerator", GameRules.Category.MISC, GameRules.BooleanValue.create(false));
+    }
 }
