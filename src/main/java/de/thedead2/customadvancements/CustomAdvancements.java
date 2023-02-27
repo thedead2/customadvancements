@@ -2,6 +2,7 @@ package de.thedead2.customadvancements;
 
 import com.mojang.brigadier.CommandDispatcher;
 import de.thedead2.customadvancements.commands.*;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
 import net.minecraft.commands.CommandSourceStack;
@@ -9,6 +10,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.CrashReportCallables;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -38,6 +40,7 @@ public class CustomAdvancements {
         forgeEventBus.addListener(this::onPlayerLogin);
         forgeEventBus.register(this);
 
+        CrashReportCallables.registerCrashCallable(CrashHandler.getInstance());
         registerLoggerFilter();
     }
 
