@@ -2,6 +2,8 @@ package de.thedead2.customadvancements.util.handler;
 
 import com.google.common.io.ByteStreams;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
+import joptsimple.internal.Strings;
+import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ISystemReportExtender;
 import net.minecraftforge.logging.CrashReportExtender;
@@ -13,7 +15,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
@@ -21,11 +22,12 @@ public class CrashHandler implements ISystemReportExtender {
 
     private static CrashHandler instance;
     private IAdvancement activeAdvancement;
+    private Advancement activeGameAdvancement;
     private File activeFile;
     private final Set<IAdvancement> advancements = new HashSet<>();
     private final Set<ResourceLocation> removedAdvancements = new HashSet<>();
-    private static final String SEPARATOR = "----------------------------------------------------------------------------------------------------------------------------------------------------\n";
     private final Set<CrashDetail> crashDetails = new HashSet<>();
+    private StringBuilder stringBuilder;
 
     private CrashHandler(){
         instance = this;
@@ -37,148 +39,257 @@ public class CrashHandler implements ISystemReportExtender {
 
     @Override
     public String getLabel() {
-        return "\n\n" + MOD_NAME;
+        return "\n\n" + "-- " + MOD_NAME + " --" + "\n" + "Details";
     }
 
     @Override
     public String get() {
-        StringBuilder stringBuilder = new StringBuilder();
-        this.getDetails(stringBuilder);
-
-        return stringBuilder.toString();
+        this.stringBuilder = new StringBuilder();
+        return this.getDetails();
     }
 
-    private void getDetails(StringBuilder stringBuilder){
-        this.getModInformation(stringBuilder);
-        this.getExecutionErrors(stringBuilder);
-        this.getActiveAdvancement(stringBuilder);
-        this.getActiveFile(stringBuilder);
-        this.getLoadedAdvancements(stringBuilder);
-        this.getRemovedAdvancements(stringBuilder);
+    private String getDetails(){
+        this.getModInformation();
+        if(this.activeAdvancement != null || this.activeGameAdvancement != null) {
+            this.getActiveAdvancement();
+        }
+        if(this.activeFile != null) {
+            this.getActiveFile();
+        }
+        this.getExecutionErrors();
+        this.getLoadedAdvancements();
+        this.getRemovedAdvancements();
+
+        this.stringBuilder.append("\n\n");
+        return this.stringBuilder.toString();
     }
 
-    private void getModInformation(StringBuilder stringBuilder){
-        stringBuilder.append("\n");
-        stringBuilder.append("- Mod ID: ").append(MOD_ID).append("\n");
-        stringBuilder.append("- Version: ").append(MOD_VERSION).append("\n");
-        stringBuilder.append("- Path Separator: ").append(PATH_SEPARATOR).append("\n");
-        stringBuilder.append("- Main Path: ").append(DIR_PATH).append("\n");
-        stringBuilder.append("\n\n");
+    private void addDetail(String name, Object in){
+        this.stringBuilder.append("\t").append(name);
+        if(in != null){
+            this.stringBuilder.append(": ");
+            if(in instanceof Throwable){
+                this.stringBuilder.append(((Throwable) in).getMessage());
+            }
+            else {
+                this.stringBuilder.append(in);
+            }
+        }
+        this.stringBuilder.append("\n");
     }
 
-    private void getExecutionErrors(StringBuilder stringBuilder){
+    private void addDetail(String name){
+        this.addDetail(name, null);
+    }
+
+    private void addSection(String name){
+        this.stringBuilder.append("\n");
+        this.stringBuilder.append(name).append(":");
+        this.stringBuilder.append("\n");
+    }
+
+    private void getModInformation(){
+        this.stringBuilder.append("\n");
+        this.addDetail("Mod ID", MOD_ID);
+        this.addDetail("Version", MOD_VERSION);
+        this.addDetail("Path Separator", PATH_SEPARATOR);
+        this.addDetail("Main Path", DIR_PATH);
+        if(this.activeAdvancement == null && this.activeGameAdvancement == null) {
+            this.getActiveAdvancement();
+        }
+        if(this.activeFile == null) {
+            this.getActiveFile();
+        }
+    }
+
+    private void getErrorDetails(CrashDetail crashDetail){
+        this.stringBuilder.append("\n");
+        this.addErrorDetails(crashDetail);
+        this.stringBuilder.append("\n");
+        this.addDetail("Stacktrace", this.addStackTrace(crashDetail));
+        this.stringBuilder.append("\n").append(Strings.repeat('-', 200)).append("\n");
+    }
+
+    private void getExecutionErrors(){
+        if(!this.crashDetails.isEmpty()){
+            this.stringBuilder.append("\n").append(Strings.repeat('-', 200)).append("\n");
+        }
+        this.addSection("All detected execution errors related to " + MOD_NAME);
         if(!this.crashDetails.isEmpty()) {
-            stringBuilder.append("All detected execution errors related to " + MOD_NAME + ":").append("\n");
-            stringBuilder.append("---------------------------------------------------------------").append("\n\n");
             Set<CrashDetail> temp = new HashSet<>();
             this.crashDetails.forEach((crashDetail) -> {
                 if(crashDetail.level().equals(Level.FATAL)){
-                    crashDetail.printStackTrace(stringBuilder);
+                    this.getErrorDetails(crashDetail);
                     temp.add(crashDetail);
                 }
             });
             this.crashDetails.removeAll(temp);
 
             if(this.crashDetails.size() <= 5){
-                this.crashDetails.forEach((crashDetail) -> crashDetail.printStackTrace(stringBuilder));
+                this.crashDetails.forEach(this::getErrorDetails);
             }
             else if(this.crashDetails.size() <= 10){
                 this.crashDetails.forEach((crashDetail) -> {
                     if(crashDetail.level.isInRange(Level.ERROR, Level.FATAL)){
-                        crashDetail.printStackTrace(stringBuilder);
+                        this.getErrorDetails(crashDetail);
                     }
                 });
             }
             else {
                 this.crashDetails.forEach((crashDetail) -> {
                     if(crashDetail.level.equals(Level.FATAL)){
-                        crashDetail.printStackTrace(stringBuilder);
+                        this.getErrorDetails(crashDetail);
                     }
                 });
             }
 
         }
         else {
-            stringBuilder.append(SEPARATOR);
-            stringBuilder.append("There was no execution error detected related to ").append(MOD_NAME).append("!\n\n");
-            stringBuilder.append(SEPARATOR);
+            this.addDetail("There were no execution errors detected!");
         }
     }
 
+    private void addErrorDetails(CrashDetail detail){
+        Throwable throwable = detail.throwable();
+        this.addDetail("Reported Error", getExceptionName(throwable));
+        this.addDetail("Description", detail.description());
+        if(throwable.getCause() != null){
+            this.addDetail("Caused by", getExceptionName(throwable.getCause()));
+        }
+        this.addDetail("Level", detail.level());
+        this.addDetail("Caused Crash", detail.responsibleForCrash() ? "Definitely!" : "Probably Not!");
+    }
 
-    private void getActiveAdvancement(StringBuilder stringBuilder) {
-        stringBuilder.append("Currently active advancement: ");
-        if(this.activeAdvancement != null){
-            stringBuilder.append(this.activeAdvancement.getResourceLocation());
-            stringBuilder.append("\n\n");
-            stringBuilder.append(this.activeAdvancement.getJsonObject());
+    private String getExceptionName(Throwable throwable){
+        return throwable.getClass().getName() + (throwable.getMessage() != null ? (": " + throwable.getMessage()) : "");
+    }
+
+    private String addStackTrace(CrashDetail detail){
+        Throwable throwable = detail.throwable();
+        StringBuilder stringBuilder1 = new StringBuilder();
+        StringBuilder stringBuilder2 = new StringBuilder();
+
+        if(detail.level().equals(Level.FATAL)){
+            stringBuilder2.append(CrashReportExtender.generateEnhancedStackTrace(throwable, false));
+        }
+        else if (detail.level().equals(Level.ERROR)) {
+            stringBuilder2.append(CrashReportExtender.generateEnhancedStackTrace(this.trimStacktrace(throwable, 6), false));
+        }
+        else if (detail.level().equals(Level.WARN)) {
+            stringBuilder2.append(CrashReportExtender.generateEnhancedStackTrace(this.trimStacktrace(throwable, 3), false));
+        }
+        else if (detail.level().equals(Level.DEBUG)) {
+            stringBuilder2.append(CrashReportExtender.generateEnhancedStackTrace(this.trimStacktrace(throwable, 1), false));
+        }
+        String temp = stringBuilder2.toString().replaceAll("\t", "\t\t");
+        return stringBuilder1.append(temp).toString();
+    }
+
+    private Throwable trimStacktrace(Throwable throwable, int length) {
+        StackTraceElement[] stackTraceElements = throwable.getStackTrace();
+        StackTraceElement[] astacktraceelement = new StackTraceElement[length];
+        System.arraycopy(stackTraceElements, 0, astacktraceelement, 0, astacktraceelement.length);
+        throwable.setStackTrace(astacktraceelement);
+        return throwable;
+    }
+
+
+
+    private void getActiveAdvancement() {
+        if(this.activeAdvancement != null || this.activeGameAdvancement != null){
+            this.addSection("Currently active advancement");
+
+            if(this.activeAdvancement != null){
+                this.addDetail(this.activeAdvancement.getResourceLocation().toString(), this.activeAdvancement.getJsonObject());
+            }
+            else {
+                this.addDetail(this.activeGameAdvancement.getId().toString(), this.activeGameAdvancement.deconstruct().serializeToJson());
+            }
+
+            if(this.activeFile == null){
+                this.stringBuilder.append("\n");
+            }
         }
         else {
-            stringBuilder.append("NONE");
+            this.addDetail("Currently active advancement", "NONE");
         }
-        stringBuilder.append("\n\n");
-        stringBuilder.append(SEPARATOR);
     }
 
-    private void getActiveFile(StringBuilder stringBuilder) {
-        stringBuilder.append("Currently active file: ");
+    private void getActiveFile() {
         if(this.activeFile != null){
-            stringBuilder.append(this.activeFile.getName());
-            stringBuilder.append("\n");
-            stringBuilder.append("- Is File: ").append(this.activeFile.isFile());
-            stringBuilder.append("\n");
-            stringBuilder.append("- Is Readable: ").append(this.activeFile.canRead());
-            stringBuilder.append("\n\n");
+            this.addSection("Currently active file");
+            this.addDetail("Name", this.activeFile.getName());
+            this.addDetail("Is File", this.activeFile.isFile());
+            this.addDetail("Is Readable", this.activeFile.canRead());
             try {
                 InputStream fileInput = Files.newInputStream(this.activeFile.toPath());
                 String file_data = new String(ByteStreams.toByteArray(fileInput), StandardCharsets.UTF_8);
-                stringBuilder.append(file_data);
+                file_data = file_data.replaceAll("\n", "\n\t\t");
+                this.addDetail("Data", "\n\t" + file_data);
                 fileInput.close();
             }
-            catch (Exception ignored) {}
+            catch (Exception e) {
+                this.addDetail("Data", "\n\t" + "ERROR while reading file data: " + e.getMessage());
+            }
         }
         else {
-            stringBuilder.append("NONE");
+            this.addDetail("Currently active file", "NONE");
         }
-        stringBuilder.append("\n\n");
-        stringBuilder.append(SEPARATOR);
     }
 
-    private void getLoadedAdvancements(StringBuilder stringBuilder){
-        stringBuilder.append("All loaded Advancements: ");
+    private void getLoadedAdvancements(){
         List<String> temp = new ArrayList<>();
         if(!this.advancements.isEmpty()){
-            stringBuilder.append("\n");
-            this.advancements.forEach(advancement -> temp.add("- " + advancement.toString()));
-            stringBuilder.append(String.join(",\n", temp));
+            this.addSection("All loaded Advancements");
+            int i = 0;
+            for(IAdvancement advancement : this.advancements){
+                StringBuilder builder = new StringBuilder();
+                if(i != 0){
+                    builder.append("\t");
+                }
+                else {
+                    i++;
+                }
+                builder.append(advancement.toString());
+                temp.add(builder.toString());
+            }
+            this.addDetail(String.join(",\n", temp));
         }
-        else {
-            stringBuilder.append("NONE");
-        }
-        stringBuilder.append("\n\n");
-        stringBuilder.append(SEPARATOR);
     }
 
-    private void getRemovedAdvancements(StringBuilder stringBuilder){
-        stringBuilder.append("All removed Advancements: ");
+    private void getRemovedAdvancements(){
         List<String> temp = new ArrayList<>();
         if(!this.removedAdvancements.isEmpty()){
-            stringBuilder.append("\n");
-            this.removedAdvancements.forEach(advancement -> temp.add("- " + advancement.toString()));
-            stringBuilder.append(String.join(",\n", temp));
+            this.addSection("All removed Advancements");
+            int i = 0;
+            for(ResourceLocation advancement : this.removedAdvancements){
+                StringBuilder builder = new StringBuilder();
+                if(i != 0){
+                    builder.append("\t");
+
+                }
+                else {
+                    i++;
+                }
+                builder.append(advancement.toString());
+                temp.add(builder.toString());
+            }
+            this.addDetail(String.join(",\n", temp));
         }
-        else {
-            stringBuilder.append("NONE");
-        }
-        stringBuilder.append("\n\n");
-        stringBuilder.append(SEPARATOR);
     }
 
 
-    public void setActiveAdvancement(IAdvancement advancement){
-        this.activeAdvancement = advancement;
-        if(advancement != null){
-            this.advancements.add(advancement);
+    public <T> void setActiveAdvancement(T advancement){
+        if(advancement instanceof IAdvancement){
+            this.activeAdvancement = (IAdvancement) advancement;
+            this.advancements.add(this.activeAdvancement);
+        }
+        else if(advancement instanceof net.minecraft.advancements.Advancement){
+            this.activeGameAdvancement = (Advancement) advancement;
+        }
+        else if(advancement == null) {
+            this.activeAdvancement = null;
+            this.activeGameAdvancement = null;
         }
     }
 
@@ -190,49 +301,41 @@ public class CrashHandler implements ISystemReportExtender {
         this.removedAdvancements.add(advancement);
     }
 
-
     public void addCrashDetails(String errorDescription, Level level, Throwable throwable){
         this.addCrashDetails(errorDescription, level, throwable, false);
     }
 
-    private void addCrashDetails(String errorDescription, Level level, Throwable throwable, boolean responsibleForCrash){
-        AtomicBoolean i = new AtomicBoolean(false);
-        AtomicBoolean j = new AtomicBoolean(false);
-        AtomicBoolean k = new AtomicBoolean(false);
+    public void addCrashDetails(String errorDescription, Level level, Throwable throwable, boolean responsibleForCrash){
+        CrashDetail crashDetail = new CrashDetail(errorDescription, level, throwable, responsibleForCrash);
         for(CrashDetail crashDetail1 : this.crashDetails){
-            i.set(crashDetail1.description().equals(errorDescription));
-            j.set(crashDetail1.level().equals(level));
-            if(crashDetail1.throwable().getMessage() != null) {
-                k.set(crashDetail1.throwable().getMessage().equals(throwable.getMessage()));
-
-                if(i.get() && j.get() && k.get()){
-                    return;
-                }
-            }
-            if(i.get() && j.get()){
+            if (crashDetail.equals(crashDetail1)){
                 return;
             }
         }
-        CrashDetail crashDetail = new CrashDetail(errorDescription, level, throwable, responsibleForCrash);
         this.crashDetails.add(crashDetail);
     }
 
-    public void resolveCrash(Throwable throwable){
+    public boolean resolveCrash(Throwable throwable){
         for(StackTraceElement element : throwable.getStackTrace()){
             if(element.getClassName().contains("de.thedead2.customadvancements")){
                 this.addCrashDetails("A fatal error occurred executing " + MOD_NAME, Level.FATAL, throwable, true);
-                break;
+                return true;
             }
         }
         if(throwable.getCause() != null){
             this.resolveCrash(throwable.getCause());
         }
+        return false;
     }
 
-    public void resolveCrash(StackTraceElement[] stacktrace, String input){
-        Throwable throwable = this.resolveThrowable(input);
+    public boolean resolveCrash(StackTraceElement[] stacktrace, String input){
+        return this.resolveCrash(this.recreateThrowable(stacktrace, input));
+    }
+
+    public Throwable recreateThrowable(StackTraceElement[] stacktrace, String exceptionMessage){
+        Throwable throwable = this.resolveThrowable(exceptionMessage);
         throwable.setStackTrace(stacktrace);
-        this.resolveCrash(throwable);
+        return throwable;
     }
 
     private Throwable resolveThrowable(String input){
@@ -249,7 +352,7 @@ public class CrashHandler implements ISystemReportExtender {
                 String exceptionMessage = input.substring(i + 1);
                 Object object;
                 try {
-                    object = exceptionClass.getDeclaredConstructor(exceptionMessage.getClass()).newInstance(exceptionMessage);
+                    object = exceptionClass.getDeclaredConstructor(String.class).newInstance(exceptionMessage);
                 }
                 catch (NoSuchMethodException e){
                     object = exceptionClass.getDeclaredConstructor().newInstance();
@@ -273,41 +376,27 @@ public class CrashHandler implements ISystemReportExtender {
         return throwable;
     }
 
+    public void reset(){
+        this.crashDetails.clear();
+        this.advancements.clear();
+        this.removedAdvancements.clear();
+        this.activeAdvancement = null;
+        this.activeFile = null;
+    }
+
     private record CrashDetail(String description, Level level, Throwable throwable, boolean responsibleForCrash) {
 
-        private void printStackTrace(StringBuilder stringBuilder){
-            stringBuilder.append("Description: ").append(this.description).append("\n");
-            Throwable throwable = this.throwable;
-            stringBuilder.append("Reported Error: ").append(throwable.getMessage()).append("\n");
-            if(throwable.getCause() != null){
-                stringBuilder.append("Caused by: ").append(throwable.getCause()).append("\n");
-            }
-            stringBuilder.append("Level: ").append(this.level).append("\n");
-            stringBuilder.append("Caused Crash: ").append(this.responsibleForCrash ? "Definitely!" : "Probably Not!").append("\n");
-            stringBuilder.append("\n");
-            if(this.level.equals(Level.FATAL)){
-                stringBuilder.append(CrashReportExtender.generateEnhancedStackTrace(throwable));
-            }
-            else if (this.level.equals(Level.ERROR)) {
-                stringBuilder.append(CrashReportExtender.generateEnhancedStackTrace(this.trimStacktrace(throwable, 6)));
-            }
-            else if (this.level.equals(Level.WARN)) {
-                stringBuilder.append(CrashReportExtender.generateEnhancedStackTrace(this.trimStacktrace(throwable, 3)));
-            }
-            else if (this.level.equals(Level.DEBUG)) {
-                stringBuilder.append(CrashReportExtender.generateEnhancedStackTrace(this.trimStacktrace(throwable, 1)));
-            }
-
-            stringBuilder.append("\n\n");
-            stringBuilder.append(SEPARATOR);
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            CrashDetail that = (CrashDetail) o;
+            return responsibleForCrash == that.responsibleForCrash && com.google.common.base.Objects.equal(description, that.description) && com.google.common.base.Objects.equal(level, that.level) && com.google.common.base.Objects.equal(throwable, that.throwable);
         }
 
-        private Throwable trimStacktrace(Throwable throwable, int length) {
-            StackTraceElement[] stackTraceElements = throwable.getStackTrace();
-            StackTraceElement[] astacktraceelement = new StackTraceElement[length];
-            System.arraycopy(stackTraceElements, 0, astacktraceelement, 0, astacktraceelement.length);
-            throwable.setStackTrace(astacktraceelement);
-            return throwable;
+        @Override
+        public int hashCode() {
+            return com.google.common.base.Objects.hashCode(description, level, throwable, responsibleForCrash);
         }
     }
 }
