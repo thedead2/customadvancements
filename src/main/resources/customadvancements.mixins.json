@@ -5,6 +5,7 @@
   "refmap": "customadvancements.refmap.json",
   "mixins": [
     "MixinAdvancementsScreen",
+    "MixinCrashReport",
     "MixinJsonReloadListener"
   ],
   "client": [
