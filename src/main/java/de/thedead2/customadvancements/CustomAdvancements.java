@@ -3,6 +3,7 @@ package de.thedead2.customadvancements;
 import com.mojang.brigadier.CommandDispatcher;
 import de.thedead2.customadvancements.commands.*;
 import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.handler.CriteriaConditionsIdentifier;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
 import net.minecraft.commands.CommandSourceStack;
@@ -17,6 +18,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.RegisterEvent;
 import net.minecraftforge.server.command.ConfigCommand;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.LogManager;
@@ -63,6 +65,7 @@ public class CustomAdvancements {
 
     private void onLoadComplete(final FMLLoadCompleteEvent event){
         VersionManager.sendLoggerMessage();
+        //event.enqueueWork(CriteriaConditionsIdentifier::load);
     }
 
 

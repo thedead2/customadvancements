@@ -5,10 +5,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.thedead2.customadvancements.client.ClientRegistrationHandler;
 import de.thedead2.customadvancements.client.gui.components.FakeAdvancementTab;
+import de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget;
 import de.thedead2.customadvancements.client.gui.generator.ClientAdvancementGenerator;
 import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.handler.AdvancementHandler;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
+import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.advancements.AdvancementTabType;
@@ -18,9 +22,15 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ServerboundSeenAdvancementsPacket;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
+
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.ModHelper.reloadAll;
 
 public class AdvancementGeneratorGUI extends Screen implements ClientAdvancements.Listener {
 
@@ -42,7 +52,7 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
     public int screenOffsetX;
     public int screenOffsetY;
     private static final Component TITLE = Component.translatable("gui.customadvancements.advancement_generator.title");
-    private final ClientAdvancements advancements;
+    private ClientAdvancements advancements;
     private final Map<Advancement, FakeAdvancementTab> tabs = Maps.newLinkedHashMap();
     @Nullable
     private FakeAdvancementTab selectedTab;
@@ -63,7 +73,7 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
 
 
     @Override
-    protected void init() {
+    public void init() {
         this.tabs.clear();
         this.selectedTab = null;
         this.advancements.setListener(this);
@@ -117,7 +127,7 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
             RenderSystem.disableDepthTest();
         }
         else {
-            throw new RuntimeException("Unable to create Advancement Generator GUI as there are no advancements to display!");
+            throw new RuntimeException("Unable to create Advancement Generator GUI as there are no advancements to display! That was unexpected!");
         }
     }
 
@@ -140,7 +150,12 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
 
             for(FakeAdvancementTab advancementtab1 : this.tabs.values()) {
                 if (advancementtab1.getPage() == tabPage){
-                    advancementtab1.drawIcon(offsetX, offsetY, this.itemRenderer);
+                    if(advancementtab1.getAdvancement().getId().toString().equals(ModHelper.MOD_ID + ":" + "fake_root_advancement")){
+                        advancementtab1.drawRandomIcon(offsetX, offsetY, this.itemRenderer);
+                    }
+                    else {
+                        advancementtab1.drawIcon(offsetX, offsetY, this.itemRenderer);
+                    }
                 }
             }
             RenderSystem.disableBlend();
@@ -183,7 +198,8 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
             for(FakeAdvancementTab advancementtab : this.tabs.values()) {
                 if (advancementtab.getPage() == tabPage && advancementtab.isMouseOver(offsetX, offsetY, pMouseX, pMouseY)) {
                     if(advancementtab.getAdvancement().getId().toString().equals(ModHelper.MOD_ID + ":" + "fake_root_advancement")){
-                        this.minecraft.setScreen(new ClientAdvancementGenerator(this, null, null, null));
+                        this.advancements.setSelectedTab(advancementtab.getAdvancement(), true);
+                        this.minecraft.setScreen(new ClientAdvancementGenerator(this, null, null, advancementtab.getWidget(advancementtab.getAdvancement())));
                     }
                     else {
                         this.advancements.setSelectedTab(advancementtab.getAdvancement(), true);
@@ -195,7 +211,7 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
 
         double buttonMouseX = pMouseX - offsetX - 9;
         double buttonMouseY = pMouseY - offsetY - 18;
-        if (this.selectedTab.getActiveWidget() != null && this.selectedTab.getActiveWidget().editButton.isMouseOver(buttonMouseX, buttonMouseY)){
+        if (this.selectedTab.getActiveWidget() != null && this.selectedTab.getActiveWidget().editButton != null && this.selectedTab.getActiveWidget().editButton.isMouseOver(buttonMouseX, buttonMouseY)){
             this.selectedTab.getActiveWidget().editButton.onClick(buttonMouseX, buttonMouseY);
         }
         else if(this.selectedTab.getActiveWidget() != null && this.selectedTab.getActiveWidget().addButton.isMouseOver(buttonMouseX, buttonMouseY)){
@@ -247,6 +263,7 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
     public void onClose() {
         this.minecraft.setScreen(this.parent);
         this.minecraft.mouseHandler.grabMouse();
+        ClientAdvancementGenerator.saveBuildAdvancements();
     }
 
     @Override
@@ -305,6 +322,53 @@ public class AdvancementGeneratorGUI extends Screen implements ClientAdvancement
     public void resetScreen(){
         this.setScreenOffset((this.width - WINDOW_WIDTH) / 2, (this.height - WINDOW_HEIGHT) / 2);
         this.renderTooltips = true;
+    }
+
+    public void updateAdvancements(ClientAdvancements advancementsIn, Advancement changedAdvancementWidget){
+        FakeAdvancementTab temp = this.selectedTab;
+        FakeAdvancementWidget activeWidget = temp != null ? temp.getActiveWidget() : null;
+        this.advancements = advancementsIn;
+        this.init();
+        Advancement temp2;
+        if(changedAdvancementWidget != null){
+            temp2 = changedAdvancementWidget.getParent() == null ? changedAdvancementWidget : (temp == null ? advancementsIn.getAdvancements().get(new ResourceLocation(MOD_ID, "fake_root_advancement")) : temp.getAdvancement());
+        }
+        else {
+            temp2 = temp == null ? advancementsIn.getAdvancements().get(new ResourceLocation(MOD_ID, "fake_root_advancement")) : temp.getAdvancement();
+        }
+        this.advancements.setSelectedTab(temp2, true);
+        if(changedAdvancementWidget != null){
+            activeWidget = this.selectedTab.getWidget(changedAdvancementWidget);
+        }
+        if(this.selectedTab != null) {
+            this.selectedTab.setActiveWidget(activeWidget);
+        }
+    }
+
+    public void updateAdvancementDisplay(@NotNull ResourceLocation id, @Nullable ResourceLocation parentId, DisplayInfo displayInfo){
+        Advancement advancement = this.advancements.getAdvancements().get(id);
+        Advancement.Builder builder;
+        boolean changeActiveWidget;
+        if(advancement != null && !advancement.getId().equals(new ResourceLocation(MOD_ID, "fake_root_advancement"))){
+            builder = advancement.deconstruct().display(displayInfo);
+            changeActiveWidget = false;
+        }
+        else {
+            builder = Advancement.Builder.advancement();
+            if(parentId != null){
+                builder.parent(parentId);
+            }
+            builder.display(displayInfo);
+            changeActiveWidget = true;
+        }
+
+        if(this.advancements.getAdvancements().get(builder.parentId) != null){
+            builder.parent(Objects.requireNonNull(this.advancements.getAdvancements().get(builder.parentId)));
+        }
+        advancement = builder.build(id);
+        Collection<Advancement> temp2 = new HashSet<>();
+        temp2.add(advancement);
+        this.updateAdvancements(ClientRegistrationHandler.getFakeAdvancements(temp2), changeActiveWidget ? advancement : null);
     }
 
 

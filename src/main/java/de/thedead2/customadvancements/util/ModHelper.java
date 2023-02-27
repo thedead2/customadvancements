@@ -39,7 +39,7 @@ import static de.thedead2.customadvancements.advancements.CustomAdvancementManag
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.19.2-5.5.0";
+    public static final String MOD_VERSION = "1.19.2-5.5.5";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
@@ -112,6 +112,7 @@ public abstract class ModHelper {
         CHILDREN_PARENT_MAP.clear();
         ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
         ADVANCEMENTS.clear();
+        CrashHandler.getInstance().reset();
     }
 
 
@@ -197,6 +198,7 @@ public abstract class ModHelper {
         public static final ForgeConfigSpec.ConfigValue<Boolean> NO_ADVANCEMENTS;
         public static final ForgeConfigSpec.ConfigValue<Boolean> BLACKLIST_IS_WHITELIST;
         public static final ForgeConfigSpec.ConfigValue<Boolean> DISABLE_STANDARD_ADVANCEMENT_LOAD;
+        public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_ADVANCEMENT_GENERATOR;
         private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
 
 
@@ -217,6 +219,9 @@ public abstract class ModHelper {
             BLACKLIST_IS_WHITELIST = CONFIG_BUILDER.comment("Whether the Blacklist of Advancements should be a Whitelist").define("blacklistIsWhitelist", false);
 
             DISABLE_STANDARD_ADVANCEMENT_LOAD = CONFIG_BUILDER.comment("Whether the mod should overwrite vanilla advancements with generated ones").define("disableStandardAdvancementLoad", false);
+
+            ENABLE_ADVANCEMENT_GENERATOR = CONFIG_BUILDER.comment("Whether the in-game Advancement Generator should be enabled").define("enableAdvancementGenerator", false);
+
 
             CONFIG_BUILDER.pop();
             CONFIG_SPEC = CONFIG_BUILDER.build();

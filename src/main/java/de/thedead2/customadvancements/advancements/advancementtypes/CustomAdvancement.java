@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.advancements.advancementtypes;
 
 import com.google.gson.JsonObject;
+import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 

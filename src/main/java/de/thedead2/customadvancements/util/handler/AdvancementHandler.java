@@ -39,18 +39,20 @@ public abstract class AdvancementHandler extends FileHandler {
 
     public static void writeAdvancementToFile(Advancement advancementIn) throws IOException {
         ResourceLocation advancementId = advancementIn.getId();
-        JsonObject advancementData = /*serializeAdvancementToJson(*/advancementIn.deconstruct().serializeToJson();
+        JsonObject advancementData = serializeToJson(advancementIn.deconstruct());
 
         writeAdvancementToFile(advancementId, advancementData);
     }
-
-    /*public static JsonObject serializeAdvancementToJson(Advancement.Builder builder){
+    
+    public static JsonObject serializeToJson(Advancement.Builder builder){
         if (builder.requirements == null) {
             builder.requirements = builder.requirementsStrategy.createRequirements(builder.criteria.keySet());
         }
 
         JsonObject jsonobject = new JsonObject();
-        if (builder.parentId != null) {
+        if (builder.parent != null) {
+            jsonobject.addProperty("parent", builder.parent.getId().toString());
+        } else if (builder.parentId != null) {
             jsonobject.addProperty("parent", builder.parentId.toString());
         }
 
@@ -60,16 +62,15 @@ public abstract class AdvancementHandler extends FileHandler {
 
         if(builder.rewards != AdvancementRewards.EMPTY){
             jsonobject.add("rewards", builder.rewards.serializeToJson());
-            JsonObject jsonobject1 = new JsonObject();
+        }
+        JsonObject jsonobject1 = new JsonObject();
 
-            for(Map.Entry<String, Criterion> entry : builder.criteria.entrySet()) {
-                jsonobject1.add(entry.getKey(), entry.getValue().serializeToJson());
-            }
-            jsonobject.add("criteria", jsonobject1);
-            JsonArray jsonarray1 = new JsonArray();
+        for(Map.Entry<String, Criterion> entry : builder.criteria.entrySet()) {
+            jsonobject1.add(entry.getKey(), entry.getValue().serializeToJson());
         }
 
-
+        jsonobject.add("criteria", jsonobject1);
+        JsonArray jsonarray1 = new JsonArray();
 
         for(String[] astring : builder.requirements) {
             JsonArray jsonarray = new JsonArray();
@@ -82,8 +83,9 @@ public abstract class AdvancementHandler extends FileHandler {
         }
 
         jsonobject.add("requirements", jsonarray1);
+
         return jsonobject;
-    }*/
+    }
 
 
     private static void getSubDirectories(String pathIn){

@@ -3,6 +3,7 @@ package de.thedead2.customadvancements.client.gui.components;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.thedead2.customadvancements.client.gui.BasicInputScreen;
 import de.thedead2.customadvancements.client.gui.generator.AdvancementGeneratorGUI;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.DisplayInfo;
@@ -43,6 +44,9 @@ public class FakeAdvancementTab extends GuiComponent {
     private boolean centered;
     private int page;
 
+    int i = 0;
+    ItemStack item = BasicInputScreen.getRandomItem().getDefaultInstance();
+
 
     public FakeAdvancementTab(Minecraft pMinecraft, AdvancementGeneratorGUI pScreen, AdvancementTabType pType, int pIndex, Advancement pAdvancement, DisplayInfo pDisplay) {
         this.minecraft = pMinecraft;
@@ -67,14 +71,6 @@ public class FakeAdvancementTab extends GuiComponent {
         return page;
     }
 
-    /*public AdvancementTabType getType() {
-        return this.type;
-    }
-
-    public int getIndex() {
-        return this.index;
-    }*/
-
     public Advancement getAdvancement() {
         return this.advancement;
     }
@@ -87,7 +83,12 @@ public class FakeAdvancementTab extends GuiComponent {
         return this.display;
     }
 
-    public void setActiveWidget(FakeAdvancementWidget widget){this.activeWidget = widget;}
+    public void setActiveWidget(FakeAdvancementWidget widget){
+        this.activeWidget = widget;
+        if(this.activeWidget != null){
+            this.activeWidget.setActiveWidget(true);
+        }
+    }
 
     public void drawTab(PoseStack pPoseStack, int pOffsetX, int pOffsetY, boolean pIsSelected) {
         this.type.draw(pPoseStack, this, pOffsetX, pOffsetY, pIsSelected, this.index);
@@ -95,6 +96,15 @@ public class FakeAdvancementTab extends GuiComponent {
 
     public void drawIcon(int pOffsetX, int pOffsetY, ItemRenderer pRenderer) {
         this.type.drawIcon(pOffsetX, pOffsetY, this.index, pRenderer, this.icon);
+    }
+
+    public void drawRandomIcon(int pOffsetX, int pOffsetY, ItemRenderer pRenderer){
+        i++;
+        if(i > 250){
+            item = BasicInputScreen.getRandomItem().getDefaultInstance();
+            i = 0;
+        }
+        this.type.drawIcon(pOffsetX, pOffsetY, this.index, pRenderer, item);
     }
 
     public void drawContents(PoseStack pPoseStack) {

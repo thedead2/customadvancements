@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.thedead2.customadvancements.client.gui.generator.ClientAdvancementGenerator;
 import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.Minecraft;
@@ -24,6 +25,8 @@ import net.minecraft.util.Mth;
 import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.List;
+
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 public class FakeAdvancementWidget extends GuiComponent {
     public static final ResourceLocation WIDGETS_LOCATION = new ResourceLocation(ModHelper.MOD_ID, "textures/gui/advancements/widgets.png");
@@ -53,13 +56,14 @@ public class FakeAdvancementWidget extends GuiComponent {
     private final List<FakeAdvancementWidget> children = Lists.newArrayList();
 
     private final int x;
-    private final int y;// what are x and y doing?
+    private final int y;
 
     private final int tooltipWidth;
     private final int tooltipHeight;
     private final ResourceLocation resourceLocation;
 
     public boolean drawingTooltip = false;
+    private boolean isActiveWidget = false;
     public EditButton editButton;
     public AddButton addButton;
     private final AdvancementWidgetType advancementwidgettype = AdvancementWidgetType.OBTAINED;
@@ -83,7 +87,10 @@ public class FakeAdvancementWidget extends GuiComponent {
         }
 
         this.resourceLocation = this.advancement.getId();
-        l = Math.max(l, pMinecraft.font.width(this.resourceLocation.toString()));
+
+        if(!this.advancement.getId().toString().equals(MOD_ID + ":fake_root_advancement")){
+            l = Math.max(l, pMinecraft.font.width(this.resourceLocation.toString()));
+        }
 
         this.tooltipWidth = l + TITLE_PADDING_LEFT + TITLE_PADDING_RIGHT;
         LINE_HEIGHT = this.minecraft.font.lineHeight;
@@ -159,7 +166,13 @@ public class FakeAdvancementWidget extends GuiComponent {
     public void draw(PoseStack pPoseStack, int pX, int pY) {
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.setShaderTexture(BOX_X, WIDGETS_LOCATION);
-            drawIcon(pPoseStack, pX, pY);
+            if(this.advancement.getId().toString().equals(ModHelper.MOD_ID + ":" + "fake_root_advancement")) {
+                this.blit(pPoseStack, pX + this.x + TITLE_PADDING_LEFT, pY + this.y, this.display.getFrame().getTexture(), 128 + advancementwidgettype.getIndex() * FRAME_WIDTH, FRAME_WIDTH, FRAME_WIDTH);
+                this.tab.drawRandomIcon(pX - 62, pY + 24, this.minecraft.getItemRenderer());
+            }
+            else {
+                drawIcon(pPoseStack, pX, pY);
+            }
 
         for(FakeAdvancementWidget advancementWidget : this.children) {
             advancementWidget.draw(pPoseStack, pX, pY);
@@ -176,6 +189,8 @@ public class FakeAdvancementWidget extends GuiComponent {
     }
 
     public void drawHover(PoseStack pPoseStack, int pX, int pY, float pFade, int pWidth, int pHeight, int pMouseX, int pMouseY, float pPartialTick) {
+        CrashHandler.getInstance().setActiveAdvancement(this.advancement);
+
         boolean tooltipWiderThanScreen = pWidth + pX + this.x + this.tooltipWidth + HEIGHT >= this.tab.getScreen().width;
         boolean tooltipLongerThanScreen = 113 - pY - this.y - HEIGHT <= 6 + this.description.size() * LINE_HEIGHT;
 
@@ -191,7 +206,14 @@ public class FakeAdvancementWidget extends GuiComponent {
         if (!this.description.isEmpty()) {
             this.renderTooltipBackground(pPoseStack, tooltipStartPosition, tooltipLongerThanScreen ? (yPos + HEIGHT - this.tooltipHeight) : yPos, this.tooltipWidth, this.tooltipHeight, 10, BOX_WIDTH, HEIGHT, 0, 52, yPos);
         }
-        drawIcon(pPoseStack, pX, pY);
+
+        if(this.advancement.getId().toString().equals(ModHelper.MOD_ID + ":" + "fake_root_advancement")) {
+            this.blit(pPoseStack, pX + this.x + TITLE_PADDING_LEFT, pY + this.y, this.display.getFrame().getTexture(), 128 + advancementwidgettype.getIndex() * FRAME_WIDTH, FRAME_WIDTH, FRAME_WIDTH);
+            this.tab.drawRandomIcon(pX - 62, pY + 24, this.minecraft.getItemRenderer());
+        }
+        else {
+            drawIcon(pPoseStack, pX, pY);
+        }
 
         this.minecraft.font.drawShadow(pPoseStack, this.title, (tooltipWiderThanScreen ? (float)(tooltipStartPosition + TITLE_PADDING_RIGHT) : (float)(pX + this.x + TITLE_X)), (float)(pY + this.y + TITLE_Y), -1);
 
@@ -204,18 +226,30 @@ public class FakeAdvancementWidget extends GuiComponent {
         int heightOffset = 2;
         int addButtonOffset = 4;
 
-        this.editButton = new EditButton((tooltipStartPosition + TITLE_PADDING_RIGHT), (int) (yPosDescription + heightOffset + BUTTON_HEIGHT), BUTTON_HEIGHT, BUTTON_HEIGHT, Component.literal("Edit"), pButton -> this.minecraft.setScreen(new ClientAdvancementGenerator(this.tab.getScreen(), this.advancement, this)), this);
-        this.addButton = new AddButton((tooltipStartPosition + TITLE_PADDING_RIGHT + BUTTON_HEIGHT), (int) (yPosDescription + heightOffset + BUTTON_HEIGHT - addButtonOffset/2), BUTTON_HEIGHT + addButtonOffset, BUTTON_HEIGHT + addButtonOffset, Component.literal("Add"), pButton -> this.minecraft.setScreen(new ClientAdvancementGenerator(this.tab.getScreen(), null, this.advancement.getId(), this)), this);
+        if(!this.advancement.getId().toString().equals(MOD_ID + ":fake_root_advancement")){
+            this.editButton = new EditButton((tooltipStartPosition + TITLE_PADDING_RIGHT), (int) (yPosDescription + heightOffset + BUTTON_HEIGHT), BUTTON_HEIGHT, BUTTON_HEIGHT, Component.literal("Edit"), pButton -> this.minecraft.setScreen(new ClientAdvancementGenerator(this.tab.getScreen(), this.advancement, this)), this);
+            this.addButton = new AddButton((tooltipStartPosition + TITLE_PADDING_RIGHT + BUTTON_HEIGHT), (int) (yPosDescription + heightOffset + BUTTON_HEIGHT - addButtonOffset/2), BUTTON_HEIGHT + addButtonOffset, BUTTON_HEIGHT + addButtonOffset, Component.literal("Add"), pButton -> this.minecraft.setScreen(new ClientAdvancementGenerator(this.tab.getScreen(), null, this.advancement.getId(), this)), this);
 
 
-        this.minecraft.font.draw(pPoseStack, this.resourceLocation.toString(), (float)(tooltipStartPosition + TITLE_PADDING_RIGHT), yPosDescription + 10F, Color.CYAN.getRGB()); //renders resource location
+            this.minecraft.font.draw(pPoseStack, this.resourceLocation.toString(), (float)(tooltipStartPosition + TITLE_PADDING_RIGHT), yPosDescription + 10F, Color.CYAN.getRGB()); //renders resource location
 
-        this.editButton.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
+            this.editButton.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
+        }
+        else {
+            this.addButton = new AddButton((tooltipStartPosition + TITLE_PADDING_RIGHT), (int) (yPosDescription + heightOffset + BUTTON_HEIGHT), BUTTON_HEIGHT + addButtonOffset, BUTTON_HEIGHT + addButtonOffset, Component.literal("Add"), pButton -> this.minecraft.setScreen(new ClientAdvancementGenerator(this.tab.getScreen(), null, null, this)), this);
+        }
         this.addButton.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
+
+        CrashHandler.getInstance().setActiveAdvancement(null);
     }
 
     private void drawIcon(PoseStack pPoseStack, int pX, int pY){
-        this.blit(pPoseStack, pX + this.x + TITLE_PADDING_LEFT, pY + this.y, this.display.getFrame().getTexture(), 128 + advancementwidgettype.getIndex() * FRAME_WIDTH, FRAME_WIDTH, FRAME_WIDTH);
+        if(this.isActiveWidget || this.drawingTooltip || this.tab.getScreen().renderTooltips){
+            this.blit(pPoseStack, pX + this.x + TITLE_PADDING_LEFT, pY + this.y, this.display.getFrame().getTexture(), 128 + AdvancementWidgetType.OBTAINED.getIndex() * FRAME_WIDTH, FRAME_WIDTH, FRAME_WIDTH);
+        }
+        else {
+            this.blit(pPoseStack, pX + this.x + TITLE_PADDING_LEFT, pY + this.y, this.display.getFrame().getTexture(), 128 + AdvancementWidgetType.UNOBTAINED.getIndex() * FRAME_WIDTH, FRAME_WIDTH, FRAME_WIDTH);
+        }
         this.minecraft.getItemRenderer().renderAndDecorateFakeItem(this.display.getIcon(), pX + this.x + ICON_X, pY + this.y + ICON_Y);
     }
 
@@ -283,6 +317,7 @@ public class FakeAdvancementWidget extends GuiComponent {
         boolean mouseInArea = pMouseX >= leftXCorner && pMouseX <= rightXCorner && pMouseY >= topYCorner && pMouseY <= bottomYCorner;
 
         this.tab.setActiveWidget(mouseInArea ? this : null);
+        this.isActiveWidget = mouseInArea;
 
         if (!mouseInArea) {
             drawingTooltip = false;
@@ -298,7 +333,14 @@ public class FakeAdvancementWidget extends GuiComponent {
                 this.parent.addChild(this);
             }
         }
+    }
 
+    public Advancement getAdvancement() {
+        return this.advancement;
+    }
+
+    public void setActiveWidget(boolean b){
+        this.isActiveWidget = b;
     }
 
     public int getY() {

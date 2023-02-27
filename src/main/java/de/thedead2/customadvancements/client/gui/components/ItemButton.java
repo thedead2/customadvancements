@@ -6,9 +6,11 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.function.Supplier;
+
 public class ItemButton extends Button {
 
-    private final ItemStack itemStack;
+    private ItemStack itemStack;
 
     public ItemButton(int pX, int pY, ItemStack itemStack, OnPress pOnPress) {
         super(pX, pY, 16, 16, Component.empty(), pOnPress);
@@ -17,12 +19,16 @@ public class ItemButton extends Button {
 
     @Override
     public boolean isMouseOver(double pMouseX, double pMouseY) {
-        int leftXCorner = this.x;
-        int rightXCorner = leftXCorner + this.width;
-        int topYCorner = this.y;
-        int bottomYCorner = topYCorner + this.height;
+        float leftXCorner = this.x;
+        float rightXCorner = leftXCorner + this.width;
+        float topYCorner = this.y;
+        float bottomYCorner = topYCorner + this.height;
 
         return pMouseX >= leftXCorner && pMouseX <= rightXCorner && pMouseY >= topYCorner && pMouseY <= bottomYCorner;
+    }
+
+    public void setItem(ItemStack itemStack) {
+        this.itemStack = itemStack;
     }
 
     @Override

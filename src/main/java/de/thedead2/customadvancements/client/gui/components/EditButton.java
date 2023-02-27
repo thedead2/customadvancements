@@ -29,7 +29,7 @@ public class EditButton extends Button {
     @Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, isHoveredOrFocused() ? EDIT_BUTTON_HOVERED : EDIT_BUTTON);
+        RenderSystem.setShaderTexture(0, isHoveredOrFocused() && isActive() ? EDIT_BUTTON_HOVERED : EDIT_BUTTON);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();

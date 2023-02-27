@@ -7,6 +7,7 @@ import de.thedead2.customadvancements.util.ModHelper;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.FrameType;
 import net.minecraft.advancements.TreeNodePosition;
+import net.minecraft.advancements.critereon.ImpossibleTrigger;
 import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -25,6 +26,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -36,48 +38,51 @@ import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 public class ClientRegistrationHandler {
 
     private static final Minecraft MINECRAFT = Minecraft.getInstance();
-    public static final Map<ResourceLocation, Advancement.Builder> TEMP = new HashMap<>();
     public static final Lazy<KeyMapping> ADVANCEMENT_GENERATOR_KEY = Lazy.of(() -> new KeyMapping(
             "key.customadvancements.advancement_generator_key",
             KeyConflictContext.IN_GAME,
             KeyModifier.SHIFT,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_G,
-            "key.categories.customadvancements.key_category"));
+            "key.categories.customadvancements.key_category")
+    );
 
 
     @SubscribeEvent
     public static void onKeyPressed(final TickEvent.ClientTickEvent event){
         if (event.phase == TickEvent.Phase.END) {
             while (ADVANCEMENT_GENERATOR_KEY.get().consumeClick()) {
-                TEMP.clear();
-                LOGGER.info("Testing!");
-                if(MINECRAFT.player != null) {
-                    LOGGER.info("Testing2!");
-                    boolean test = MINECRAFT.level.getGameRules().getBoolean(ModGameRules.ADVANCEMENT_GENERATOR_GAMERULE);
-                    LOGGER.info("Value of Gamerule: " + test);
-                    if(!test) {//rule always returns false
-                        LOGGER.info("Testing3!");
-                        MINECRAFT.setScreen(new AdvancementGeneratorGUI(getFakeAdvancements(), MINECRAFT.screen, MINECRAFT));
-                        }
-                    else {
-                        LOGGER.info("Testing4!");
-                    }
+                if(ModHelper.ConfigManager.ENABLE_ADVANCEMENT_GENERATOR.get()) {
+                    MINECRAFT.setScreen(new AdvancementGeneratorGUI(getFakeAdvancements(), MINECRAFT.screen, MINECRAFT));
+                }
+                else {
+                    MINECRAFT.player.sendSystemMessage(Component.literal("Advancement Generator is deactivated!"));
                 }
             }
         }
     }
 
     public static ClientAdvancements getFakeAdvancements(){
+        return getFakeAdvancements(null);
+    }
+
+    public static ClientAdvancements getFakeAdvancements(Collection<Advancement> additionalAdvancements){
         Map<ResourceLocation, Advancement.Builder> temp = new HashMap<>();
         Objects.requireNonNull(MINECRAFT.getSingleplayerServer()).getAdvancements().getAllAdvancements().forEach((advancement -> {
             ResourceLocation id = advancement.getId();
             Advancement.Builder builder1 = advancement.deconstruct();
             temp.put(id, builder1);
-
         }));
 
-        Advancement.Builder tempAdvancement$Builder = Advancement.Builder.advancement().display(Items.DIAMOND, Component.translatable("display.customadvancements.fake_advancement_title"), Component.translatable("display.customadvancements.fake_advancement_description"), new ResourceLocation("textures/gui/advancements/backgrounds/stone.png"), FrameType.TASK, false, false, false).addCriterion("fake_root_advancement", InventoryChangeTrigger.TriggerInstance.hasItems(Blocks.CRAFTING_TABLE));
+        if(additionalAdvancements != null){
+            additionalAdvancements.forEach(advancement -> {
+                ResourceLocation id = advancement.getId();
+                Advancement.Builder builder1 = advancement.deconstruct();
+                temp.put(id, builder1);
+            });
+        }
+
+        Advancement.Builder tempAdvancement$Builder = Advancement.Builder.advancement().display(Items.DIAMOND, Component.translatable("display.customadvancements.fake_advancement_title"), Component.translatable("display.customadvancements.fake_advancement_description"), new ResourceLocation("textures/gui/advancements/backgrounds/stone.png"), FrameType.TASK, false, false, false).addCriterion("fake_root_advancement", new ImpossibleTrigger.TriggerInstance());
         ResourceLocation tempResourceLocation = new ResourceLocation(MOD_ID, "fake_root_advancement");
         temp.put(tempResourceLocation, tempAdvancement$Builder);
 

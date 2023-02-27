@@ -2,43 +2,50 @@ package de.thedead2.customadvancements.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.thedead2.customadvancements.client.gui.components.CheckBox;
-import de.thedead2.customadvancements.client.gui.components.EditButton;
-import de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget;
+import de.thedead2.customadvancements.client.gui.components.*;
 import de.thedead2.customadvancements.client.gui.generator.AdvancementGeneratorGUI;
+import de.thedead2.customadvancements.client.gui.generator.ClientAdvancementGenerator;
+import de.thedead2.customadvancements.util.ModHelper;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.advancements.FrameType;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.advancements.AdvancementWidgetType;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget.ICON_X;
 import static de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget.ICON_Y;
 import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
-import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 public class BasicInputScreen extends Screen {
 
-    protected final Screen parent;
+    protected final ClientAdvancementGenerator generator;
+    protected final AdvancementGeneratorGUI mainGui;
     protected final Minecraft minecraft = Minecraft.getInstance();
-    protected final Set<CheckBox> checkBoxes = new HashSet<>();
-    protected final Map<String, EditBox> editBoxes = new HashMap<>();
+    protected final Map<String, CheckBox> checkBoxes = new HashMap<>();
+    protected final Map<String, EditBoxWithEditButton> editBoxes = new HashMap<>();
+    protected final Map<String, DropDownList<?>> dropDownLists = new HashMap<>();
+    protected final Map<String, Button> mainButtons = new HashMap<>();
     protected final FakeAdvancementWidget widget;
 
     protected DisplayInfo display;
@@ -62,18 +69,22 @@ public class BasicInputScreen extends Screen {
 
     protected static final Component DEFAULT_DESCRIPTION = Component.literal("Example Description");
     protected static final Component DEFAULT_TITLE = Component.literal("Example Title");
-    protected static final ItemStack DEFAULT_ITEM = new ItemStack(Items.DIAMOND);
+    //protected static final ItemStack DEFAULT_ITEM = new ItemStack(Items.DIAMOND);
     protected static final FrameType DEFAULT_FRAME = FrameType.TASK;
-    protected static final ResourceLocation DEFAULT_BACKGROUND = new ResourceLocation( "textures/gui/advancements/stone.png");
+    protected static final ResourceLocation DEFAULT_BACKGROUND = new ResourceLocation( "textures/gui/advancements/backgrounds/stone.png");
 
     protected final Supplier<Integer> screenWidthSupplier;
     protected final Supplier<Integer> screenHeightSupplier;
     protected final Supplier<int[]> screenStartPositionSupplier;
 
+    int i = 0;
+    ItemStack item = getRandomItem().getDefaultInstance();
 
-    public BasicInputScreen(Screen parent, DisplayInfo display, FakeAdvancementWidget widget, Supplier<Integer> screenWidthSupplier, Supplier<Integer> screenHeightSupplier, Supplier<int[]> screenStartPositionSupplier) {
+
+    public BasicInputScreen(ClientAdvancementGenerator generator, AdvancementGeneratorGUI gui, DisplayInfo display, @NotNull FakeAdvancementWidget widget, Supplier<Integer> screenWidthSupplier, Supplier<Integer> screenHeightSupplier, Supplier<int[]> screenStartPositionSupplier) {
         super(GameNarrator.NO_TITLE);
-        this.parent = parent;
+        this.generator = generator;
+        this.mainGui = gui;
         this.display = display;
         this.widget = widget;
         this.screenWidthSupplier = screenWidthSupplier;
@@ -86,7 +97,7 @@ public class BasicInputScreen extends Screen {
             this.display = new DisplayInfo(itemStack == null ? this.display.getIcon() : itemStack, title == null ? this.display.getTitle() : title, description == null ? this.display.getDescription() : description, background == null ? (this.parentId != null ? null: this.display.getBackground()) : background, frame == null ? this.display.getFrame() : frame, showToast, announceToChat, hidden);
         }
         else {
-            this.display = new DisplayInfo(itemStack == null ? DEFAULT_ITEM : itemStack, title == null ? DEFAULT_TITLE : title, description == null ? DEFAULT_DESCRIPTION : description, background == null ? (this.parentId != null ? null: DEFAULT_BACKGROUND) : background, frame == null ? DEFAULT_FRAME : frame, showToast, announceToChat, hidden);
+            this.display = new DisplayInfo(itemStack == null ? getRandomItem().getDefaultInstance() : itemStack, title == null ? DEFAULT_TITLE : title, description == null ? DEFAULT_DESCRIPTION : description, background == null ? (this.parentId != null ? null: DEFAULT_BACKGROUND) : background, frame == null ? DEFAULT_FRAME : frame, showToast, announceToChat, hidden);
         }
         LOGGER.debug("Updated DisplayInfo with: {}, {}, {}, {}, {}, {}, {}, {}", this.display.getIcon(), this.display.getTitle(), this.display.getDescription(), this.display.getBackground(), this.display.getFrame(), this.display.shouldShowToast(), this.display.shouldAnnounceChat(), this.display.isHidden());
     }
@@ -111,6 +122,10 @@ public class BasicInputScreen extends Screen {
             }
             else if (t instanceof Boolean && r instanceof Boolean && v != null) {
                 this.updateDisplayInfo(null, null, null, null, null, (Boolean) t, (Boolean) r, v);
+            }
+
+            if(this.generator != null && this.generator.advancementId != null){
+                this.mainGui.updateAdvancementDisplay(this.generator.advancementId, this.generator.parentId, this.display);
             }
         }
         else {
@@ -148,22 +163,33 @@ public class BasicInputScreen extends Screen {
         return this.minecraft.font.width(in);
     }
 
-    public void addCheckBox(CheckBox checkBox){
+    public void addCheckBox(String id, CheckBox checkBox){
         this.addRenderableWidget(checkBox);
-        this.checkBoxes.add(checkBox);
+        this.checkBoxes.put(id, checkBox);
     }
 
-    public void addEditBox(int pX, int pY, String key, Supplier<String> input, Consumer<EditBox> action){
-        int editBoxWidth = this.display != null ? getFontWidth(input.get()) + 10 : editBox[0];
-        EditBox editBox = new EditBox(this.font, pX, pY, editBoxWidth, this.editBox[1], Component.empty());
+    public void addDropDownList(Collection<?> entries, String key, int x, int y, int listHeight, Supplier<String> input, Supplier<Integer> color, Consumer<EditBox> onSave){
+        EditBox editBox1 = this.addEditBox(x, y, key, input, color, onSave);
+        DropDownList<?> list = new DropDownList<>(entries, editBox1, listHeight);
+        this.addRenderableWidget(list);
+        this.dropDownLists.put(key, list);
+    }
+
+    public EditBox addEditBox(int pX, int pY, String key, Supplier<String> input, Supplier<Integer> color, Consumer<EditBox> action){
+        int temp = this.display != null ? getFontWidth(input.get()) + 10 : editBox[0];
+        int editBoxWidth = temp <= this.screenWidth/2 && temp >= 50 ? temp : this.screenWidth/2;
+        CustomEditBox editBox = new CustomEditBox(this.font, pX, pY, editBoxWidth, this.editBox[1], Component.empty(), color);
         editBox.setMaxLength(Integer.MAX_VALUE);
         editBox.setVisible(false);
-        if(this.display != null){
+        try {
             editBox.setValue(input.get());
         }
+        catch (NullPointerException ignored){}
+
+
         this.addRenderableWidget(editBox);
 
-        this.addRenderableWidget(new EditButton(screenTopRightCorner[0] - EDIT_BUTTON_LENGTH - PADDING_RIGHT, pY - 3, EDIT_BUTTON_LENGTH -1, EDIT_BUTTON_LENGTH -1, Component.empty(), pButton -> {
+        EditButton editButton = new EditButton(screenTopRightCorner[0] - EDIT_BUTTON_LENGTH - PADDING_RIGHT, pY - 3, EDIT_BUTTON_LENGTH -1, EDIT_BUTTON_LENGTH -1, Component.empty(), pButton -> {
             if(!editBox.isVisible()){
                 editBox.setVisible(true);
             }
@@ -171,9 +197,12 @@ public class BasicInputScreen extends Screen {
                 action.accept(editBox);
                 editBox.setVisible(false);
             }
-        }));
+        });
 
-        this.editBoxes.put(key, editBox);
+        this.addRenderableWidget(editButton);
+        this.editBoxes.put(key, new EditBoxWithEditButton(editBox, editButton));
+
+        return editBox;
     }
 
 
@@ -193,12 +222,13 @@ public class BasicInputScreen extends Screen {
 
     @Override
     public void render(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
-        if (this.widget != null && this.parent instanceof AdvancementGeneratorGUI) {
+        if (this.widget != null && this.mainGui != null) {
             int offsetX = -(Mth.floor(this.widget.tab.scrollX) + this.widget.getX() + AdvancementGeneratorGUI.WINDOW_WIDTH / 2 - FakeAdvancementWidget.FRAME_WIDTH - PADDING);
-            ((AdvancementGeneratorGUI) this.parent).setScreenOffset(offsetX, 0);
-            ((AdvancementGeneratorGUI) this.parent).setRenderTooltips(false);
-            this.parent.render(poseStack, mouseX, mouseY, partialTick);
+            this.mainGui.setScreenOffset(offsetX, 0);
+            this.mainGui.setRenderTooltips(false);
+            this.mainGui.render(poseStack, mouseX, mouseY, partialTick);
         }
+
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, FakeAdvancementWidget.WIDGETS_LOCATION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -208,18 +238,35 @@ public class BasicInputScreen extends Screen {
         this.renderRectangleFromImage(poseStack, screenTopLeftCorner[0], screenTopLeftCorner[1], screenWidth, TOP_OFFSET, 10, 200, 26, 0, 0);
 
         this.drawIcon(poseStack, this.framePos[0] , this.framePos[1]);
-        super.render(poseStack, mouseX, mouseY, partialTick);
+
+        for(Widget widget : this.renderables) {
+            if(widget instanceof Button button){
+                if(this.isInScreen(button)){
+                    button.render(poseStack, mouseX, mouseY, partialTick);
+                }
+            }
+            else {
+                widget.render(poseStack, mouseX, mouseY, partialTick);
+            }
+        }
     }
 
     public void initMainButtons(){
         int[] mainButton = {this.screenWidth/3 - (FRAME_LENGTH /2) + 2, 20};
 
-        this.addRenderableWidget(new Button(screenBottomLeftCorner[0] + PADDING + FRAME_LENGTH /2, screenBottomLeftCorner[1] - mainButton[1] - 15, mainButton[0], mainButton[1], Component.literal("Save"), button -> {
+        Button saveButton = new Button(screenBottomLeftCorner[0] + PADDING + FRAME_LENGTH /2, screenBottomLeftCorner[1] - mainButton[1] - 15, mainButton[0], mainButton[1], Component.literal("Save"), button -> {
             this.save();
             this.onClose();
-        }));
-        this.addRenderableWidget(new Button(screenBottomLeftCorner[0] + PADDING + FRAME_LENGTH /2 + mainButton[0] + 2, screenBottomLeftCorner[1] - mainButton[1] - 15, mainButton[0], mainButton[1], Component.literal("Exit"), button -> this.onClose()));
-        this.addRenderableWidget(new Button(screenBottomLeftCorner[0] + PADDING + FRAME_LENGTH /2 + (mainButton[0] + 2) * 2, screenBottomLeftCorner[1] - mainButton[1] - 15, mainButton[0], mainButton[1], Component.literal("Reset"), button -> this.reset()));
+        }, (pButton, pPoseStack, pMouseX, pMouseY) -> this.onMainButtonTooltip("save", pPoseStack, pMouseX, pMouseY));
+        this.mainButtons.put("save", saveButton);
+        Button exitButton = new Button(screenBottomLeftCorner[0] + PADDING + FRAME_LENGTH /2 + mainButton[0] + 2, screenBottomLeftCorner[1] - mainButton[1] - 15, mainButton[0], mainButton[1], Component.literal("Exit"), button -> this.onClose());
+        this.mainButtons.put("exit", exitButton);
+        Button resetButton = new Button(screenBottomLeftCorner[0] + PADDING + FRAME_LENGTH /2 + (mainButton[0] + 2) * 2, screenBottomLeftCorner[1] - mainButton[1] - 15, mainButton[0], mainButton[1], Component.literal("Reset"), button -> this.reset());
+        this.mainButtons.put("reset", resetButton);
+
+        this.addRenderableWidget(saveButton);
+        this.addRenderableWidget(exitButton);
+        this.addRenderableWidget(resetButton);
     }
 
     protected void drawIcon(PoseStack pPoseStack, int pX, int pY){
@@ -228,8 +275,18 @@ public class BasicInputScreen extends Screen {
             this.minecraft.getItemRenderer().renderAndDecorateFakeItem(this.display.getIcon(), (int) (pX + ICON_X/1.5), pY + ICON_Y);
         }
         else {
-            this.blit(pPoseStack, pX, pY, FrameType.TASK.getTexture(), 128 + AdvancementWidgetType.OBTAINED.getIndex() * FRAME_LENGTH, FRAME_LENGTH, FRAME_LENGTH);
-            this.minecraft.getItemRenderer().renderAndDecorateFakeItem(new ItemStack(Items.DIAMOND), (int) (pX + ICON_X/1.5), pY + ICON_Y);
+            this.blit(pPoseStack, pX, pY, DEFAULT_FRAME.getTexture(), 128 + AdvancementWidgetType.OBTAINED.getIndex() * FRAME_LENGTH, FRAME_LENGTH, FRAME_LENGTH);
+            i++;
+            if(i > 40){
+                item = getRandomItem().getDefaultInstance();
+                i = 0;
+            }
+            if(this.widget.getAdvancement().getId().toString().equals(ModHelper.MOD_ID + ":" + "fake_root_advancement")) {
+                this.widget.tab.drawRandomIcon((int) (pX + ICON_X/1.5) - 70, pY + ICON_Y + 19, this.itemRenderer);
+            }
+            else {
+                this.minecraft.getItemRenderer().renderAndDecorateFakeItem(item, (int) (pX + ICON_X/1.5), pY + ICON_Y);
+            }
         }
     }
 
@@ -258,20 +315,38 @@ public class BasicInputScreen extends Screen {
         }
     }
 
-    public void save(){}
+    protected boolean isInScreen(Button button){
+        int widgetX = button.x;
+        int widgetY = button.y;
+        int[] mainButton = {this.screenWidth/3 - (FRAME_LENGTH /2) + 2, 20};
+
+        return widgetX >= screenTopLeftCorner[0] && widgetX <= screenTopRightCorner[0] && widgetY >= screenTopLeftCorner[1] && widgetY <= screenBottomLeftCorner[1] - mainButton[1] - 15;
+    }
+
+    public void save(){
+        this.onClose();
+    }
 
     public void reset(){}
 
+    public void onMainButtonTooltip(String buttonId, PoseStack poseStack, int mouseX, int mouseY) {}
+
+    public static Item getRandomItem(){
+        Random random = new Random();
+        List<Item> items = ForgeRegistries.ITEMS.getValues().stream().toList();
+        int randomInt = random.nextInt(items.size());
+        return items.get(randomInt);
+    }
+
     @Override
     public void onClose() {
-        if(this.parent != null){
-            if(this.parent instanceof AdvancementGeneratorGUI){
-                ((AdvancementGeneratorGUI) this.parent).setRenderTooltips(true);
-            }
-            this.minecraft.setScreen(this.parent);
+        if(this.generator != null){
+            this.minecraft.setScreen(this.generator);
         }
         else {
             super.onClose();
         }
     }
+
+    protected record EditBoxWithEditButton(EditBox editBox, EditButton editButton){}
 }

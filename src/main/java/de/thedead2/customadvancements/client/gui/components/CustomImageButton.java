@@ -9,24 +9,21 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
-import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
+public class CustomImageButton extends Button {
 
-public class AddButton extends Button {
+    private final ResourceLocation texture;
+    private final ResourceLocation textureHovered;
 
-    private final FakeAdvancementWidget widget;
-    private static final ResourceLocation ADD_BUTTON = new ResourceLocation(MOD_ID, "textures/gui/button/add_button.png");
-    private static final ResourceLocation ADD_BUTTON_HOVERED = new ResourceLocation(MOD_ID, "textures/gui/button/add_button_hovered.png");
-
-    public AddButton(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress, FakeAdvancementWidget widget) {
-        super(pX, pY, pWidth, pHeight, pMessage, pOnPress);
-        this.widget = widget;
+    public CustomImageButton(int pX, int pY, int pWidth, int pHeight, ResourceLocation texture, ResourceLocation textureHovered, OnPress pOnPress) {
+        super(pX, pY, pWidth, pHeight, Component.empty(), pOnPress);
+        this.texture = texture;
+        this.textureHovered = textureHovered;
     }
-
 
     @Override
     public void renderButton(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, isHoveredOrFocused() && isActive() ? ADD_BUTTON_HOVERED : ADD_BUTTON);
+        RenderSystem.setShaderTexture(0, isHoveredOrFocused() && isActive() ? this.textureHovered : this.texture);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();
@@ -51,13 +48,5 @@ public class AddButton extends Button {
         int bottomYCorner = topYCorner + this.height;
 
         return pMouseX >= leftXCorner && pMouseX <= rightXCorner && pMouseY >= topYCorner && pMouseY <= bottomYCorner;
-    }
-
-
-    @Override
-    public void onClick(double pMouseX, double pMouseY) {
-        if(this.isMouseOver(pMouseX, pMouseY) && this.widget.drawingTooltip && this.active){
-            this.onPress();
-        }
     }
 }

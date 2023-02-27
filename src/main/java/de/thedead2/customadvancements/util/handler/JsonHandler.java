@@ -2,10 +2,7 @@ package de.thedead2.customadvancements.util.handler;
 
 
 import com.google.common.io.ByteStreams;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import net.minecraft.ResourceLocationException;
@@ -17,6 +14,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 
 public class JsonHandler extends FileHandler {
@@ -154,6 +152,29 @@ public class JsonHandler extends FileHandler {
             }
             else {
                 return false;
+            }
+        }
+    }
+
+    public void readJsonObject(List<CriteriaConditionsIdentifier.CriteriaPreCondition> preConditions, JsonObject jsonObject){
+        for (String key : jsonObject.keySet()) {
+            JsonElement jsonElement = jsonObject.get(key);
+
+            if (jsonElement instanceof JsonPrimitive jsonPrimitive) {
+                Object object = null;
+                if(jsonPrimitive.isBoolean()){
+                    object = jsonPrimitive.getAsBoolean();
+                }
+                else if (jsonPrimitive.isString()) {
+                    object = jsonPrimitive.getAsString();
+                }
+                else if (jsonPrimitive.isNumber()) {
+                    object = jsonObject.getAsNumber();
+                }
+                preConditions.add(new CriteriaConditionsIdentifier.CriteriaPreCondition(key, object));
+            }
+            else if(jsonElement instanceof JsonObject jsonObject1){
+                readJsonObject(preConditions, jsonObject1);
             }
         }
     }
