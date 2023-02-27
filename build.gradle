@@ -21,7 +21,7 @@ apply plugin: 'maven-publish'
 // MixinGradle:
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.18.2-4.3.3'
+version = '1.18.2-4.4.0'
 group = 'de.thedead2.customadvancements' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'customadvancements'
 
@@ -32,7 +32,7 @@ minecraft {
     mappings channel:  'parchment', version: '2022.11.06-1.18.2'
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
     
-    //accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     // Default run configurations.
     // These can be tweaked, removed, or duplicated as needed.
