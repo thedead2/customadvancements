@@ -3,11 +3,13 @@ package de.thedead2.customadvancements.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.TextComponent;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,6 +47,7 @@ public class GenerateGameAdvancementsCommand {
                     catch (IOException e) {
                         LOGGER.error("Unable to write {} to file!", advancement);
                         source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write " + advancement + " to file!"));
+                        CrashHandler.getInstance().addCrashDetails("Unable to write resource location to file!", Level.WARN, e);
                         e.printStackTrace();
                     }
                 });

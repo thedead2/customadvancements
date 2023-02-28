@@ -31,7 +31,7 @@ public abstract class MixinJsonReloadListener {
             ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.addAll(resourceManagerIn.listResources("advancements", resourceLocation -> resourceLocation.endsWith(".json")));
             ALL_DETECTED_GAME_ADVANCEMENTS.putAll(map);
 
-            map = CustomAdvancementManager.modifyData(map);
+            CustomAdvancementManager.modifyAdvancementData(map);
         }
     }
 }

@@ -5,12 +5,12 @@ import net.minecraft.resources.ResourceLocation;
 
 import static de.thedead2.customadvancements.util.handler.FileHandler.getId;
 
-
 public class GameAdvancement implements IAdvancement{
     private final JsonObject jsonObject;
     private final String fileName;
     private final ResourceLocation resourceLocation;
     private final ResourceLocation parentAdvancement;
+
 
     public GameAdvancement(JsonObject jsonObject, String fileName, String path){
         this.jsonObject = jsonObject;
@@ -18,6 +18,7 @@ public class GameAdvancement implements IAdvancement{
         this.resourceLocation = IAdvancement.createResourceLocation(getId(path), this.fileName, false);
         this.parentAdvancement = this.jsonObject.get("parent") != null ? IAdvancement.createResourceLocation((this.jsonObject.get("parent").getAsString() + ".json"), this.fileName, true) : null;
     }
+
 
     @Override
     public JsonObject getJsonObject(){

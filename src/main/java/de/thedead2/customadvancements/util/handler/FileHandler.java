@@ -2,6 +2,7 @@ package de.thedead2.customadvancements.util.handler;
 
 import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +32,7 @@ public abstract class FileHandler extends ModHelper {
             }
             catch (FileCopyException e){
                 LOGGER.error("Unable to create example advancements!");
+                CrashHandler.getInstance().addCrashDetails("Unable to create example advancements!", Level.WARN, e);
                 e.printStackTrace();
             }
         }
@@ -42,6 +44,7 @@ public abstract class FileHandler extends ModHelper {
             }
             catch (FileCopyException e){
                 LOGGER.error("Unable to create example textures for advancements!");
+                CrashHandler.getInstance().addCrashDetails("Unable to create example textures!", Level.WARN, e);
                 e.printStackTrace();
             }
         }
@@ -78,18 +81,26 @@ public abstract class FileHandler extends ModHelper {
 
 
     public static String getId(String filePath){
-        String subString = filePath.replace(String.valueOf(DIR_PATH), "");
-        subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
-        subString = subString.replaceFirst("/", "");
-        subString = subString.replaceFirst("/", ":");
-        return subString;
+        try{
+            String subString = filePath.replace(String.valueOf(DIR_PATH), "");
+            subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
+            subString = subString.replaceFirst("/", "");
+            subString = subString.replaceFirst("/", ":");
+            return subString;
+        }
+        catch (Throwable throwable){
+            CrashHandler.getInstance().addCrashDetails("Unable to create ID!", Level.ERROR , throwable);
+            throw throwable;
+        }
     }
 
 
     public static boolean createDirectory(File directoryIn){
+        CrashHandler.getInstance().setActiveFile(directoryIn);
         if (!directoryIn.exists()) {
             if (directoryIn.mkdir()){
                 LOGGER.debug("Created directory: " + directoryIn.toPath());
+                CrashHandler.getInstance().setActiveFile(null);
                 return true;
             }
             else {
@@ -99,17 +110,20 @@ public abstract class FileHandler extends ModHelper {
         }
         else {
             LOGGER.debug("Found directory {} at {}", directoryIn.getName(), directoryIn.toPath());
+            CrashHandler.getInstance().setActiveFile(null);
             return false;
         }
     }
 
 
     public static void writeFile(InputStream inputStream, Path outputPath) throws IOException {
+        CrashHandler.getInstance().setActiveFile(outputPath.toFile());
         OutputStream fileOut = Files.newOutputStream(outputPath);
 
         writeToFile(inputStream, fileOut);
 
         fileOut.close();
+        CrashHandler.getInstance().setActiveFile(null);
     }
 
 

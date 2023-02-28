@@ -18,6 +18,7 @@ public interface IAdvancement {
 
     String toString();
 
+
     static ResourceLocation createResourceLocation(String id, String fileName, boolean parent){
         ResourceLocation resourceLocation1 = ResourceLocation.tryParse(id);
         if(!parent){
