@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Objects;
 
-
 public class TextureHandler extends FileHandler{
 
     private static TextureHandler instance;

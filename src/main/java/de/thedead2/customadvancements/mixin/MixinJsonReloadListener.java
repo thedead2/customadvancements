@@ -22,7 +22,6 @@ import static de.thedead2.customadvancements.util.ModHelper.*;
 @Mixin(SimpleJsonResourceReloadListener.class)
 public abstract class MixinJsonReloadListener {
 
-
     @Shadow @Final private String directory;
 
     @Inject(at = @At(value = "RETURN"), method = "prepare(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)Ljava/util/Map;", locals = LocalCapture.CAPTURE_FAILSOFT)

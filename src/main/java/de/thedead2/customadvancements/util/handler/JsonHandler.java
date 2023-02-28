@@ -24,10 +24,9 @@ public class JsonHandler extends FileHandler {
 
     private static JsonHandler instance;
 
-    public JsonHandler(File directory){
+    private JsonHandler(File directory){
         super(directory);
         instance = this;
-        this.start();
     }
 
     @Override

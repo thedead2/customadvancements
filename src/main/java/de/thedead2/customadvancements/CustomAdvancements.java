@@ -40,7 +40,6 @@ public class CustomAdvancements {
         forgeEventBus.addListener(this::onPlayerLogin);
         forgeEventBus.register(this);
 
-        CrashReportCallables.registerCrashCallable(CrashHandler.getInstance());
         registerLoggerFilter();
     }
 
@@ -96,5 +95,9 @@ public class CustomAdvancements {
         else {
             LOGGER.error("Unable to register filter for Logger with unexpected class: {}", rootLogger.getClass().getName());
         }
+    }
+
+    static {
+        CrashReportCallables.registerCrashCallable(CrashHandler.getInstance());
     }
 }
