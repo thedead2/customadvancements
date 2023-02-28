@@ -1,11 +1,8 @@
 package de.thedead2.customadvancements.mixin;
 
-import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.handler.CrashHandler;
-import de.thedead2.customadvancements.util.logger.ConsoleColors;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
-import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -40,10 +37,7 @@ public abstract class MixinCrashReport {
                 }
                 else if(key.contains("Screen")){
                     if(crashReportCategory$Entry.getValue().contains("de.thedead2.customadvancements")){
-                        crashHandler.addCrashDetails("Error while rendering screen: " + crashReportCategory$Entry.getValue() +
-                                "\n\t\t\t\t" + ConsoleColors.italic + " Please note that this error was not caused by " + ModHelper.MOD_NAME + "! So don't report it to the mod author!" + ConsoleColors.reset,
-                                Level.FATAL, exception, true
-                        );
+                        crashHandler.addScreenCrash(crashReportCategory$Entry, exception);
                         return;
                     }
                 }

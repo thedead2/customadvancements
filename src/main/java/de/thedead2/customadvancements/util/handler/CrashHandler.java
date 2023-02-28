@@ -2,7 +2,10 @@ package de.thedead2.customadvancements.util.handler;
 
 import com.google.common.io.ByteStreams;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
+import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.logger.ConsoleColors;
 import joptsimple.internal.Strings;
+import net.minecraft.CrashReportCategory;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ISystemReportExtender;
@@ -305,7 +308,14 @@ public class CrashHandler implements ISystemReportExtender {
         this.addCrashDetails(errorDescription, level, throwable, false);
     }
 
-    public void addCrashDetails(String errorDescription, Level level, Throwable throwable, boolean responsibleForCrash){
+    public void addScreenCrash(CrashReportCategory.Entry crashReportCategory$Entry, Throwable exception){
+        this.addCrashDetails("Error while rendering screen: " + crashReportCategory$Entry.getValue() +
+                        "\n\t\t\t\t" + ConsoleColors.italic + " Please note that this error was not caused by " + ModHelper.MOD_NAME + "! So don't report it to the mod author!" + ConsoleColors.reset,
+                Level.FATAL, exception, true
+        );
+    }
+
+    private void addCrashDetails(String errorDescription, Level level, Throwable throwable, boolean responsibleForCrash){
         CrashDetail crashDetail = new CrashDetail(errorDescription, level, throwable, responsibleForCrash);
         for(CrashDetail crashDetail1 : this.crashDetails){
             if (crashDetail.equals(crashDetail1)){
