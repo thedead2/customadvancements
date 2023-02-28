@@ -9,7 +9,8 @@
     "MixinJsonReloadListener"
   ],
   "client": [
-    "MixinSimpleTexture"
+    "MixinSimpleTexture",
+    "MixinWorldOpenFlows"
   ],
   "server": [
   ],

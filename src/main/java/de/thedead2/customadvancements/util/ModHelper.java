@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
@@ -16,13 +17,16 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.storage.WorldData;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.VersionChecker;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,10 +39,11 @@ import static de.thedead2.customadvancements.advancements.CustomAdvancementManag
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.19.2-5.3.3";
+    public static final String MOD_VERSION = "1.19.2-5.4.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
+    public static final String MOD_ISSUES_LINK = "https://github.com/thedead2/customadvancements/issues";
 
     public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
     public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
@@ -52,7 +57,6 @@ public abstract class ModHelper {
     public static final Map<ResourceLocation, CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, GameAdvancement> GAME_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, NativeImage> TEXTURES = new HashMap<>();
-    public static final Set<ResourceLocation> REMOVED_ADVANCEMENTS_SET = new HashSet<>();
     public static final Map<ResourceLocation, JsonElement> ALL_DETECTED_GAME_ADVANCEMENTS = new HashMap<>();
 
     public static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
@@ -60,7 +64,6 @@ public abstract class ModHelper {
     public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
 
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-
 
     public static void reloadAll(MinecraftServer server){
         StopWatch timer = new StopWatch();
@@ -80,18 +83,8 @@ public abstract class ModHelper {
         clearAll();
         FileHandler.checkForMainDirectories();
 
-        if(TextureHandler.getInstance() != null){
-            TextureHandler.getInstance().start();
-        }
-        else {
-            new TextureHandler(TEXTURES_PATH.toFile());
-        }
-        if (JsonHandler.getInstance() != null){
-            JsonHandler.getInstance().start();
-        }
-        else {
-            new JsonHandler(DIR_PATH.toFile());
-        }
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> TextureHandler.getInstance().start());
+        JsonHandler.getInstance().start();
 
         LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
         LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " Custom Advancements!" : " Custom Advancement!"));
@@ -103,12 +96,12 @@ public abstract class ModHelper {
         CUSTOM_ADVANCEMENTS.clear();
         GAME_ADVANCEMENTS.clear();
         TEXTURES.clear();
-        REMOVED_ADVANCEMENTS_SET.clear();
         ALL_DETECTED_GAME_ADVANCEMENTS.clear();
         PARENT_CHILDREN_MAP.clear();
         CHILDREN_PARENT_MAP.clear();
         ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
         ADVANCEMENTS.clear();
+        CrashHandler.getInstance().reset();
     }
 
 
@@ -129,6 +122,7 @@ public abstract class ModHelper {
         server.reloadResources(selectedIds).exceptionally((e) -> {
             LOGGER.error("Failed to execute reload!", e);
             server.sendSystemMessage(Component.translatable("chat.customadvancements.reload_failed_massage"));
+            CrashHandler.getInstance().addCrashDetails("Failed to execute reload!", Level.ERROR, e);
             e.printStackTrace();
             return null;
         });
