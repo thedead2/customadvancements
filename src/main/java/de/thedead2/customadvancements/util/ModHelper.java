@@ -111,7 +111,7 @@ public abstract class ModHelper {
 
         packRepository.reload();
         Collection<String> selectedIds = Lists.newArrayList(packRepository.getSelectedIds());
-        Collection<String> disabledPacks = worldData.getDataPackConfig().getDisabled();
+        Collection<String> disabledPacks = worldData.getDataConfiguration().dataPacks().getDisabled();
 
         for(String ids : packRepository.getAvailableIds()) {
             if (!disabledPacks.contains(ids) && !selectedIds.contains(ids)) {
