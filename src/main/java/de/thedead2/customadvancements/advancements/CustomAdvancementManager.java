@@ -2,9 +2,11 @@ package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.logging.log4j.Level;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,40 +17,59 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
 
-public class CustomAdvancementManager {
+public abstract class CustomAdvancementManager {
 
     private static long counter = 0;
     public static final Map<ResourceLocation, JsonElement> ADVANCEMENTS = new HashMap<>();
     private static final StopWatch TIMER = new StopWatch();
+    private static boolean safeMode = false;
 
-    public static Map<ResourceLocation, JsonElement> modifyData(Map<ResourceLocation, JsonElement> mapIn) {
-        TIMER.start();
-        if (ADVANCEMENTS.isEmpty()){
-            if(!ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()){
-                ADVANCEMENTS.putAll(mapIn);
+    public static void modifyAdvancementData(Map<ResourceLocation, JsonElement> mapIn) {
+        if(!safeMode){
+            TIMER.start();
+            try {
+                if (ADVANCEMENTS.isEmpty()){
+                    if(!ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()){
+                        ADVANCEMENTS.putAll(mapIn);
+                    }
+
+                    loadAdvancements(CUSTOM_ADVANCEMENTS);
+                    loadAdvancements(GAME_ADVANCEMENTS);
+                    removeListAdvancements();
+                    removeRecipeAdvancements();
+                    removeAllAdvancements();
+
+                    mapIn.clear();
+                    mapIn.putAll(ADVANCEMENTS);
+                }
+                else {
+                    mapIn.clear();
+                    mapIn.putAll(ADVANCEMENTS);
+                    ADVANCEMENTS.clear();
+                }
+                LOGGER.debug("Modifying Advancement data took {} ms.", TIMER.getTime());
             }
-
-            loadAdvancements(CUSTOM_ADVANCEMENTS);
-            loadAdvancements(GAME_ADVANCEMENTS);
-            removeListAdvancements();
-            removeRecipeAdvancements();
-            removeAllAdvancements();
-
-            mapIn.clear();
-            mapIn.putAll(ADVANCEMENTS);
+            catch (Throwable e){
+                CrashHandler.getInstance().addCrashDetails("Error while modifying advancement data!", Level.ERROR, e);
+                throw e;
+            }
+            finally {
+                TIMER.stop();
+                TIMER.reset();
+            }
         }
         else {
-            mapIn.clear();
-            mapIn.putAll(ADVANCEMENTS);
-            ADVANCEMENTS.clear();
+            LOGGER.warn("Safe Mode is enabled! Skipping advancement load...");
         }
-        LOGGER.debug("Modifying Advancement data took {} ms.", TIMER.getTime());
-        TIMER.stop();
-        TIMER.reset();
-
-        return mapIn;
     }
 
+    public static void enableSafeMode(){
+        safeMode = true;
+    }
+
+    public static void disableSafeMode(){
+        safeMode = false;
+    }
 
     private static void loadAdvancements(Map<ResourceLocation, ? extends IAdvancement> advancementsIn){
         if(!advancementsIn.isEmpty() && !ConfigManager.NO_ADVANCEMENTS.get()) {
@@ -63,6 +84,7 @@ public class CustomAdvancementManager {
             }
 
             for(ResourceLocation resourceLocation:advancementsIn.keySet()){
+                CrashHandler.getInstance().setActiveAdvancement(advancementsIn.get(resourceLocation));
                 if(resourceLocation.toString().contains("recipes/") && ConfigManager.NO_RECIPE_ADVANCEMENTS.get()){
                     LOGGER.debug("Skipped recipe advancement: " + resourceLocation);
                     continue;
@@ -91,10 +113,12 @@ public class CustomAdvancementManager {
                 }
                 catch (ResourceLocationException e){
                     LOGGER.error("Unable to register advancement {} with resource location: {}", advancement.getFileName(), resourceLocation);
+                    CrashHandler.getInstance().addCrashDetails("Unable to register advancement", Level.WARN, e);
                     e.printStackTrace();
                 }
             }
 
+            CrashHandler.getInstance().setActiveAdvancement(null);
             LOGGER.info("Loaded {} {} into Advancement Manager!", counter, counter != 1 ? (className + "s") : className);
             counter = 0;
         }
@@ -115,6 +139,7 @@ public class CustomAdvancementManager {
 
                     ADVANCEMENTS.remove(resourceLocation1);
 
+                    CrashHandler.getInstance().addRemovedAdvancement(resourceLocation1);
                     counter++;
                     LOGGER.debug("Removed recipe advancement: " + resourceLocation);
                 }
@@ -136,7 +161,7 @@ public class CustomAdvancementManager {
             LOGGER.debug("Removed advancement: " + blacklistedAdvancement);
             counter++;
 
-            REMOVED_ADVANCEMENTS_SET.add(blacklistedAdvancement);
+            CrashHandler.getInstance().addRemovedAdvancement(blacklistedAdvancement);
 
             removeChildren(ADVANCEMENTS, blacklistedAdvancement);
         }
@@ -161,7 +186,7 @@ public class CustomAdvancementManager {
                 LOGGER.debug("Removed advancement: " + advancement);
                 counter++;
 
-                REMOVED_ADVANCEMENTS_SET.add(advancement);
+                CrashHandler.getInstance().addRemovedAdvancement(advancement);
             }
         }
 
@@ -193,6 +218,7 @@ public class CustomAdvancementManager {
             mapKeySet.forEach(resourceLocation -> {
                 if (!resourceLocation.toString().contains("recipes/")) {
                     ADVANCEMENTS.remove(resourceLocation);
+                    CrashHandler.getInstance().addRemovedAdvancement(resourceLocation);
                     LOGGER.debug("Removed advancement: " + resourceLocation);
                     counter.getAndIncrement();
                 }
@@ -290,7 +316,7 @@ public class CustomAdvancementManager {
                 LOGGER.debug("Skipped advancement {} with parent {} as it's parent wasn't found!", advancement, parent);
                 counter++;
 
-                REMOVED_ADVANCEMENTS_SET.add(advancement);
+                CrashHandler.getInstance().addRemovedAdvancement(advancement);
 
                 removeChildren(mapIn, advancement);
             }

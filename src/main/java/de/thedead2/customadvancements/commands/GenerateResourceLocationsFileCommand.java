@@ -3,11 +3,13 @@ package de.thedead2.customadvancements.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import de.thedead2.customadvancements.util.ModHelper;
 
+import de.thedead2.customadvancements.util.handler.CrashHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.Level;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -44,6 +46,7 @@ public class GenerateResourceLocationsFileCommand {
             catch (IOException e){
                 LOGGER.error("Unable to write resource locations to file!");
                 source.sendFailure(Component.literal("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
+                CrashHandler.getInstance().addCrashDetails("Unable to write resource locations to file!", Level.ERROR, e);
                 e.printStackTrace();
                 return -1;
             }
@@ -53,6 +56,7 @@ public class GenerateResourceLocationsFileCommand {
                     fileOut.close();
                 } catch (IOException e) {
                     LOGGER.warn("Unable to close OutputStream!");
+                    CrashHandler.getInstance().addCrashDetails("Unable to close OutputStream!", Level.WARN, e);
                     e.printStackTrace();
                 }
             }

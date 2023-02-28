@@ -2,22 +2,27 @@ package de.thedead2.customadvancements.util.handler;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.Objects;
 
-public class TextureHandler extends FileHandler {
+public class TextureHandler extends FileHandler{
 
     private static TextureHandler instance;
 
-    public TextureHandler(File directory){
+    private TextureHandler(File directory){
         super(directory);
         instance = this;
-        if (!FMLEnvironment.dist.isDedicatedServer() || !ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
-            this.start();
+    }
+
+    @Override
+    public void start() {
+        if (!ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
+            super.start();
         }
         else if (ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
             LOGGER.warn("Enabling compatibility mode for Optifine Shaders! This disables custom background textures for advancements!");
@@ -32,6 +37,7 @@ public class TextureHandler extends FileHandler {
 
         assert texture_files != null;
         for (File texture : texture_files) {
+            CrashHandler.getInstance().setActiveFile(texture);
             if (texture.getName().endsWith(".png")) {
                 LOGGER.debug("Found file: " + texture.getName());
 
@@ -41,6 +47,7 @@ public class TextureHandler extends FileHandler {
                 LOGGER.warn("File '" + texture.getName() + "' is not a '.png' file, ignoring it!");
             }
         }
+        CrashHandler.getInstance().setActiveFile(null);
     }
 
 
@@ -57,9 +64,10 @@ public class TextureHandler extends FileHandler {
         }
         catch (IOException e) {
             LOGGER.error("Failed to read texture file: " + e);
+            CrashHandler.getInstance().addCrashDetails("Failed to read texture file", Level.ERROR, e);
             e.printStackTrace();
         }
     }
 
-    public static TextureHandler getInstance(){return instance;}
+    public static TextureHandler getInstance(){return Objects.requireNonNullElseGet(instance, () -> new TextureHandler(TEXTURES_PATH.toFile()));}
 }
