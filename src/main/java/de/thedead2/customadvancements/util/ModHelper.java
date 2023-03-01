@@ -39,7 +39,7 @@ import static de.thedead2.customadvancements.advancements.CustomAdvancementManag
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.19.2-5.4.2";
+    public static final String MOD_VERSION = "1.19.3-6.0.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
