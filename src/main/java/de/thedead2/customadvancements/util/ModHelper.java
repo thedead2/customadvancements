@@ -43,6 +43,7 @@ public abstract class ModHelper {
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
+    public static final String MOD_ISSUES_LINK = "https://github.com/thedead2/customadvancements/issues";
 
     public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
     public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
@@ -82,20 +83,8 @@ public abstract class ModHelper {
         clearAll();
         FileHandler.checkForMainDirectories();
 
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            if(TextureHandler.getInstance() != null){
-                TextureHandler.getInstance().start();
-            }
-            else {
-                new TextureHandler(TEXTURES_PATH.toFile());
-            }
-        });
-        if (JsonHandler.getInstance() != null){
-            JsonHandler.getInstance().start();
-        }
-        else {
-            new JsonHandler(DIR_PATH.toFile());
-        }
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> TextureHandler.getInstance().start());
+        JsonHandler.getInstance().start();
 
         LOGGER.info("Loaded " + TEXTURES.size() + (TEXTURES.size() != 1 ? " Textures!" : " Texture!"));
         LOGGER.info("Loaded " + CUSTOM_ADVANCEMENTS.size() + (CUSTOM_ADVANCEMENTS.size() != 1 ? " Custom Advancements!" : " Custom Advancement!"));

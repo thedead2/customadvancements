@@ -1,7 +1,6 @@
 package de.thedead2.customadvancements.advancements.advancementtypes;
 
 import com.google.gson.JsonObject;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
@@ -27,7 +26,7 @@ public class CustomAdvancement implements IAdvancement {
 
 
     @Override
-    public JsonObject getJsonObject() {
+    public JsonObject getJsonObject(){
         return this.jsonObject;
     }
 
@@ -48,7 +47,6 @@ public class CustomAdvancement implements IAdvancement {
     public String toString(){
         return "Custom Advancement: {fileName = " + this.fileName + ", resourceLocation = " + this.resourceLocation + ", parent = " + this.parentAdvancement + ", hasBackgroundImage = " + this.backgroundImage + (this.backgroundImage ? (", textureLocation = " + this.textureLocation) : "") + "}";
     }
-
 
     private boolean hasBackgroundImage(){
         if(this.jsonObject.get("display").getAsJsonObject().get("background") != null) {

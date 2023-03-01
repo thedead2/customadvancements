@@ -17,14 +17,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
 
-public class CustomAdvancementManager {
+public abstract class CustomAdvancementManager {
 
     private static long counter = 0;
     public static final Map<ResourceLocation, JsonElement> ADVANCEMENTS = new HashMap<>();
     private static final StopWatch TIMER = new StopWatch();
     private static boolean safeMode = false;
 
-    public static Map<ResourceLocation, JsonElement> modifyData(Map<ResourceLocation, JsonElement> mapIn) {
+    public static void modifyAdvancementData(Map<ResourceLocation, JsonElement> mapIn) {
         if(!safeMode){
             TIMER.start();
             try {
@@ -61,8 +61,6 @@ public class CustomAdvancementManager {
         else {
             LOGGER.warn("Safe Mode is enabled! Skipping advancement load...");
         }
-
-        return mapIn;
     }
 
     public static void enableSafeMode(){

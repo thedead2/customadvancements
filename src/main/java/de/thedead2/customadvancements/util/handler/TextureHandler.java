@@ -8,16 +8,21 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.Objects;
 
-public class TextureHandler extends FileHandler {
+public class TextureHandler extends FileHandler{
 
     private static TextureHandler instance;
 
-    public TextureHandler(File directory){
+    private TextureHandler(File directory){
         super(directory);
         instance = this;
+    }
+
+    @Override
+    public void start() {
         if (!ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
-            this.start();
+            super.start();
         }
         else if (ConfigManager.OPTIFINE_SHADER_COMPATIBILITY.get()){
             LOGGER.warn("Enabling compatibility mode for Optifine Shaders! This disables custom background textures for advancements!");
@@ -64,5 +69,5 @@ public class TextureHandler extends FileHandler {
         }
     }
 
-    public static TextureHandler getInstance(){return instance;}
+    public static TextureHandler getInstance(){return Objects.requireNonNullElseGet(instance, () -> new TextureHandler(TEXTURES_PATH.toFile()));}
 }

@@ -15,16 +15,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 
 public class JsonHandler extends FileHandler {
 
     private static JsonHandler instance;
 
-    public JsonHandler(File directory){
+    private JsonHandler(File directory){
         super(directory);
         instance = this;
-        this.start();
     }
 
     @Override
@@ -179,5 +179,5 @@ public class JsonHandler extends FileHandler {
         }
     }
 
-    public static JsonHandler getInstance(){return instance;}
+    public static JsonHandler getInstance(){return Objects.requireNonNullElseGet(instance, () -> new JsonHandler(DIR_PATH.toFile()));}
 }

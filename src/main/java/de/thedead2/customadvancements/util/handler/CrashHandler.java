@@ -2,12 +2,16 @@ package de.thedead2.customadvancements.util.handler;
 
 import com.google.common.io.ByteStreams;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
+import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.logger.ConsoleColors;
 import joptsimple.internal.Strings;
+import net.minecraft.CrashReportCategory;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ISystemReportExtender;
 import net.minecraftforge.logging.CrashReportExtender;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 import java.io.InputStream;
@@ -31,6 +35,7 @@ public class CrashHandler implements ISystemReportExtender {
 
     private CrashHandler(){
         instance = this;
+        LogManager.getLogger().debug("Registered CrashHandler!");
     }
 
     public static CrashHandler getInstance(){
@@ -68,8 +73,8 @@ public class CrashHandler implements ISystemReportExtender {
         this.stringBuilder.append("\t").append(name);
         if(in != null){
             this.stringBuilder.append(": ");
-            if(in instanceof Throwable){
-                this.stringBuilder.append(((Throwable) in).getMessage());
+            if(in instanceof Throwable throwable){
+                this.stringBuilder.append(throwable.getMessage());
             }
             else {
                 this.stringBuilder.append(in);
@@ -92,7 +97,6 @@ public class CrashHandler implements ISystemReportExtender {
         this.stringBuilder.append("\n");
         this.addDetail("Mod ID", MOD_ID);
         this.addDetail("Version", MOD_VERSION);
-        this.addDetail("Path Separator", PATH_SEPARATOR);
         this.addDetail("Main Path", DIR_PATH);
         if(this.activeAdvancement == null && this.activeGameAdvancement == null) {
             this.getActiveAdvancement();
@@ -157,7 +161,10 @@ public class CrashHandler implements ISystemReportExtender {
             this.addDetail("Caused by", getExceptionName(throwable.getCause()));
         }
         this.addDetail("Level", detail.level());
-        this.addDetail("Caused Crash", detail.responsibleForCrash() ? "Definitely!" : "Probably Not!");
+        this.addDetail("Caused Crash", detail.responsibleForCrash() ? "Definitely! \n\t"
+                + ConsoleColors.italic + "Please report this crash to the mod author: " + MOD_ISSUES_LINK + ConsoleColors.reset :
+                "Probably Not!"
+        );
     }
 
     private String getExceptionName(Throwable throwable){
@@ -266,7 +273,6 @@ public class CrashHandler implements ISystemReportExtender {
                 StringBuilder builder = new StringBuilder();
                 if(i != 0){
                     builder.append("\t");
-
                 }
                 else {
                     i++;
@@ -280,12 +286,14 @@ public class CrashHandler implements ISystemReportExtender {
 
 
     public <T> void setActiveAdvancement(T advancement){
-        if(advancement instanceof IAdvancement){
-            this.activeAdvancement = (IAdvancement) advancement;
-            this.advancements.add(this.activeAdvancement);
+        if(advancement instanceof IAdvancement activeAdvancement1){
+            this.activeAdvancement = activeAdvancement1;
+            if(!activeAdvancement1.getResourceLocation().toString().contains("recipes/")){
+                this.advancements.add(activeAdvancement1);
+            }
         }
-        else if(advancement instanceof net.minecraft.advancements.Advancement){
-            this.activeGameAdvancement = (Advancement) advancement;
+        else if(advancement instanceof Advancement advancement1){
+            this.activeGameAdvancement = advancement1;
         }
         else if(advancement == null) {
             this.activeAdvancement = null;
@@ -298,14 +306,23 @@ public class CrashHandler implements ISystemReportExtender {
     }
 
     public void addRemovedAdvancement(ResourceLocation advancement){
-        this.removedAdvancements.add(advancement);
+        if(!advancement.toString().contains("recipes/")) {
+            this.removedAdvancements.add(advancement);
+        }
     }
 
     public void addCrashDetails(String errorDescription, Level level, Throwable throwable){
         this.addCrashDetails(errorDescription, level, throwable, false);
     }
 
-    public void addCrashDetails(String errorDescription, Level level, Throwable throwable, boolean responsibleForCrash){
+    public void addScreenCrash(CrashReportCategory.Entry crashReportCategory$Entry, Throwable exception){
+        this.addCrashDetails("Error while rendering screen: " + crashReportCategory$Entry.getValue() +
+                        "\n\t\t\t\t" + ConsoleColors.italic + " Please note that this error was not caused by " + ModHelper.MOD_NAME + "! So don't report it to the mod author!" + ConsoleColors.reset,
+                Level.FATAL, exception, true
+        );
+    }
+
+    private void addCrashDetails(String errorDescription, Level level, Throwable throwable, boolean responsibleForCrash){
         CrashDetail crashDetail = new CrashDetail(errorDescription, level, throwable, responsibleForCrash);
         for(CrashDetail crashDetail1 : this.crashDetails){
             if (crashDetail.equals(crashDetail1)){

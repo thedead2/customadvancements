@@ -2,7 +2,6 @@ package de.thedead2.customadvancements.advancements.advancementtypes;
 
 import com.google.gson.JsonObject;
 import net.minecraft.ResourceLocationException;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
 
 import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
