@@ -18,7 +18,7 @@ public class MixinTest {
 
     @Inject(at = @At("RETURN"), method = "criterionFromJson(Lcom/google/gson/JsonObject;Lnet/minecraft/advancements/critereon/DeserializationContext;)Lnet/minecraft/advancements/Criterion;")
     private static void onFromJson(JsonObject pJson, DeserializationContext pContext, CallbackInfoReturnable<Criterion> cir){
-        Criterion criterion = cir.getReturnValue();
-        CriteriaConditionsIdentifier.load(criterion);
+        /*Criterion criterion = cir.getReturnValue();
+        CriteriaConditionsIdentifier.init(criterion);*/
     }
 }

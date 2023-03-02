@@ -1,24 +1,21 @@
 package de.thedead2.customadvancements.client.gui;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget;
 import de.thedead2.customadvancements.client.gui.generator.AdvancementGeneratorGUI;
 import de.thedead2.customadvancements.client.gui.generator.ClientAdvancementGenerator;
+import de.thedead2.customadvancements.util.handler.CriteriaConditionsIdentifier;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.advancements.*;
-import net.minecraft.advancements.critereon.AbstractCriterionTriggerInstance;
-import net.minecraft.advancements.critereon.DeserializationContext;
-import net.minecraft.client.gui.components.MultiLineEditBox;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -28,6 +25,7 @@ public class CriteriaInputScreen extends BasicInputScreen {
 
     Map<ResourceLocation, CriterionTrigger<?>> allCriteriaTriggers = ImmutableMap.copyOf(CriteriaTriggers.CRITERIA);
     Map<String, CriterionTrigger<?>> criteria = new HashMap<>();
+    List<? extends Widget> inputFields = new ArrayList<>();
 
 
     public CriteriaInputScreen(ClientAdvancementGenerator parent, AdvancementGeneratorGUI gui, DisplayInfo display, @NotNull FakeAdvancementWidget widget, Supplier<Integer> screenWidthSupplier, Supplier<Integer> screenHeightSupplier, Supplier<int[]> screenStartPositionSupplier) {
@@ -38,7 +36,7 @@ public class CriteriaInputScreen extends BasicInputScreen {
     public void init() {
         super.init();
 
-        /*this.addDropDownList(this.allCriteriaTriggers.keySet(), "criteriaTriggers", 45, 45, 80, () -> "", Color.green::getRGB, (editBox1 -> {
+        this.addDropDownList(this.allCriteriaTriggers.keySet(), "criteriaTriggers", 45, 45, 80, () -> "", Color.green::getRGB, (editBox1 -> {
             try {
                 ResourceLocation temp = new ResourceLocation(editBox1.getValue());
                 var trigger = this.allCriteriaTriggers.get(temp);
@@ -46,6 +44,8 @@ public class CriteriaInputScreen extends BasicInputScreen {
 
                 if(trigger != null){
                     this.criteria.put(key, trigger);
+                    this.identifyConditionInputs(temp);
+                    this.init();
                 }
                 else {
                     throw new IllegalArgumentException();
@@ -54,8 +54,8 @@ public class CriteriaInputScreen extends BasicInputScreen {
             catch (ResourceLocationException | IllegalArgumentException e){
                 LOGGER.error("Can't find Criterion for input: {}", editBox1.getValue());
             }
-        }));*/
-        this.addRenderableWidget(new MultiLineEditBox(this.font, this.screenTopLeftCorner[0] + 5, this.screenTopLeftCorner[1] + 5, 100, 100, Component.literal("LOL"), Component.literal("Test")));
+        }));
+        //this.addRenderableWidget(new MultiLineEditBox(this.font, this.screenTopLeftCorner[0] + 5, this.screenTopLeftCorner[1] + 5, 100, 100, Component.literal("LOL"), Component.literal("Test")));
     }
 
     @Override
@@ -65,5 +65,30 @@ public class CriteriaInputScreen extends BasicInputScreen {
 
         //RequirementsStrategy.AND;
         //RequirementsStrategy.OR;
+    }
+
+    private void identifyConditionInputs(ResourceLocation trigger){
+        CriteriaConditionsIdentifier.CriteriaConditions criteriaConditions = CriteriaConditionsIdentifier.getConditionsFor(trigger);
+        var conditions = criteriaConditions.getConditions();
+        List<Class<?>> mainConditions = conditions.get(criteriaConditions.getTriggerInstanceClass());
+        this.addInputFields(mainConditions, conditions);
+    }
+
+    private void addInputFields(List<Class<?>> conditionsList, Map<Class<?>, List<Class<?>>> conditions){
+        conditionsList.forEach(aClass -> {
+            String className = aClass.getName();
+            if(className.equals("java.lang.String")){
+                //TODO: ADD String input field
+            }
+            else if (aClass.getGenericSuperclass().getTypeName().equals("java.lang.Number")) {
+                //TODO: Add Number input field
+            }
+            else if (className.equals("java.lang.Boolean")) {
+                //TODO: ADD Boolean input field
+            }
+            else {
+                addInputFields(conditions.get(aClass), conditions);
+            }
+        });
     }
 }

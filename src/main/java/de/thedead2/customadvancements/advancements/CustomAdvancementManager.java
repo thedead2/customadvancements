@@ -59,7 +59,7 @@ public abstract class CustomAdvancementManager {
             }
         }
         else {
-            LOGGER.warn("Safe Mode is enabled! Skipping advancement load...");
+            LOGGER.warn("Safe Mode is enabled! Skipping advancement init...");
         }
     }
 
@@ -76,7 +76,7 @@ public abstract class CustomAdvancementManager {
             String clazz = advancementsIn.values().toArray()[0].getClass().getName();
             String className = clazz.substring(clazz.lastIndexOf(".") + 1);
 
-            LOGGER.info("Starting to load advancements of type: {}", className);
+            LOGGER.info("Starting to init advancements of type: {}", className);
             counter = 0;
 
             if(ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()){

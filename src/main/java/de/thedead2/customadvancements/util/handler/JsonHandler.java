@@ -2,7 +2,9 @@ package de.thedead2.customadvancements.util.handler;
 
 
 import com.google.common.io.ByteStreams;
-import com.google.gson.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import net.minecraft.ResourceLocationException;
@@ -14,7 +16,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 
 
@@ -50,7 +51,7 @@ public class JsonHandler extends FileHandler {
 
                     printFileDataToConsole(file);
 
-                    JsonObject jsonObject = (JsonObject) getJsonObject(file);
+                    JsonObject jsonObject = getJsonObject(file);
 
                     assert jsonObject != null;
                     if (isCorrectJsonFormat(jsonObject, file.toPath())) {
@@ -74,7 +75,7 @@ public class JsonHandler extends FileHandler {
                     LOGGER.warn("File '" + fileName + "' is not a '.json' file, ignoring it!");
                 }
             }
-            catch (NullPointerException | ClassCastException e){
+            catch (NullPointerException e){
                 LOGGER.error("Unable to get JsonObject for: " + fileName);
                 e.printStackTrace();
                 CrashHandler.getInstance().addCrashDetails("Failed to create JsonObject from File!", Level.WARN , e);
@@ -117,11 +118,11 @@ public class JsonHandler extends FileHandler {
     }
 
 
-    private JsonElement getJsonObject(File file){
+    public JsonObject getJsonObject(File file){
         final String fileName = file.getName();
 
         try{
-            return JsonParser.parseReader(new FileReader(file));
+            return (JsonObject) JsonParser.parseReader(new FileReader(file));
         }
         catch (FileNotFoundException e) {
             LOGGER.error("Unable to parse " + fileName + " to JsonObject: " + e);
@@ -133,6 +134,12 @@ public class JsonHandler extends FileHandler {
             LOGGER.error("Error parsing {} to JsonObject! Make sure you have the right syntax for '.json' files!", fileName);
             CrashHandler.getInstance().addCrashDetails("Couldn't parse file to JsonElement!", Level.ERROR, e);
             e.printStackTrace();
+            return null;
+        }
+        catch (ClassCastException e){
+            LOGGER.error("Unable to get JsonObject for: " + fileName);
+            e.printStackTrace();
+            CrashHandler.getInstance().addCrashDetails("Failed to create JsonObject from File!", Level.WARN , e);
             return null;
         }
     }
@@ -152,29 +159,6 @@ public class JsonHandler extends FileHandler {
             }
             else {
                 return false;
-            }
-        }
-    }
-
-    public void readJsonObject(List<CriteriaConditionsIdentifier.CriteriaPreCondition> preConditions, JsonObject jsonObject){
-        for (String key : jsonObject.keySet()) {
-            JsonElement jsonElement = jsonObject.get(key);
-
-            if (jsonElement instanceof JsonPrimitive jsonPrimitive) {
-                Object object = null;
-                if(jsonPrimitive.isBoolean()){
-                    object = jsonPrimitive.getAsBoolean();
-                }
-                else if (jsonPrimitive.isString()) {
-                    object = jsonPrimitive.getAsString();
-                }
-                else if (jsonPrimitive.isNumber()) {
-                    object = jsonObject.getAsNumber();
-                }
-                preConditions.add(new CriteriaConditionsIdentifier.CriteriaPreCondition(key, object));
-            }
-            else if(jsonElement instanceof JsonObject jsonObject1){
-                readJsonObject(preConditions, jsonObject1);
             }
         }
     }

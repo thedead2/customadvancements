@@ -6,10 +6,12 @@ import de.thedead2.customadvancements.commands.GenerateGameAdvancementsCommand;
 import de.thedead2.customadvancements.commands.GenerateResourceLocationsFileCommand;
 import de.thedead2.customadvancements.commands.ReloadCommand;
 import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.handler.CriteriaConditionsIdentifier;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.GameShuttingDownEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -41,6 +43,7 @@ public class CustomAdvancements {
         IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
         forgeEventBus.addListener(this::onCommandsRegister);
         forgeEventBus.addListener(this::onPlayerLogin);
+        forgeEventBus.addListener(this::onShutDown);
         forgeEventBus.register(this);
 
         registerLoggerFilter();
@@ -64,6 +67,7 @@ public class CustomAdvancements {
 
     private void onLoadComplete(final FMLLoadCompleteEvent event){
         VersionManager.sendLoggerMessage();
+        CriteriaConditionsIdentifier.init();
     }
 
 
@@ -85,6 +89,10 @@ public class CustomAdvancements {
 
         ConfigCommand.register(dispatcher);
         LOGGER.debug("Command registration complete.");
+    }
+
+    private void onShutDown(final GameShuttingDownEvent event){
+        CriteriaConditionsIdentifier.save();
     }
 
 

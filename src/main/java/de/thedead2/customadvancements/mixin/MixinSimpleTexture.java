@@ -42,7 +42,7 @@ public abstract class MixinSimpleTexture {
                 }
             }
             else {
-                LOGGER.error("Could not load texture for: " + this.location);
+                LOGGER.error("Could not init texture for: " + this.location);
             }
         }
     }
