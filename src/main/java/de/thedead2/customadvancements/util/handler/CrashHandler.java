@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.regex.Matcher;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
@@ -50,7 +51,12 @@ public class CrashHandler implements ISystemReportExtender {
     @Override
     public String get() {
         this.stringBuilder = new StringBuilder();
+        onCrash();
         return this.getDetails();
+    }
+
+    private static void onCrash(){
+        CriteriaConditionsIdentifier.save();
     }
 
     private String getDetails(){
@@ -360,9 +366,9 @@ public class CrashHandler implements ISystemReportExtender {
         Throwable throwable;
 
         if(input != null) {
-            int i = input.lastIndexOf(":");
+            int i = input.indexOf(":");
             String temp = i != -1 ? input.substring(i) : "";
-            String className = input.replaceAll(temp, "");
+            String className = input.replace(Matcher.quoteReplacement(temp), "");
             try {
                 exceptionClass = Class.forName(className);
 
