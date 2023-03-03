@@ -213,10 +213,10 @@ public class CrashHandler implements ISystemReportExtender {
             this.addSection("Currently active advancement");
 
             if(this.activeAdvancement != null){
-                this.addDetail(this.activeAdvancement.getResourceLocation().toString(), this.activeAdvancement.getJsonObject());
+                this.addDetail(this.activeAdvancement.getResourceLocation().toString(),"\n\n" + JsonHandler.formatJsonObject(this.activeAdvancement.getJsonObject()));
             }
             else {
-                this.addDetail(this.activeGameAdvancement.getId().toString(), this.activeGameAdvancement.deconstruct().serializeToJson());
+                this.addDetail(this.activeGameAdvancement.getId().toString(),"\n\n" + JsonHandler.formatJsonObject(this.activeGameAdvancement.deconstruct().serializeToJson()));
             }
 
             if(this.activeFile == null){

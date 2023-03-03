@@ -139,7 +139,7 @@ public abstract class CriteriaConditionsIdentifier {
     public static void save(){
         try {
             LOGGER.debug("Saving criteria conditions to file...");
-            FileHandler.writeFile(new ByteArrayInputStream(serializeToJson().toString().getBytes()), conditionsFile.toPath());
+            FileHandler.writeFile(new ByteArrayInputStream(JsonHandler.formatJsonObject(serializeToJson()).getBytes()), conditionsFile.toPath());
         }
         catch (IOException e) {
             LOGGER.error("Couldn't write criteria conditions data to file!");
