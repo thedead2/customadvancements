@@ -2,11 +2,13 @@ package de.thedead2.customadvancements.util.handler;
 
 
 import com.google.common.io.ByteStreams;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
+import joptsimple.internal.Strings;
 import net.minecraft.ResourceLocationException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.Level;
@@ -161,6 +163,50 @@ public class JsonHandler extends FileHandler {
                 return false;
             }
         }
+    }
+
+    public static String formatJsonObject(JsonElement jsonObject){
+        StringBuilder stringBuilder = new StringBuilder();
+        char[] chars = jsonObject.toString().toCharArray();
+        int i = 0;
+        for (int j = 0; j < chars.length; j++) {
+            char c = chars[j];
+            char previousChar = j - 1 < 0 ? c : chars[j - 1];
+            char nextChar = j + 1 >= chars.length ? c : chars[j + 1];
+
+            if(c == '{'){
+                stringBuilder.append(c);
+                if(nextChar != '}'){
+                    i++;
+                    stringBuilder.append('\n').append(Strings.repeat('\t', i));
+                }
+            }
+            else if (c == '}') {
+                if(previousChar != '{'){
+                    i--;
+                    stringBuilder.append("\n").append(Strings.repeat('\t', i));
+                }
+                stringBuilder.append(c);
+                if(nextChar != ',' && nextChar != '\"' && nextChar != '\'' && nextChar != '}' && nextChar != ']'){
+                    stringBuilder.append('\n').append(Strings.repeat('\t', i));
+                }
+            }
+            else if (c == ',') {
+                stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
+            }
+            else if (c == '[' && (nextChar == '\"' || nextChar == '[')) {
+                i++;
+                stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
+            }
+            else if (c == ']' && (previousChar == '\"' || previousChar == ']')) {
+                i--;
+                stringBuilder.append('\n').append(Strings.repeat('\t', i)).append(c);
+            }
+            else {
+                stringBuilder.append(c);
+            }
+        }
+        return stringBuilder.toString();
     }
 
     public static JsonHandler getInstance(){return Objects.requireNonNullElseGet(instance, () -> new JsonHandler(DIR_PATH.toFile()));}

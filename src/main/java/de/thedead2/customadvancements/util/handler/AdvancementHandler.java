@@ -34,7 +34,7 @@ public abstract class AdvancementHandler extends FileHandler {
 
         createDirectory(basePath.toFile());
 
-        writeFile(getInput(advancementData), resolvePath(basePath, advancementId.getPath()));
+        writeFile(new ByteArrayInputStream(JsonHandler.formatJsonObject(advancementData).getBytes()), resolvePath(basePath, advancementId.getPath()));
     }
 
 
@@ -122,57 +122,4 @@ public abstract class AdvancementHandler extends FileHandler {
         }
     }
 
-
-    private static InputStream getInput(JsonElement advancementData){
-        try {
-            StringBuilder stringBuilder = new StringBuilder();
-            char[] chars = advancementData.toString().toCharArray();
-            int i = 0;
-            for (int j = 0; j < chars.length; j++) {
-                char c = chars[j];
-                char previousChar = j - 1 < 0 ? c : chars[j - 1];
-                char nextChar = j + 1 >= chars.length ? c : chars[j + 1];
-
-                if(c == '{'){
-                    stringBuilder.append(c);
-                    if(nextChar != '}'){
-                        i++;
-                        stringBuilder.append('\n').append(Strings.repeat('\t', i));
-                    }
-                }
-                else if (c == '}') {
-                    if(previousChar != '{'){
-                        i--;
-                        stringBuilder.append("\n").append(Strings.repeat('\t', i));
-                    }
-                    stringBuilder.append(c);
-                    if(nextChar != ','){
-                        stringBuilder.append('\n').append(Strings.repeat('\t', i));
-                    }
-                }
-                else if (c == ',') {
-                    stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
-                }
-                else if (c == '[' && nextChar != '\"') {
-                    i++;
-                    stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
-                }
-                else if (c == ']' && previousChar != '\"') {
-                    i--;
-                    stringBuilder.append('\n').append(Strings.repeat('\t', i)).append(c);
-                }
-                else {
-                    stringBuilder.append(c);
-                }
-            }
-            String temp = stringBuilder.toString();
-
-            //TODO: Remove additional \n and consider nbt data format
-            return new ByteArrayInputStream(temp.getBytes());
-        }
-        catch (Exception e){
-            e.printStackTrace();
-            return null;
-        }
-    }
 }
