@@ -36,7 +36,7 @@ public class CriteriaInputScreen extends BasicInputScreen {
     public void init() {
         super.init();
 
-        this.addDropDownList(this.allCriteriaTriggers.keySet(), "criteriaTriggers", 45, 45, 80, () -> "", Color.green::getRGB, (editBox1 -> {
+        this.addDropDownList(this.allCriteriaTriggers.keySet(), "criteriaTriggers", this.screenTopLeftCorner[0] + 10, this.screenTopLeftCorner[1] + 45, 80, () -> "", Color.green::getRGB, (editBox1 -> {
             try {
                 ResourceLocation temp = new ResourceLocation(editBox1.getValue());
                 var trigger = this.allCriteriaTriggers.get(temp);
@@ -75,18 +75,25 @@ public class CriteriaInputScreen extends BasicInputScreen {
     }
 
     private void addInputFields(List<Class<?>> conditionsList, Map<Class<?>, List<Class<?>>> conditions){
+        if(conditionsList == null){
+            return;
+        }
         conditionsList.forEach(aClass -> {
             String className = aClass.getName();
             if(className.equals("java.lang.String")){
                 //TODO: ADD String input field
+                LOGGER.debug("Found String");
             }
-            else if (aClass.getGenericSuperclass().getTypeName().equals("java.lang.Number")) {
+            else if (aClass.getGenericSuperclass() != null && aClass.getGenericSuperclass().getTypeName().equals("java.lang.Number")) {
                 //TODO: Add Number input field
+                LOGGER.debug("Found number");
             }
             else if (className.equals("java.lang.Boolean")) {
                 //TODO: ADD Boolean input field
+                LOGGER.debug("Found boolean");
             }
             else {
+                LOGGER.debug("Class: " + aClass.getName());
                 addInputFields(conditions.get(aClass), conditions);
             }
         });
