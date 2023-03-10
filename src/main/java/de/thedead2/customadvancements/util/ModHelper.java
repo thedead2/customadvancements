@@ -7,10 +7,12 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
-import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -25,7 +27,6 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.VersionChecker;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.locating.IModFile;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,16 +67,14 @@ public abstract class ModHelper {
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
     public static void reloadAll(MinecraftServer server){
-        StopWatch timer = new StopWatch();
-        timer.start();
+        Timer timer = new Timer(true);
         LOGGER.info("Reloading...");
 
         init();
         reloadGameData(server);
 
         LOGGER.info("Reload completed in {} ms!", timer.getTime());
-        timer.stop();
-        timer.reset();
+        timer.stop(true);
     }
 
 
@@ -140,7 +139,7 @@ public abstract class ModHelper {
         public static void sendChatMessage(Player player){
             if (RESULT.status().equals(VersionChecker.Status.OUTDATED)){
                 player.sendSystemMessage(Component.literal("§c" + PREFIX + "Mod is outdated! Please update using the link below:"));
-                player.sendSystemMessage(Component.literal("§c" + MOD_UPDATE_LINK));
+                player.sendSystemMessage(Component.literal(MOD_UPDATE_LINK).withStyle(ChatFormatting.UNDERLINE).withStyle(ChatFormatting.RED).withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, MOD_UPDATE_LINK))));
             }
             else if (RESULT.status().equals(VersionChecker.Status.BETA)) {
                 player.sendSystemMessage(Component.literal("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"));
@@ -148,7 +147,7 @@ public abstract class ModHelper {
             else if (RESULT.status().equals(VersionChecker.Status.BETA_OUTDATED)) {
                 player.sendSystemMessage(Component.literal("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"));
                 player.sendSystemMessage(Component.literal("§c" + PREFIX + "This Beta Version is outdated! Please update using the link below:"));
-                player.sendSystemMessage(Component.literal("§c" + MOD_UPDATE_LINK));
+                player.sendSystemMessage(Component.literal(MOD_UPDATE_LINK).withStyle(ChatFormatting.UNDERLINE).withStyle(ChatFormatting.RED).withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, MOD_UPDATE_LINK))));
             }
         }
 

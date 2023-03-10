@@ -3,7 +3,7 @@ package de.thedead2.customadvancements.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import de.thedead2.customadvancements.util.ModHelper;
 
-import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;

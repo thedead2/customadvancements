@@ -8,9 +8,11 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
+import de.thedead2.customadvancements.advancements.criteria.CriteriaConditionsIdentifier;
+import de.thedead2.customadvancements.util.Timer;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import joptsimple.internal.Strings;
 import net.minecraft.ResourceLocationException;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,7 +34,7 @@ public class JsonHandler extends FileHandler {
 
     @Override
     public void readFiles(File directory) {
-        StopWatch timer = new StopWatch();
+        Timer timer = new Timer();
         if(directory.getPath().contains(String.valueOf(TEXTURES_PATH))){
             return;
         }
@@ -46,6 +48,9 @@ public class JsonHandler extends FileHandler {
             timer.start();
             String fileName = file.getName();
             CrashHandler.getInstance().setActiveFile(file);
+            if(file.toPath().equals(CriteriaConditionsIdentifier.conditionsFile.toPath())){
+                continue;
+            }
 
             try {
                 if (file.isFile() && fileName.endsWith(".json")) {
@@ -98,7 +103,6 @@ public class JsonHandler extends FileHandler {
                 throw new RuntimeException("Reading a file took " + timer.getTime() + " ms! Max. is 500 ms!");
             }
             timer.stop();
-            timer.reset();
         }
         CrashHandler.getInstance().setActiveAdvancement(null);
         CrashHandler.getInstance().setActiveFile(null);
@@ -165,9 +169,53 @@ public class JsonHandler extends FileHandler {
         }
     }
 
-    public static String formatJsonObject(JsonElement jsonObject){
+    public static String formatJsonObject(JsonElement jsonElement){
         StringBuilder stringBuilder = new StringBuilder();
-        char[] chars = jsonObject.toString().toCharArray();
+        char[] chars = jsonElement.toString().toCharArray();
+        int i = 0;
+        for (int j = 0; j < chars.length; j++) {
+            char c = chars[j];
+            char previousChar = j - 1 < 0 ? c : chars[j - 1];
+            char nextChar = j + 1 >= chars.length ? c : chars[j + 1];
+
+            if(c == '{'){
+                stringBuilder.append(c);
+                if(nextChar != '}'){
+                    i++;
+                    stringBuilder.append('\n').append(Strings.repeat('\t', i));
+                }
+            }
+            else if (c == '}') {
+                if(previousChar != '{'){
+                    i--;
+                    stringBuilder.append("\n").append(Strings.repeat('\t', i));
+                }
+                stringBuilder.append(c);
+                if(nextChar != ',' && nextChar != '\"' && nextChar != '\'' && nextChar != '}' && nextChar != ']'){
+                    stringBuilder.append('\n').append(Strings.repeat('\t', i));
+                }
+            }
+            else if (c == ',') {
+                stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
+            }
+            else if (c == '[' && (nextChar == '\"' || nextChar == '[')) {
+                i++;
+                stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
+            }
+            else if (c == ']' && (previousChar == '\"' || previousChar == ']')) {
+                i--;
+                stringBuilder.append('\n').append(Strings.repeat('\t', i)).append(c);
+            }
+            else {
+                stringBuilder.append(c);
+            }
+        }
+        return stringBuilder.toString();
+    }
+
+    public static String formatString(String string){
+        StringBuilder stringBuilder = new StringBuilder();
+        char[] chars = string.toCharArray();
         int i = 0;
         for (int j = 0; j < chars.length; j++) {
             char c = chars[j];

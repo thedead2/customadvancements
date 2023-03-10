@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.util.handler;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
 

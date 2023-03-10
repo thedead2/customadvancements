@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.util.handler;
 
 import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
 import org.apache.logging.log4j.Level;
 

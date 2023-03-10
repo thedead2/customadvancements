@@ -1,8 +1,10 @@
-package de.thedead2.customadvancements.util.handler;
+package de.thedead2.customadvancements.util.exceptions;
 
 import com.google.common.io.ByteStreams;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
 import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.advancements.criteria.CriteriaConditionsIdentifier;
+import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.logger.ConsoleColors;
 import joptsimple.internal.Strings;
 import net.minecraft.CrashReportCategory;
@@ -56,7 +58,7 @@ public class CrashHandler implements ISystemReportExtender {
     }
 
     private static void onCrash(){
-        CriteriaConditionsIdentifier.save();
+        CriteriaConditionsIdentifier.emergencySave();
     }
 
     private String getDetails(){

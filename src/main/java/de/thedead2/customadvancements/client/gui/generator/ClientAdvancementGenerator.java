@@ -11,7 +11,7 @@ import de.thedead2.customadvancements.client.gui.components.CheckBox;
 import de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget;
 import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
-import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import net.minecraft.ChatFormatting;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.advancements.*;

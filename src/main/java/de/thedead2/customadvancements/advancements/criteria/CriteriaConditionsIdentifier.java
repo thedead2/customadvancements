@@ -1,37 +1,37 @@
-package de.thedead2.customadvancements.util.handler;
+package de.thedead2.customadvancements.advancements.criteria;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.ResourceLocationException;
+import de.thedead2.customadvancements.util.Timer;
+import de.thedead2.customadvancements.util.handler.FileHandler;
+import de.thedead2.customadvancements.util.handler.JsonHandler;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.advancements.Criterion;
 import net.minecraft.advancements.CriterionTrigger;
 import net.minecraft.advancements.CriterionTriggerInstance;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.commons.lang3.time.StopWatch;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.*;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
 public abstract class CriteriaConditionsIdentifier {
 
-    private static final Map<ResourceLocation, CriteriaConditions> criteriaConditions = new HashMap<>();
-    private static final Map<ResourceLocation, CriterionTrigger<?>> criteriaTriggers = ImmutableMap.copyOf(CriteriaTriggers.CRITERIA);
+    public static final Map<ResourceLocation, TriggerConditions> CRITERIA_CONDITIONS = new HashMap<>();
+    public static final Map<Predicate.Key, Predicate> ALL_PREDICATES = new HashMap<>();
+    public static final Map<ResourceLocation, Trigger> ALL_TRIGGERS = new HashMap<>();
+    public static final Map<ResourceLocation, CriterionTrigger<?>> CRITERIA_TRIGGERS = ImmutableMap.copyOf(CriteriaTriggers.CRITERIA);
     public static final File conditionsFile = new File(String.valueOf(DIR_PATH.resolve("criteriaConditions.json")));
+    public static final File newconditionsFile = new File(String.valueOf(DIR_PATH.resolve("test.json")));
+
+
 
 
     public static void init(){
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        Timer timer = new Timer(true);
         LOGGER.debug("Starting to resolve conditions for criteria triggers...");
         if(!conditionsFile.exists()){
             JsonObject jsonObject = new JsonObject();
@@ -42,15 +42,27 @@ public abstract class CriteriaConditionsIdentifier {
                 LOGGER.error("Couldn't write file: {}", conditionsFile.getPath());
             }
         }
-        deserializeFromJson(JsonHandler.getInstance().getJsonObject(conditionsFile));
+        deserializeFromJson(JsonHandler.getInstance().getJsonObject(newconditionsFile));
 
-        criteriaTriggers.forEach((resourceLocation, trigger) -> {
+        createCriteriaConditions();
+
+        LOGGER.info("All predicates:");
+        ALL_PREDICATES.forEach((key, predicate) -> LOGGER.debug(predicate));
+
+        LOGGER.info("All triggers:");
+        ALL_TRIGGERS.forEach((resourceLocation, trigger) -> LOGGER.debug(trigger));
+
+        LOGGER.info("All trigger conditions:");
+        CRITERIA_CONDITIONS.forEach((resourceLocation, triggerConditions) -> LOGGER.debug(triggerConditions));
+
+        /*criteriaTriggers.forEach((resourceLocation, trigger) -> {
             if(criteriaConditions.containsKey(resourceLocation)){
                 return;
             }
             LOGGER.debug("Trying to resolve conditions for criteria trigger: " + resourceLocation);
 
-            Map<Constructor<?>, Parameter[]> constructorMap = new HashMap<>();
+
+            *//*Map<Constructor<?>, Parameter[]> constructorMap = new HashMap<>();
             Class<?> triggerClass = trigger.getClass();
             try {
                 Method[] methods = triggerClass.getDeclaredMethods();
@@ -71,14 +83,38 @@ public abstract class CriteriaConditionsIdentifier {
             }
             catch (NoSuchMethodException e) {
                 LOGGER.error("Can't find declared method \"createInstance\" for class: {}", triggerClass.getName());
-            }
-        });
+            }*//*
+        });*/
 
-        stopWatch.stop();
-        LOGGER.debug("Resolving criteria conditions took: " + stopWatch.getTime() + " ms");
+        timer.stop();
+        LOGGER.debug("Resolving criteria conditions took: " + timer.getTime() + " ms");
     }
 
-    private static Map<Class<?>, List<Class<?>>> resolveClasses(Map<Constructor<?>, Parameter[]> constructorMap) {
+    private static void createCriteriaConditions() {
+        ALL_TRIGGERS.forEach((resourceLocation, trigger) -> {
+            TriggerConditions triggerConditions = TriggerConditions.fromTrigger(trigger);
+            CRITERIA_CONDITIONS.put(resourceLocation, triggerConditions);
+        });
+    }
+
+    public static void deserializePredicates(JsonObject jsonObject){
+        JsonObject jsonObject1 = jsonObject.getAsJsonObject("predicates");
+
+        jsonObject1.entrySet().forEach(entry -> {
+            Predicate predicate = Predicate.deserializeFromJson(entry.getKey(), entry.getValue().getAsJsonObject());
+            ALL_PREDICATES.put(predicate.getKey(), predicate);
+        });
+    }
+
+    public static void serializePredicates(JsonObject jsonObject) {
+        JsonObject jsonObject1 = new JsonObject();
+        ALL_PREDICATES.forEach((key, predicate) -> {
+            jsonObject1.add(key.getName(), predicate.serializeToJson());
+        });
+        jsonObject.add("predicates", jsonObject1);
+    }
+
+    /*private static Map<Class<?>, List<Class<?>>> resolveClasses(Map<Constructor<?>, Parameter[]> constructorMap) {
         Map<Class<?>, List<Class<?>>> constructorParameterClasses = new HashMap<>();
         constructorMap.forEach((constructor, parameters) -> {
             Class<?> constructorClass = constructor.getDeclaringClass();
@@ -89,17 +125,23 @@ public abstract class CriteriaConditionsIdentifier {
             constructorParameterClasses.put(constructorClass, parameterClasses);
         });
         return constructorParameterClasses;
-    }
+    }*/
 
     private static void deserializeFromJson(JsonObject jsonObject){
-        try {
-            if(jsonObject.size() == 0){
+        //try {
+            if(jsonObject != null && (jsonObject.isJsonNull() || jsonObject.size() == 0))
                 return;
-            }
-            JsonArray jsonArray = jsonObject.getAsJsonArray("triggerConditions");
-            if (jsonArray == null) {
+            else if(jsonObject == null)
+                return;
+
+            deserializePredicates(jsonObject);
+            deserializeTriggers(jsonObject);
+
+
+            /*if (!jsonObject.has("triggerConditions")) {
                 throw new IllegalArgumentException("Can't identify triggerConditions from json object: " + jsonObject);
             }
+            JsonArray jsonArray = jsonObject.getAsJsonArray("triggerConditions");
             jsonArray.forEach(jsonElement -> {
                 CriteriaConditions.deserializeFromJson(jsonElement.getAsJsonObject()).ifPresentOrElse(criteriaConditions1 -> criteriaConditions.put(criteriaConditions1.getTriggerName(), criteriaConditions1),
                         () -> {
@@ -112,10 +154,18 @@ public abstract class CriteriaConditionsIdentifier {
         }
         catch (IllegalStateException e){
             e.printStackTrace();
-        }
+        }*/
     }
 
-    private static void getConstructorParameters(Constructor<?>[] constructors, Map<Constructor<?>, Parameter[]> constructorMap){
+    private static void deserializeTriggers(JsonObject jsonObject) {
+        JsonObject jsonObject1 = jsonObject.getAsJsonObject("triggers");
+        jsonObject1.entrySet().forEach(entry -> {
+            Trigger trigger = Trigger.deserializeFromJson(entry.getKey(), entry.getValue().getAsJsonObject());
+            ALL_TRIGGERS.put(trigger.getKey(), trigger);
+        });
+    }
+
+    /*private static void getConstructorParameters(Constructor<?>[] constructors, Map<Constructor<?>, Parameter[]> constructorMap){
         for(Constructor<?> constructor : constructors){
             if(constructorMap.containsKey(constructor)){
                 break;
@@ -134,7 +184,7 @@ public abstract class CriteriaConditionsIdentifier {
             }
             constructorMap.put(constructor, constructorParameters);
         }
-    }
+    }*/
 
     public static void save(){
         try {
@@ -148,26 +198,48 @@ public abstract class CriteriaConditionsIdentifier {
 
     private static JsonObject serializeToJson(){
         JsonObject jsonObject = new JsonObject();
-        JsonArray jsonArray = new JsonArray();
+        serializePredicates(jsonObject);
+        serializeTriggers(jsonObject);
+
+
+        /*JsonArray jsonArray = new JsonArray();
         criteriaConditions.forEach((resourceLocation, criteriaConditions1) -> jsonArray.add(criteriaConditions1.serializeToJson()));
-        jsonObject.add("triggerConditions", jsonArray);
+        jsonObject.add("triggerConditions", jsonArray);*/
         return jsonObject;
     }
 
-
-    public static CriteriaConditions getConditionsFor(ResourceLocation key){
-        return criteriaConditions.get(key);
+    private static void serializeTriggers(JsonObject jsonObject) {
+        JsonObject jsonObject1 = new JsonObject();
+        ALL_TRIGGERS.forEach((key, trigger) -> {
+            jsonObject1.add(key.toString(), trigger.serializeToJson());
+        });
+        jsonObject.add("triggers", jsonObject1);
     }
 
-    public static CriteriaConditions getConditionsFor(Criterion criterion){
-        return criteriaConditions.get(criterion.getTrigger().getCriterion());
+
+    public static TriggerConditions getConditionsFor(ResourceLocation key){
+        return CRITERIA_CONDITIONS.get(key);
     }
 
-    public static CriteriaConditions getConditionsFor(CriterionTriggerInstance triggerInstance){
-        return criteriaConditions.get(triggerInstance.getCriterion());
+    public static TriggerConditions getConditionsFor(Criterion criterion){
+        return CRITERIA_CONDITIONS.get(criterion.getTrigger().getCriterion());
     }
 
-    public static class CriteriaConditions {
+    public static TriggerConditions getConditionsFor(CriterionTriggerInstance triggerInstance){
+        return CRITERIA_CONDITIONS.get(triggerInstance.getCriterion());
+    }
+
+    public static void emergencySave() {
+        try {
+            LOGGER.fatal("Emergency saving criteria conditions to file...");
+            FileHandler.writeFile(new ByteArrayInputStream(JsonHandler.formatJsonObject(serializeToJson()).getBytes()), conditionsFile.toPath());
+        }
+        catch (IOException e) {
+            LOGGER.error("Couldn't write criteria conditions data to file!");
+        }
+    }
+
+    /*public static class CriteriaConditions {
         private final Map<Class<?>, List<Class<?>>> conditions;
         private final ResourceLocation triggerName;
         private final Class<?> triggerInstanceClass;
@@ -194,38 +266,37 @@ public abstract class CriteriaConditionsIdentifier {
         public static Optional<CriteriaConditions> deserializeFromJson(JsonObject jsonObject){
             CriteriaConditions criteriaConditions = null;
             try {
-                JsonElement jsonElement = jsonObject.get("trigger");
-                if (jsonElement == null) {
+                if(!jsonObject.has("trigger")){
                     throw new IllegalArgumentException("Couldn't get trigger resource location from json object!");
                 }
-                String s = jsonElement.getAsString();
-                ResourceLocation triggerName = ResourceLocation.tryParse(s);
-                if (triggerName == null) {
-                    throw new ResourceLocationException("Couldn't create resource location for trigger: " + s);
-                }
+                ResourceLocation triggerName = new ResourceLocation(jsonObject.get("trigger").getAsString());
+
                 if (criteriaTriggers.get(triggerName) == null) {
                     throw new IllegalArgumentException("Unknown trigger with resource location: " + triggerName);
                 }
-                JsonElement triggerInstanceClassField = jsonObject.get("triggerInstanceClass");
-                if(triggerInstanceClassField == null){
+
+                if(!jsonObject.has("triggerInstanceClass")){
                     throw new IllegalArgumentException("Can't find triggerInstanceClassField");
                 }
-                Class<?> triggerInstanceClass = Class.forName(triggerInstanceClassField.getAsString());
+                Class<?> triggerInstanceClass = Class.forName(jsonObject.get("triggerInstanceClass").getAsString());
                 Map<Class<?>, List<Class<?>>> conditionClasses = new HashMap<>();
-                JsonObject jsonObject1 = jsonObject.getAsJsonObject("conditions");
-                for (String key : jsonObject1.keySet()) {
-                    try {
-                        Class<?> constructor = Class.forName(key);
-                        List<Class<?>> parameters = new ArrayList<>();
-                        for (JsonElement jsonElement1 : jsonObject1.getAsJsonArray(key)){
-                            String parameterName = jsonElement1.getAsString();
-                            Class<?> parameter = Class.forName(parameterName);
-                            parameters.add(parameter);
+
+                if(jsonObject.has("conditions")){
+                    JsonObject jsonObject1 = jsonObject.getAsJsonObject("conditions");
+                    for (String key : jsonObject1.keySet()) {
+                        try {
+                            Class<?> constructor = Class.forName(key);
+                            List<Class<?>> parameters = new ArrayList<>();
+                            for (JsonElement jsonElement1 : jsonObject1.getAsJsonArray(key)){
+                                String parameterName = jsonElement1.getAsString();
+                                Class<?> parameter = Class.forName(parameterName);
+                                parameters.add(parameter);
+                            }
+                            conditionClasses.put(constructor, parameters);
                         }
-                        conditionClasses.put(constructor, parameters);
-                    }
-                    catch (ClassNotFoundException e) {
-                        LOGGER.error("Can't resolve class for name: {}", key);
+                        catch (ClassNotFoundException e) {
+                            LOGGER.error("Can't resolve class for key: {}", key);
+                        }
                     }
                 }
 
@@ -252,7 +323,9 @@ public abstract class CriteriaConditionsIdentifier {
                 jsonObject1.add(constructor.getName(), jsonArray);
             });
 
-            jsonObject.add("conditions", jsonObject1);
+            if(jsonObject1.size() != 0){
+                jsonObject.add("conditions", jsonObject1);
+            }
             return jsonObject;
         }
 
@@ -264,5 +337,5 @@ public abstract class CriteriaConditionsIdentifier {
                     ", conditions=" + this.conditions +
                     '}';
         }
-    }
+    }*/
 }

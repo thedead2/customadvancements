@@ -9,7 +9,7 @@ import de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidge
 import de.thedead2.customadvancements.client.gui.generator.ClientAdvancementGenerator;
 import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
-import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.DisplayInfo;

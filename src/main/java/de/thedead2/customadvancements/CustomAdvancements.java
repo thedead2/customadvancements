@@ -5,8 +5,9 @@ import de.thedead2.customadvancements.commands.GenerateAdvancementCommand;
 import de.thedead2.customadvancements.commands.GenerateGameAdvancementsCommand;
 import de.thedead2.customadvancements.commands.GenerateResourceLocationsFileCommand;
 import de.thedead2.customadvancements.commands.ReloadCommand;
-import de.thedead2.customadvancements.util.handler.CrashHandler;
-import de.thedead2.customadvancements.util.handler.CriteriaConditionsIdentifier;
+import de.thedead2.customadvancements.util.Timer;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.advancements.criteria.CriteriaConditionsIdentifier;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
 import net.minecraft.commands.CommandSourceStack;
@@ -23,7 +24,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.server.command.ConfigCommand;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -51,17 +51,15 @@ public class CustomAdvancements {
 
 
     private void setup(final FMLCommonSetupEvent event) {
-        StopWatch timer = new StopWatch();
+        Timer timer = new Timer(true);
 
-        timer.start();
         LOGGER.info("Starting " + MOD_NAME + ", Version: " + MOD_VERSION);
         LOGGER.debug("Registered PATH_SEPARATOR with: " + PATH_SEPARATOR);
 
         init();
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());
-        timer.stop();
-        timer.reset();
+        timer.stop(true);
     }
 
 

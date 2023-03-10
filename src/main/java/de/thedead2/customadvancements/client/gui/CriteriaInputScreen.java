@@ -1,11 +1,12 @@
 package de.thedead2.customadvancements.client.gui;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.thedead2.customadvancements.advancements.criteria.*;
 import de.thedead2.customadvancements.client.gui.components.FakeAdvancementWidget;
 import de.thedead2.customadvancements.client.gui.generator.AdvancementGeneratorGUI;
 import de.thedead2.customadvancements.client.gui.generator.ClientAdvancementGenerator;
-import de.thedead2.customadvancements.util.handler.CriteriaConditionsIdentifier;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.advancements.*;
 import net.minecraft.client.gui.components.Widget;
@@ -55,6 +56,7 @@ public class CriteriaInputScreen extends BasicInputScreen {
                 LOGGER.error("Can't find Criterion for input: {}", editBox1.getValue());
             }
         }));
+        //this.inputFields.forEach(widget1 -> this.addRenderableWidget(widget1));
         //this.addRenderableWidget(new MultiLineEditBox(this.font, this.screenTopLeftCorner[0] + 5, this.screenTopLeftCorner[1] + 5, 100, 100, Component.literal("LOL"), Component.literal("Test")));
     }
 
@@ -68,34 +70,6 @@ public class CriteriaInputScreen extends BasicInputScreen {
     }
 
     private void identifyConditionInputs(ResourceLocation trigger){
-        CriteriaConditionsIdentifier.CriteriaConditions criteriaConditions = CriteriaConditionsIdentifier.getConditionsFor(trigger);
-        var conditions = criteriaConditions.getConditions();
-        List<Class<?>> mainConditions = conditions.get(criteriaConditions.getTriggerInstanceClass());
-        this.addInputFields(mainConditions, conditions);
-    }
 
-    private void addInputFields(List<Class<?>> conditionsList, Map<Class<?>, List<Class<?>>> conditions){
-        if(conditionsList == null){
-            return;
-        }
-        conditionsList.forEach(aClass -> {
-            String className = aClass.getName();
-            if(className.equals("java.lang.String")){
-                //TODO: ADD String input field
-                LOGGER.debug("Found String");
-            }
-            else if (aClass.getGenericSuperclass() != null && aClass.getGenericSuperclass().getTypeName().equals("java.lang.Number")) {
-                //TODO: Add Number input field
-                LOGGER.debug("Found number");
-            }
-            else if (className.equals("java.lang.Boolean")) {
-                //TODO: ADD Boolean input field
-                LOGGER.debug("Found boolean");
-            }
-            else {
-                LOGGER.debug("Class: " + aClass.getName());
-                addInputFields(conditions.get(aClass), conditions);
-            }
-        });
     }
 }
