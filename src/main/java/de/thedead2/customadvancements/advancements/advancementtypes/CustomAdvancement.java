@@ -1,11 +1,12 @@
 package de.thedead2.customadvancements.advancements.advancementtypes;
 
 import com.google.gson.JsonObject;
+import de.thedead2.customadvancements.util.ResourceManagerExtender;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
-import static de.thedead2.customadvancements.util.handler.FileHandler.getId;
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 public class CustomAdvancement implements IAdvancement {
     private final JsonObject jsonObject;
@@ -19,7 +20,7 @@ public class CustomAdvancement implements IAdvancement {
     public CustomAdvancement(JsonObject jsonObject, String fileName, String path){
         this.jsonObject = jsonObject;
         this.fileName = fileName;
-        this.resourceLocation = IAdvancement.createResourceLocation(getId(path), this.fileName, false);
+        this.resourceLocation = IAdvancement.createResourceLocation(path, this.fileName, false);
         this.backgroundImage = hasBackgroundImage();
         this.parentAdvancement = this.jsonObject.get("parent") != null ? IAdvancement.createResourceLocation((this.jsonObject.get("parent").getAsString() + ".json"), this.fileName, true) : null;
     }
@@ -54,7 +55,7 @@ public class CustomAdvancement implements IAdvancement {
 
             this.textureLocation = textureLocation;
             assert textureLocation != null;
-            boolean backgroundImage_in_map = !textureLocation.getNamespace().equals(MOD_ID) || TEXTURES.get(textureLocation) != null;
+            boolean backgroundImage_in_map = !textureLocation.getNamespace().equals(MOD_ID) || ResourceManagerExtender.getResource(textureLocation) != null;
 
             if(backgroundImage_in_map) {
                 LOGGER.debug("Found background for " + fileName);

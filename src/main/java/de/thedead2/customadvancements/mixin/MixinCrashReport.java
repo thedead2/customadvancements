@@ -1,6 +1,6 @@
 package de.thedead2.customadvancements.mixin;
 
-import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import org.spongepowered.asm.mixin.Final;

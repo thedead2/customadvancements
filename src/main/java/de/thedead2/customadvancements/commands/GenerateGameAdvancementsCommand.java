@@ -2,13 +2,13 @@ package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.Timer;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
-import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class GenerateGameAdvancementsCommand {
 
 
     private static final AtomicInteger COUNTER = new AtomicInteger();
-    private final StopWatch timer = new StopWatch();
+    private final Timer timer = new Timer();
 
 
     public GenerateGameAdvancementsCommand(CommandDispatcher<CommandSourceStack> dispatcher){
@@ -54,8 +54,7 @@ public class GenerateGameAdvancementsCommand {
                 LOGGER.info("Generating {} files for game advancements took {} ms", COUNTER.get(), timer.getTime());
                 source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Generated " + COUNTER + " files for game advancements successfully!"), false);
                 COUNTER.set(0);
-                timer.stop();
-                timer.reset();
+                timer.stop(true);
 
                 reloadAll(source.getServer());
             }

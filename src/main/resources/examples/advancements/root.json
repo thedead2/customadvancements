@@ -3,8 +3,12 @@
     "icon": {
       "item": "minecraft:diamond_block"
     },
-    "title": "Custom Advancements",
-    "description": "Follow your imagination!",
+    "title":{
+      "translate":"customadvancements.advancements.example_root.title"
+    },
+    "description":{
+      "translate":"customadvancements.advancements.example_root.description"
+    },
     "background": "customadvancements:textures/logo.png",
     "show_toast": false,
     "announce_to_chat": false,
