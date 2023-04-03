@@ -6,11 +6,13 @@
   "mixins": [
     "MixinAdvancementsScreen",
     "MixinCrashReport",
-    "MixinJsonReloadListener"
+    "MixinJsonReloadListener",
+    "MixinLanguageHook",
+    "MixinResourceManager"
   ],
   "client": [
-    "MixinMinecraft",
-    "MixinSimpleTexture"
+    "MixinClientLanguage",
+    "MixinMinecraft"
   ],
   "server": [
   ],

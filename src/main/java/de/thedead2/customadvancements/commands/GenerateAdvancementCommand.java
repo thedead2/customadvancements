@@ -5,7 +5,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
-import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

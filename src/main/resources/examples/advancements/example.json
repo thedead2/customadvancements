@@ -3,8 +3,12 @@
       "icon": {
         "item": "minecraft:dirt"
       },
-      "title": "Example",
-      "description": "This is an example advancement!",
+      "title":{
+        "translate":"customadvancements.advancements.example_example.title"
+      },
+      "description":{
+        "translate":"customadvancements.advancements.example_example.description"
+      },
       "frame": "task",
       "show_toast": true,
       "announce_to_chat": true

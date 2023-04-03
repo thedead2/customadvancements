@@ -2,10 +2,12 @@ package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import de.thedead2.customadvancements.util.ModHelper;
-import de.thedead2.customadvancements.util.handler.CrashHandler;
+
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
@@ -21,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_NAME;
 
 public class GenerateResourceLocationsFileCommand {
     public GenerateResourceLocationsFileCommand(CommandDispatcher<CommandSourceStack> dispatcher){
