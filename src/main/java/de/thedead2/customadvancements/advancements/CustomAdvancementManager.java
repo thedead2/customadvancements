@@ -2,10 +2,12 @@ package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
-import de.thedead2.customadvancements.util.handler.CrashHandler;
+import de.thedead2.customadvancements.util.Timer;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import net.minecraft.CrashReport;
+import net.minecraft.ReportedException;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.Level;
 
 import java.util.HashMap;
@@ -21,7 +23,7 @@ public abstract class CustomAdvancementManager {
 
     private static long counter = 0;
     public static final Map<ResourceLocation, JsonElement> ADVANCEMENTS = new HashMap<>();
-    private static final StopWatch TIMER = new StopWatch();
+    private static final Timer TIMER = new Timer();
     private static boolean safeMode = false;
 
     public static void modifyAdvancementData(Map<ResourceLocation, JsonElement> mapIn) {
@@ -50,12 +52,12 @@ public abstract class CustomAdvancementManager {
                 LOGGER.debug("Modifying Advancement data took {} ms.", TIMER.getTime());
             }
             catch (Throwable e){
-                CrashHandler.getInstance().addCrashDetails("Error while modifying advancement data!", Level.ERROR, e);
-                throw e;
+                CrashReport crashReport = new CrashReport("Error while modifying advancement data!", e);
+                CrashHandler.getInstance().printCrashReport(crashReport);
+                throw new ReportedException(crashReport);
             }
             finally {
-                TIMER.stop();
-                TIMER.reset();
+                TIMER.stop(true);
             }
         }
         else {
@@ -74,7 +76,8 @@ public abstract class CustomAdvancementManager {
     private static void loadAdvancements(Map<ResourceLocation, ? extends IAdvancement> advancementsIn){
         if(!advancementsIn.isEmpty() && !ConfigManager.NO_ADVANCEMENTS.get()) {
             String clazz = advancementsIn.values().toArray()[0].getClass().getName();
-            String className = clazz.substring(clazz.lastIndexOf(".") + 1);
+            clazz = clazz.substring(clazz.lastIndexOf(".") + 1);
+            String className = new StringBuilder(clazz).insert(clazz.indexOf("A"), " ").toString();
 
             LOGGER.info("Starting to load advancements of type: {}", className);
             counter = 0;

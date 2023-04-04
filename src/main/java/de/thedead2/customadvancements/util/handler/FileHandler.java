@@ -1,7 +1,9 @@
 package de.thedead2.customadvancements.util.handler;
 
 import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
 import java.io.File;
@@ -36,15 +38,26 @@ public abstract class FileHandler extends ModHelper {
                 e.printStackTrace();
             }
         }
-
+        createDirectory(DATA_PATH.toFile());
         if(createDirectory(TEXTURES_PATH.toFile())){
             try {
-                copyModFiles("examples/textures", TEXTURES_PATH, ".png");
+                copyModFiles("examples/data/textures", TEXTURES_PATH, ".png");
                 LOGGER.debug("Created example textures for advancements!");
             }
             catch (FileCopyException e){
                 LOGGER.error("Unable to create example textures for advancements!");
                 CrashHandler.getInstance().addCrashDetails("Unable to create example textures!", Level.WARN, e);
+                e.printStackTrace();
+            }
+        }
+        if(createDirectory(LANG_PATH.toFile())){
+            try {
+                copyModFiles("examples/data/lang", LANG_PATH, ".json");
+                LOGGER.debug("Created example lang files for advancements!");
+            }
+            catch (FileCopyException e){
+                LOGGER.error("Unable to create example lang files for advancements!");
+                CrashHandler.getInstance().addCrashDetails("Unable to create example lang files!", Level.WARN, e);
                 e.printStackTrace();
             }
         }
@@ -80,13 +93,13 @@ public abstract class FileHandler extends ModHelper {
     }
 
 
-    public static String getId(String filePath){
+    public static ResourceLocation getId(String filePath){
         try{
             String subString = filePath.replace(String.valueOf(DIR_PATH), "");
             subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
             subString = subString.replaceFirst("/", "");
             subString = subString.replaceFirst("/", ":");
-            return subString;
+            return new ResourceLocation(subString);
         }
         catch (Throwable throwable){
             CrashHandler.getInstance().addCrashDetails("Unable to create ID!", Level.ERROR , throwable);
