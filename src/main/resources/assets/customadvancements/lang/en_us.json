@@ -1,10 +1,17 @@
 {
-  "display.customadvancements.fake_advancement_title": "Add Advancement",
-  "display.customadvancements.fake_advancement_description": "Click to add a new Advancement!",
-  "gui.customadvancements.advancement_generator.title": "Advancement Generator",
-
-  "chat.customadvancements.reload_failed_massage": "Failed to execute reload!",
-
-  "key.customadvancements.advancement_generator_key": "Advancement Generator Key",
-  "key.categories.customadvancements.key_category": "Custom Advancements"
+  "chat.customadvancements.reload_failed_message": "%s Failed to execute reload!",
+  "chat.customadvancements.mod_outdated_message": "%s Mod is outdated! Please update using the link below:",
+  "chat.customadvancements.beta_warn_message": "%s You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!",
+  "chat.customadvancements.beta_outdated_message": "%s This Beta Version is outdated! Please update using the link below:",
+  "chat.customadvancements.reload_started": "%s Reloading...",
+  "chat.customadvancements.reload_successful": "%s Reload complete!",
+  "chat.customadvancements.generating_rl_file": "%s Starting to write resource locations to file...",
+  "chat.customadvancements.generating_rl_file_success": "%s Finished!",
+  "chat.customadvancements.generating_rl_file_failed": "%s Unable to write resource locations to file!",
+  "chat.customadvancements.generating_game_advancements": "%s Starting to generate files for game advancements...",
+  "chat.customadvancements.generating_game_advancements_failed": "%s Unable to write %s to file!",
+  "chat.customadvancements.generating_game_advancements_success": "%s Generated %s files for game advancements successfully!",
+  "chat.customadvancements.generating_game_advancement_failed": "%s Unable to generate file for: %s",
+  "chat.customadvancements.generating_game_advancement_already_exists": "%s The file for %s already exist!",
+  "chat.customadvancements.generating_game_advancement_success": "%s Successfully generated file for: %s"
 }

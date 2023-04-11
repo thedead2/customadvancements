@@ -7,10 +7,8 @@ import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import de.thedead2.customadvancements.util.exceptions.CrashHandler;
-import de.thedead2.customadvancements.util.handler.FileHandler;
-import de.thedead2.customadvancements.util.handler.JsonHandler;
-import de.thedead2.customadvancements.util.handler.LanguageHandler;
-import de.thedead2.customadvancements.util.handler.TextureHandler;
+import de.thedead2.customadvancements.util.handler.*;
+import de.thedead2.customadvancements.util.language.TranslationKeyType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -36,11 +34,13 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.ADVANCEMENTS;
+import static de.thedead2.customadvancements.util.language.TranslationKeyProvider.chatLink;
+import static de.thedead2.customadvancements.util.language.TranslationKeyProvider.chatMessage;
 
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.19.3-6.0.0";
+    public static final String MOD_VERSION = "1.19.3-6.1.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
@@ -64,6 +64,7 @@ public abstract class ModHelper {
     public static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
     public static final Map<ResourceLocation, ResourceLocation> CHILDREN_PARENT_MAP = new HashMap<>();
     public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
+    public static final List<String> ALL_TRANSLATION_KEYS = new ArrayList<>();
 
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
@@ -129,7 +130,7 @@ public abstract class ModHelper {
 
         server.reloadResources(selectedIds).exceptionally((e) -> {
             LOGGER.error("Failed to execute reload!", e);
-            server.sendSystemMessage(Component.translatable("chat.customadvancements.reload_failed_massage"));
+            server.sendSystemMessage(chatMessage("reload_failed_message"));
             CrashHandler.getInstance().addCrashDetails("Failed to execute reload!", Level.ERROR, e);
             e.printStackTrace();
             return null;
@@ -142,22 +143,19 @@ public abstract class ModHelper {
     public abstract static class VersionManager {
 
         private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(THIS_MOD_CONTAINER.getModInfo());
-        private static final String PREFIX = "[" + MOD_NAME + "]: ";
-
 
         public static void sendChatMessage(Player player){
             if (RESULT.status().equals(VersionChecker.Status.OUTDATED)){
-                player.sendSystemMessage(Component.literal("§c" + PREFIX + "Mod is outdated! Please update using the link below:"));
-                player.sendSystemMessage(Component.literal(MOD_UPDATE_LINK).withStyle(ChatFormatting.UNDERLINE).withStyle(ChatFormatting.RED).withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, MOD_UPDATE_LINK))));
+                player.sendSystemMessage(chatMessage("mod_outdated_message", ChatFormatting.RED));
+                player.sendSystemMessage(chatLink(MOD_UPDATE_LINK, ChatFormatting.RED));
             }
             else if (RESULT.status().equals(VersionChecker.Status.BETA)) {
-                player.sendSystemMessage(Component.literal("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"));
+                player.sendSystemMessage(chatMessage("beta_warn_message", ChatFormatting.YELLOW));
             }
             else if (RESULT.status().equals(VersionChecker.Status.BETA_OUTDATED)) {
-                player.sendSystemMessage(Component.literal("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"));
-                player.sendSystemMessage(Component.literal("§c" + PREFIX + "This Beta Version is outdated! Please update using the link below:"));
-                player.sendSystemMessage(Component.literal(MOD_UPDATE_LINK).withStyle(ChatFormatting.UNDERLINE).withStyle(ChatFormatting.RED).withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, MOD_UPDATE_LINK))));
-            }
+                player.sendSystemMessage(chatMessage("beta_warn_message", ChatFormatting.YELLOW));
+                player.sendSystemMessage(chatMessage("beta_outdated_message", ChatFormatting.RED));
+                player.sendSystemMessage(chatLink(MOD_UPDATE_LINK, ChatFormatting.RED));}
         }
 
         public static void sendLoggerMessage(){

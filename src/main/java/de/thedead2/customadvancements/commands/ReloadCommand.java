@@ -7,6 +7,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.language.TranslationKeyProvider.chatMessage;
 
 public class ReloadCommand {
     public ReloadCommand(CommandDispatcher<CommandSourceStack> dispatcher){
@@ -16,11 +17,11 @@ public class ReloadCommand {
             Thread backgroundThread = new Thread(MOD_NAME){
                 @Override
                 public void run() {
-                    source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Reloading..."), false);
+                    source.sendSuccess(chatMessage("reload_started"), false);
 
                     reloadAll(source.getServer());
 
-                    source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Reload complete!"), false);
+                    source.sendSuccess(chatMessage("reload_successful"), false);
                 }
             };
 

@@ -60,4 +60,5 @@ public class LanguageHandler extends FileHandler{
     public static LanguageHandler getInstance() {
         return Objects.requireNonNullElseGet(instance, () -> new LanguageHandler(LANG_PATH.toFile()));
     }
+
 }

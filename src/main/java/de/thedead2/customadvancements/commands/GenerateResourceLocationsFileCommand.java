@@ -23,13 +23,14 @@ import java.util.Set;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 import static de.thedead2.customadvancements.util.ModHelper.MOD_NAME;
+import static de.thedead2.customadvancements.util.language.TranslationKeyProvider.chatMessage;
 
 public class GenerateResourceLocationsFileCommand {
     public GenerateResourceLocationsFileCommand(CommandDispatcher<CommandSourceStack> dispatcher){
         dispatcher.register(Commands.literal(ModHelper.MOD_ID).then(Commands.literal("generate").then(Commands.literal("resource_locations").executes((command) -> {
             CommandSourceStack source = command.getSource();
 
-            source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Starting to write resource locations to file..."), false);
+            source.sendSuccess(chatMessage("generating_rl_file"), false);
             LOGGER.info("Starting to write resource locations to file...");
 
             OutputStream fileOut = null;
@@ -40,12 +41,12 @@ public class GenerateResourceLocationsFileCommand {
 
                 writeResourceLocations(fileOut);
 
-                source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Finished!"), false);
+                source.sendSuccess(chatMessage("generating_rl_file_success"), false);
                 return 1;
             }
             catch (IOException e){
                 LOGGER.error("Unable to write resource locations to file!");
-                source.sendFailure(Component.literal("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
+                source.sendFailure(chatMessage("generating_rl_file_failed"));
                 CrashHandler.getInstance().addCrashDetails("Unable to write resource locations to file!", Level.ERROR, e);
                 e.printStackTrace();
                 return -1;

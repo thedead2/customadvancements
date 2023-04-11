@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.language.TranslationKeyProvider.chatMessage;
 
 public class GenerateGameAdvancementsCommand {
 
@@ -35,7 +36,7 @@ public class GenerateGameAdvancementsCommand {
             public void run() {
                 timer.start();
                 LOGGER.info("Starting to generate files for game advancements...");
-                source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Starting to generate files for game advancements..."), false);
+                source.sendSuccess(chatMessage("generating_game_advancements"), false);
 
                 FileHandler.createDirectory(DIR_PATH.toFile());
 
@@ -46,13 +47,13 @@ public class GenerateGameAdvancementsCommand {
                     }
                     catch (IOException e) {
                         LOGGER.error("Unable to write {} to file!", advancement);
-                        source.sendFailure(Component.literal("[" + MOD_NAME + "]: Unable to write " + advancement + " to file!"));
+                        source.sendFailure(chatMessage("generating_game_advancements_failed", advancement.toString()));
                         CrashHandler.getInstance().addCrashDetails("Unable to write resource location to file!", Level.WARN, e);
                         e.printStackTrace();
                     }
                 });
                 LOGGER.info("Generating {} files for game advancements took {} ms", COUNTER.get(), timer.getTime());
-                source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Generated " + COUNTER + " files for game advancements successfully!"), false);
+                source.sendSuccess(chatMessage("generating_game_advancements_success", COUNTER.toString()), false);
                 COUNTER.set(0);
                 timer.stop(true);
 
