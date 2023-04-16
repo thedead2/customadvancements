@@ -128,10 +128,8 @@ public abstract class ModHelper {
         }
 
         server.reloadResources(selectedIds).exceptionally((e) -> {
-            LOGGER.error("Failed to execute reload!", e);
             server.sendSystemMessage(TranslationKeyProvider.chatMessage("reload_failed_message", ChatFormatting.RED));
-            CrashHandler.getInstance().addCrashDetails("Failed to execute reload!", Level.ERROR, e);
-            e.printStackTrace();
+            CrashHandler.getInstance().handleException("Failed to execute reload!", e, Level.ERROR, true);
             return null;
         });
     }
