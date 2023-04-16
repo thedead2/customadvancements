@@ -70,7 +70,6 @@ public class CustomAdvancements {
         if(ConfigManager.OUT_DATED_MESSAGE.get() && !(FMLLoader.getLaunchHandler() instanceof CommonDevLaunchHandler)){
             VersionManager.sendChatMessage(event.getEntity());
         }
-        LOGGER.info(FMLLoader.getLaunchHandler() instanceof CommonDevLaunchHandler); //TODO: check in non dev env
     }
 
     private void onPlayerDeath(final PlayerEvent.PlayerRespawnEvent event){
