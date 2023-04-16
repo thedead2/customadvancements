@@ -2,6 +2,7 @@ package de.thedead2.customadvancements.advancements.advancementtypes;
 
 import com.google.gson.JsonObject;
 import de.thedead2.customadvancements.util.ResourceManagerExtender;
+import de.thedead2.customadvancements.util.handler.FileHandler;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
@@ -20,9 +21,9 @@ public class CustomAdvancement implements IAdvancement {
     public CustomAdvancement(JsonObject jsonObject, String fileName, String path){
         this.jsonObject = jsonObject;
         this.fileName = fileName;
-        this.resourceLocation = IAdvancement.createResourceLocation(path, this.fileName, false);
+        this.resourceLocation = FileHandler.getId(path);
         this.backgroundImage = hasBackgroundImage();
-        this.parentAdvancement = this.jsonObject.get("parent") != null ? IAdvancement.createResourceLocation((this.jsonObject.get("parent").getAsString() + ".json"), this.fileName, true) : null;
+        this.parentAdvancement = this.jsonObject.get("parent") != null ? FileHandler.getId(this.jsonObject.get("parent").getAsString() + ".json") : null;
     }
 
 
@@ -57,11 +58,8 @@ public class CustomAdvancement implements IAdvancement {
             assert textureLocation != null;
             boolean backgroundImage_in_map = !textureLocation.getNamespace().equals(MOD_ID) || ResourceManagerExtender.getResource(textureLocation) != null;
 
-            if(backgroundImage_in_map) {
-                LOGGER.debug("Found background for " + fileName);
-            }
-            else if(FMLEnvironment.dist.isClient()) {
-                LOGGER.warn("Unable to locate background texture for custom advancement " + this.fileName + " with texture location: " + textureLocation + "! This will cause problems...");
+            if(!backgroundImage_in_map && FMLEnvironment.dist.isClient()) {
+                LOGGER.warn("Unable to locate background texture for advancement " + this.fileName + " with texture location: " + textureLocation + "! This will cause problems...");
             }
             return true;
         }

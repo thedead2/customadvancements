@@ -1,5 +1,5 @@
 {
-  "parent": "customadvancements:root",
+  "parent": "customadvancements:example",
   "criteria": {
     "back_to_the_roots": {
       "conditions": {

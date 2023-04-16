@@ -1,17 +1,15 @@
 package de.thedead2.customadvancements.commands;
 
-import com.mojang.brigadier.Command;
-import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import de.thedead2.customadvancements.util.ModHelper;
-import de.thedead2.customadvancements.util.handler.AdvancementHandler;
 import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.handler.AdvancementHandler;
+import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
+import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
@@ -20,33 +18,36 @@ import java.util.Collection;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
-public class GenerateAdvancementCommand {
+public class GenerateAdvancementCommand extends ModCommand {
     private static final SuggestionProvider<CommandSourceStack> SUGGEST_ADVANCEMENTS = (commandContext, suggestionsBuilder) -> {
         Collection<Advancement> collection = commandContext.getSource().getServer().getAdvancements().getAllAdvancements();
         return SharedSuggestionProvider.suggestResource(collection.stream().map(Advancement::getId), suggestionsBuilder);
     };
 
-    public GenerateAdvancementCommand(CommandDispatcher<CommandSourceStack> dispatcher){
-        dispatcher.register(Commands.literal(ModHelper.MOD_ID).then(Commands.literal("generate").then(Commands.literal("advancement").then(Commands.argument("advancement", ResourceLocationArgument.id()).suggests(SUGGEST_ADVANCEMENTS).executes(context -> {
-            ResourceLocation advancement = ResourceLocationArgument.getAdvancement(context, "advancement").getId();
+    protected GenerateAdvancementCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
+        super(literalArgumentBuilder);
+    }
+
+
+    public static void register(){
+        newModCommand("generate/advancement/[advancement]", ResourceLocationArgument.id(), SUGGEST_ADVANCEMENTS, command -> {
+
+            ResourceLocation advancement = ResourceLocationArgument.getAdvancement(command, "advancement").getId();
+            if (advancement.getNamespace().equals(MOD_ID)){
+                command.getSource().sendFailure(TranslationKeyProvider.chatMessage("generating_game_advancement_already_exists", ChatFormatting.RED, advancement.toString()));
+                return COMMAND_FAILURE;
+            }
             try {
-                if (advancement.getNamespace().equals(MOD_ID)){
-                    context.getSource().sendFailure(new TextComponent("The file for " + advancement + " already exist!"));
-                    return -1;
-                }
-                AdvancementHandler.writeAdvancementToFile(advancement, ALL_DETECTED_GAME_ADVANCEMENTS.get(advancement));
-                context.getSource().sendSuccess(new TextComponent("Successfully generated file for: " + advancement), false);
-                LOGGER.debug("Successfully generated file for: " + advancement);
-                reloadAll(context.getSource().getServer());
-                return Command.SINGLE_SUCCESS;
+                AdvancementHandler.writeAdvancementToFile(ResourceLocationArgument.getAdvancement(command, "advancement"));
+            } catch (IOException e) {
+                command.getSource().sendFailure(TranslationKeyProvider.chatMessage("generating_game_advancement_failed", advancement));
+                CrashHandler.getInstance().handleException("Unable to generate file for: " + advancement, e, Level.WARN);
+                return COMMAND_FAILURE;
             }
-            catch (IOException e) {
-                context.getSource().sendFailure(new TextComponent("Unable to generate file for: " + advancement));
-                LOGGER.error("Unable to generate file for: " + advancement);
-                CrashHandler.getInstance().addCrashDetails("Unable to generate file for advancement", Level.WARN, e);
-                e.printStackTrace();
-                return -1;
-            }
-        })))));
+            command.getSource().sendSuccess(TranslationKeyProvider.chatMessage("generating_game_advancement_success", advancement.toString()), false);
+            LOGGER.debug("Successfully generated file for: " + advancement);
+            reloadAll(command.getSource().getServer());
+            return COMMAND_SUCCESS;
+        });
     }
 }

@@ -3,6 +3,7 @@ package de.thedead2.customadvancements.util.handler;
 import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import net.minecraft.locale.Language;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,9 +39,11 @@ public class LanguageHandler extends FileHandler{
             });
             CrashHandler.getInstance().setActiveFile(null);
         }
-        catch (IOException e) {
-            throw new RuntimeException(e);
+        catch (IOException e){
+            CrashHandler.getInstance().handleException("Can't list files of directory: " + directory, e, Level.WARN);
         }
+
+
     }
 
     public static int size(){
@@ -54,7 +57,9 @@ public class LanguageHandler extends FileHandler{
         try {
             Language.loadFromJson(new FileInputStream(langFile), map::put);
         }
-        catch (FileNotFoundException ignored) {}
+        catch (FileNotFoundException e) {
+            CrashHandler.getInstance().handleException("Didn't find file " + langFile + "! That shouldn't be possible?!", e, Level.FATAL);
+        }
     }
 
     public static LanguageHandler getInstance() {

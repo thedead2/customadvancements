@@ -1,14 +1,11 @@
 package de.thedead2.customadvancements.commands;
 
-import com.mojang.brigadier.CommandDispatcher;
-import de.thedead2.customadvancements.util.ModHelper;
-
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
-import net.minecraft.commands.Commands;
+import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
@@ -23,14 +20,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
-import static de.thedead2.customadvancements.util.ModHelper.MOD_NAME;
 
-public class GenerateResourceLocationsFileCommand {
-    public GenerateResourceLocationsFileCommand(CommandDispatcher<CommandSourceStack> dispatcher){
-        dispatcher.register(Commands.literal(ModHelper.MOD_ID).then(Commands.literal("generate").then(Commands.literal("resource_locations").executes((command) -> {
+public class GenerateResourceLocationsFileCommand extends ModCommand {
+
+    protected GenerateResourceLocationsFileCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
+        super(literalArgumentBuilder);
+    }
+
+    public static void register() {
+        newModCommand( "generate/resource_locations", (command) -> {
             CommandSourceStack source = command.getSource();
 
-            source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Starting to write resource locations to file..."), false);
+            source.sendSuccess(TranslationKeyProvider.chatMessage("generating_rl_file"), false);
             LOGGER.info("Starting to write resource locations to file...");
 
             OutputStream fileOut = null;
@@ -41,31 +42,29 @@ public class GenerateResourceLocationsFileCommand {
 
                 writeResourceLocations(fileOut);
 
-                source.sendSuccess(new TextComponent("[" + MOD_NAME + "]: Finished!"), false);
-                return 1;
+                source.sendSuccess(TranslationKeyProvider.chatMessage("generating_rl_file_success"), false);
+                return COMMAND_SUCCESS;
             }
             catch (IOException e){
-                LOGGER.error("Unable to write resource locations to file!");
-                source.sendFailure(new TextComponent("[" + MOD_NAME + "]: Unable to write resource locations to file!"));
-                CrashHandler.getInstance().addCrashDetails("Unable to write resource locations to file!", Level.ERROR, e);
-                e.printStackTrace();
-                return -1;
+                source.sendFailure(TranslationKeyProvider.chatMessage("generating_rl_file_failed", ChatFormatting.RED));
+                CrashHandler.getInstance().handleException("Unable to write resource locations to file!", e, Level.ERROR, true);
+                return COMMAND_FAILURE;
             }
             finally {
                 try {
                     assert fileOut != null;
                     fileOut.close();
-                } catch (IOException e) {
-                    LOGGER.warn("Unable to close OutputStream!");
-                    CrashHandler.getInstance().addCrashDetails("Unable to close OutputStream!", Level.WARN, e);
-                    e.printStackTrace();
                 }
+                catch (IOException e) {
+                    CrashHandler.getInstance().handleException("Unable to close OutputStream!", e, Level.WARN);
+                }
+                CrashHandler.getInstance().setActiveFile(null);
             }
-        }))));
+        });
     }
 
 
-    private void writeResourceLocations(OutputStream fileOut) throws IOException {
+    private static void writeResourceLocations(OutputStream fileOut) throws IOException {
         Set<ResourceLocation> temp = new HashSet<>(ALL_DETECTED_GAME_ADVANCEMENTS.keySet());
         temp.addAll(CUSTOM_ADVANCEMENTS.keySet());
 

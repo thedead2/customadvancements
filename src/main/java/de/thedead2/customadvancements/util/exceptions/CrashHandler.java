@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
@@ -321,6 +322,38 @@ public class CrashHandler implements ISystemReportExtender {
 
     public void printCrashReport(CrashReport crashReport){
         Bootstrap.realStdoutPrintln(crashReport.getFriendlyReport());
+    }
+
+    public void handleException(String description, Throwable e, Level level, boolean log) {
+        if (level.equals(Level.DEBUG))LOGGER.debug(description);
+        else if(level.equals(Level.WARN)) LOGGER.warn(description);
+        else if(level.equals(Level.ERROR)) LOGGER.error(description);
+        else if(level.equals(Level.FATAL)) LOGGER.fatal(description);
+        else LOGGER.info(description);
+
+        if (log) e.printStackTrace();
+        this.addCrashDetails(description, level, e);
+        if(activeFile != null){
+            printFileDataToConsole(activeFile);
+        }
+    }
+
+    public void handleException(String description, Throwable e, Level level) {
+        handleException(description, e, level, false);
+    }
+
+    private void printFileDataToConsole(File file){
+        try {
+            InputStream fileInput = Files.newInputStream(file.toPath());
+            String file_data = new String(ByteStreams.toByteArray(fileInput), StandardCharsets.UTF_8);
+            LOGGER.error("\n" + file_data);
+            fileInput.close();
+        }
+        catch (IOException e) {
+            LOGGER.warn("Unable to read File by InputStream!");
+            this.addCrashDetails("Unable to read File by InputStream!", Level.WARN, e);
+            e.printStackTrace();
+        }
     }
 
     private static class CrashReportException extends CrashReportSection{

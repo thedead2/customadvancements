@@ -2,13 +2,12 @@ package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
+import de.thedead2.customadvancements.util.ConfigManager;
 import de.thedead2.customadvancements.util.Timer;
 import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
-import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.Level;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,7 +75,8 @@ public abstract class CustomAdvancementManager {
     private static void loadAdvancements(Map<ResourceLocation, ? extends IAdvancement> advancementsIn){
         if(!advancementsIn.isEmpty() && !ConfigManager.NO_ADVANCEMENTS.get()) {
             String clazz = advancementsIn.values().toArray()[0].getClass().getName();
-            String className = clazz.substring(clazz.lastIndexOf(".") + 1);
+            clazz = clazz.substring(clazz.lastIndexOf(".") + 1);
+            String className = new StringBuilder(clazz).insert(clazz.indexOf("A"), " ").toString();
 
             LOGGER.info("Starting to load advancements of type: {}", className);
             counter = 0;
@@ -94,29 +94,19 @@ public abstract class CustomAdvancementManager {
 
                 IAdvancement advancement = advancementsIn.get(resourceLocation);
 
-                try{
-                    if(!ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.contains(resourceLocation)){
-                        ResourceLocation resourceLocation1 = new ResourceLocation(resourceLocation.getNamespace(), resourceLocation.getPath().replace(".json", ""));
+                if(!ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.contains(resourceLocation)){
+                    ResourceLocation resourceLocation1 = new ResourceLocation(resourceLocation.getNamespace(), resourceLocation.getPath().replace(".json", ""));
 
-                        if(ADVANCEMENTS.containsKey(resourceLocation1)){
-                            ADVANCEMENTS.remove(resourceLocation1);
-                            LOGGER.debug("Overwriting advancement: " + resourceLocation1);
-                        }
-                        ADVANCEMENTS.put(resourceLocation1, advancement.getJsonObject());
-                        LOGGER.debug("Loaded " + advancement.getResourceLocation() + " into Advancement Manager!");
-                        counter++;
+                    if(ADVANCEMENTS.containsKey(resourceLocation1)){
+                        ADVANCEMENTS.remove(resourceLocation1);
+                        LOGGER.debug("Overwriting advancement: " + resourceLocation1);
                     }
-                    else {
-                        LOGGER.error("Duplicate Resource Location (" + resourceLocation + ") for Advancement: " + advancement.getFileName());
-                        LOGGER.debug("All registered advancements: " + advancementsIn);
-
-                        throw new ResourceLocationException("Duplicate Resource Location (" + resourceLocation + ") for Advancement: " + advancement.getFileName());
-                    }
+                    ADVANCEMENTS.put(resourceLocation1, advancement.getJsonObject());
+                    LOGGER.debug("Loaded " + advancement.getResourceLocation() + " into Advancement Manager!");
+                    counter++;
                 }
-                catch (ResourceLocationException e){
-                    LOGGER.error("Unable to register advancement {} with resource location: {}", advancement.getFileName(), resourceLocation);
-                    CrashHandler.getInstance().addCrashDetails("Unable to register advancement", Level.WARN, e);
-                    e.printStackTrace();
+                else {
+                    LOGGER.error("Duplicate resource location '" + resourceLocation + "' for advancement: " + advancement.getFileName());
                 }
             }
 

@@ -4,13 +4,16 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "customadvancements.refmap.json",
   "mixins": [
-    "MixinAdvancementsScreen",
+    "MixinAdvancementCommand",
     "MixinCrashReport",
     "MixinJsonReloadListener",
     "MixinLanguageHook",
+    "MixinServer",
+    "MixinPlayerAdvancements",
     "MixinResourceManager"
   ],
   "client": [
+    "MixinAdvancementsScreen",
     "MixinClientLanguage",
     "MixinMinecraft"
   ],

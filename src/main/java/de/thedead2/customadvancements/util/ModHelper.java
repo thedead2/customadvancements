@@ -11,20 +11,17 @@ import de.thedead2.customadvancements.util.handler.FileHandler;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.LanguageHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
+import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.repository.PackRepository;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.storage.WorldData;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.VersionChecker;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.Level;
@@ -33,14 +30,17 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.ADVANCEMENTS;
 
 
 public abstract class ModHelper {
 
-    public static final String MOD_VERSION = "1.18.2-4.6.0";
+    public static final String MOD_VERSION = "1.18.2-4.5.0";
     public static final String MOD_ID = "customadvancements";
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
@@ -48,6 +48,7 @@ public abstract class ModHelper {
 
     public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
     public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
+    public static MinecraftServer server = null;
 
     public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
     public static final char PATH_SEPARATOR = File.separatorChar;
@@ -90,7 +91,7 @@ public abstract class ModHelper {
         logLoadStatus(CUSTOM_ADVANCEMENTS.size(), "Custom Advancement");
         logLoadStatus(GAME_ADVANCEMENTS.size(), "Game Advancement");
         logLoadStatus(LanguageHandler.size(), "Language File");
-        logLoadStatus(ResourceManagerExtender.getResourcesCount(), "additional Resource");
+        logLoadStatus(ResourceManagerExtender.getResourcesCount(), "additional resource");
     }
 
     private static void logLoadStatus(int size, String name){
@@ -128,116 +129,9 @@ public abstract class ModHelper {
         }
 
         server.reloadResources(selectedIds).exceptionally((e) -> {
-            LOGGER.error("Failed to execute reload!", e);
-            server.sendMessage(new TranslatableComponent("chat.customadvancements.reload_failed_massage"), Util.NIL_UUID);
-            CrashHandler.getInstance().addCrashDetails("Failed to execute reload!", Level.ERROR, e);
-            e.printStackTrace();
+            server.sendMessage(TranslationKeyProvider.chatMessage("reload_failed_message", ChatFormatting.RED), Util.NIL_UUID);
+            CrashHandler.getInstance().handleException("Failed to execute reload!", e, Level.ERROR, true);
             return null;
         });
-    }
-
-
-    /** Inner Class VersionManager
-     * handles every Update related action **/
-    public abstract static class VersionManager {
-
-        private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(THIS_MOD_CONTAINER.getModInfo());
-        private static final String PREFIX = "[" + MOD_NAME + "]: ";
-
-
-        public static void sendChatMessage(Player player){
-            if (RESULT.status().equals(VersionChecker.Status.OUTDATED)){
-                player.sendMessage(new TextComponent("§c" + PREFIX + "Mod is outdated! Please update using the link below:"), Util.NIL_UUID);
-                player.sendMessage(new TextComponent("§c" + MOD_UPDATE_LINK), Util.NIL_UUID);
-            }
-            else if (RESULT.status().equals(VersionChecker.Status.BETA)) {
-                player.sendMessage(new TextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.NIL_UUID);
-            }
-            else if (RESULT.status().equals(VersionChecker.Status.BETA_OUTDATED)) {
-                player.sendMessage(new TextComponent("§6" + PREFIX + "You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!"), Util.NIL_UUID);
-                player.sendMessage(new TextComponent("§c" + PREFIX + "This Beta Version is outdated! Please update using the link below:"), Util.NIL_UUID);
-                player.sendMessage(new TextComponent("§c" + MOD_UPDATE_LINK), Util.NIL_UUID);
-            }
-        }
-
-        public static void sendLoggerMessage(){
-            if (RESULT.status().equals(VersionChecker.Status.OUTDATED)) {
-                LOGGER.warn("Mod is outdated! Current Version: " + MOD_VERSION + " Latest Version: " + RESULT.target());
-                LOGGER.warn("Please update " + MOD_NAME + " using this link: " + MOD_UPDATE_LINK);
-            }
-            else if (RESULT.status().equals(VersionChecker.Status.FAILED)) {
-                LOGGER.error("Failed to check for updates! Please check your internet connection!");
-            }
-            else if (RESULT.status().equals(VersionChecker.Status.BETA)) {
-                LOGGER.warn("You're currently using a Beta of " + MOD_NAME + "! Please note that using this beta is at your own risk!");
-                LOGGER.info("Beta Status: " + RESULT.status());
-            }
-            else if (RESULT.status().equals(VersionChecker.Status.BETA_OUTDATED)) {
-                LOGGER.warn("You're currently using a Beta of " + MOD_NAME + "! Please note that using this beta is at your own risk!");
-                LOGGER.warn("This Beta is outdated! Please update " + MOD_NAME + " using this link: " + MOD_UPDATE_LINK);
-                LOGGER.warn("Beta Status: " + RESULT.status());
-            }
-        }
-    }
-
-
-    /** Inner Class ConfigManager
-     * handles every Config related action **/
-    public abstract static class ConfigManager {
-
-        private static final ForgeConfigSpec.Builder CONFIG_BUILDER = new ForgeConfigSpec.Builder();
-        public static final ForgeConfigSpec CONFIG_SPEC;
-
-        /** All Config fields for Custom Advancements **/
-        public static final ForgeConfigSpec.ConfigValue<Boolean> OUT_DATED_MESSAGE;
-        public static final ForgeConfigSpec.ConfigValue<Boolean> NO_RECIPE_ADVANCEMENTS;
-        public static final ForgeConfigSpec.ConfigValue<Boolean> NO_ADVANCEMENTS;
-        public static final ForgeConfigSpec.ConfigValue<Boolean> BLACKLIST_IS_WHITELIST;
-        public static final ForgeConfigSpec.ConfigValue<Boolean> DISABLE_STANDARD_ADVANCEMENT_LOAD;
-        public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_ADVANCEMENT_GENERATOR;
-        private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
-
-
-        static {
-            CONFIG_BUILDER.push("Config for " + MOD_NAME);
-
-
-            OUT_DATED_MESSAGE = CONFIG_BUILDER.comment("Whether the mod should send a chat message if an update is available").define("warnMessage", true);
-
-            NO_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all advancements").worldRestart().define("noAdvancements", false);
-
-            NO_RECIPE_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all recipe advancements").define("noRecipeAdvancements", false);
-
-            ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod").worldRestart().defineList("advancementsBlacklist" , Collections.emptyList(), it -> it instanceof String);
-
-            BLACKLIST_IS_WHITELIST = CONFIG_BUILDER.comment("Whether the Blacklist of Advancements should be a Whitelist").define("blacklistIsWhitelist", false);
-
-            DISABLE_STANDARD_ADVANCEMENT_LOAD = CONFIG_BUILDER.comment("Whether the mod should overwrite vanilla advancements with generated ones").define("disableStandardAdvancementLoad", false);
-
-            ENABLE_ADVANCEMENT_GENERATOR = CONFIG_BUILDER.comment("Whether the in-game Advancement Generator should be enabled").define("enableAdvancementGenerator", false);
-
-
-            CONFIG_BUILDER.pop();
-            CONFIG_SPEC = CONFIG_BUILDER.build();
-        }
-
-
-        public static Set<ResourceLocation> getBlacklistedResourceLocations(){
-            List<String> list;
-            if(!ADVANCEMENT_BLACKLIST.get().isEmpty() && ADVANCEMENT_BLACKLIST.get().get(0) != null){
-                list = Collections.unmodifiableList(ADVANCEMENT_BLACKLIST.get());
-            }
-            else {
-                list = new ArrayList<>();
-            }
-
-            Set<ResourceLocation> blacklistedResourceLocations = new HashSet<>();
-
-            if(!list.isEmpty()){
-                list.forEach(String -> blacklistedResourceLocations.add(ResourceLocation.tryParse(String)));
-            }
-
-            return blacklistedResourceLocations;
-        }
     }
 }
