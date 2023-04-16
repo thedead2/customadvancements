@@ -8,7 +8,6 @@ import net.minecraft.resources.ResourceLocation;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +15,7 @@ import java.util.List;
 public abstract class AdvancementHandler extends FileHandler {
 
     private static final List<String> FOLDER_NAMES = new ArrayList<>();
+    public static boolean grantingAllAdvancements = false;
 
     public AdvancementHandler(File directory) {
         super(directory);
@@ -29,15 +29,18 @@ public abstract class AdvancementHandler extends FileHandler {
 
         createDirectory(basePath.toFile());
 
-        writeFile(getInput(advancementData), resolvePath(basePath, advancementId.getPath()));
+        writeFile(new ByteArrayInputStream(JsonHandler.formatJsonObject(advancementData).getBytes()), resolvePath(basePath, advancementId.getPath()));
     }
 
 
     public static void writeAdvancementToFile(Advancement advancementIn) throws IOException {
-        ResourceLocation advancementId = advancementIn.getId();
-        JsonObject advancementData = advancementIn.deconstruct().serializeToJson();
+        writeAdvancementToFile(advancementIn.getId(), serializeToJson(advancementIn));
+    }
 
-        writeAdvancementToFile(advancementId, advancementData);
+    public static JsonObject serializeToJson(Advancement advancementIn){
+        JsonObject jsonObject = advancementIn.deconstruct().serializeToJson();
+        JsonHandler.removeNullFields(jsonObject);
+        return jsonObject;
     }
 
 
@@ -72,22 +75,5 @@ public abstract class AdvancementHandler extends FileHandler {
         else {
             return Path.of(String.valueOf(basePath), advancementPath + ".json");
         }
-    }
-
-
-    private static InputStream getInput(JsonElement advancementData){
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (char c : advancementData.toString().toCharArray()){
-            if (c == '{' || c == ',' || c == '['){
-                stringBuilder.append(c).append('\n');
-            }
-            else {
-                stringBuilder.append(c);
-            }
-        }
-        String temp = stringBuilder.toString();
-
-        return new ByteArrayInputStream(temp.getBytes());
     }
 }

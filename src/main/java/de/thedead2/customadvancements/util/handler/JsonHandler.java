@@ -1,24 +1,25 @@
 package de.thedead2.customadvancements.util.handler;
 
 
-import com.google.common.io.ByteStreams;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import de.thedead2.customadvancements.util.Timer;
 import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import joptsimple.internal.Strings;
-import net.minecraft.ResourceLocationException;
+import net.minecraft.util.GsonHelper;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -52,8 +53,6 @@ public class JsonHandler extends FileHandler {
                 if (file.isFile() && fileName.endsWith(".json")) {
                     LOGGER.debug("Found file: " + fileName);
 
-                    printFileDataToConsole(file);
-
                     JsonObject jsonObject = getJsonObject(file);
 
                     assert jsonObject != null;
@@ -71,7 +70,6 @@ public class JsonHandler extends FileHandler {
                     }
                     else {
                         LOGGER.error(fileName + " does not match the required '.json' format!");
-                        throw new IllegalStateException("File does not match the required '.json' format!");
                     }
                 }
                 else if(file.isFile() && !fileName.equals("resource_locations.txt") && !fileName.endsWith(".png")) {
@@ -79,19 +77,7 @@ public class JsonHandler extends FileHandler {
                 }
             }
             catch (NullPointerException e){
-                LOGGER.error("Unable to get JsonObject for: " + fileName);
-                e.printStackTrace();
-                CrashHandler.getInstance().addCrashDetails("Failed to create JsonObject from File!", Level.WARN , e);
-            }
-            catch (IllegalStateException e){
-                LOGGER.error("Unable to create Advancement for: " + fileName);
-                e.printStackTrace();
-                CrashHandler.getInstance().addCrashDetails("File did not match the required '.json' format!", Level.DEBUG , e);
-            }
-            catch (ResourceLocationException e) {
-                LOGGER.error("Unable to create Resource Location for: " + fileName);
-                CrashHandler.getInstance().addCrashDetails("Unable to create resource location for file!", Level.WARN, e);
-                e.printStackTrace();
+                CrashHandler.getInstance().handleException("Failed to create JsonObject from file: " + fileName, e, Level.WARN);
             }
 
             if (timer.getTime() >= 500){
@@ -105,51 +91,24 @@ public class JsonHandler extends FileHandler {
     }
 
 
-    private void printFileDataToConsole(File file){
-        try {
-            InputStream fileInput = Files.newInputStream(file.toPath());
-            String file_data = new String(ByteStreams.toByteArray(fileInput), StandardCharsets.UTF_8);
-            LOGGER.debug("\n" + file_data);
-            fileInput.close();
-        }
-        catch (IOException e) {
-            LOGGER.warn("Unable to read File by InputStream!");
-            CrashHandler.getInstance().addCrashDetails("Unable to read File by InputStream!", Level.WARN, e);
-            e.printStackTrace();
-        }
-    }
-
-
     public JsonObject getJsonObject(File file){
         final String fileName = file.getName();
 
         try{
-            return (JsonObject) JsonParser.parseReader(new FileReader(file));
+            return GsonHelper.parse(new FileReader(file));
         }
         catch (FileNotFoundException e) {
-            LOGGER.error("Unable to parse " + fileName + " to JsonObject: " + e);
-            CrashHandler.getInstance().addCrashDetails("Couldn't find file " + fileName + "?!", Level.WARN, e);
-            e.printStackTrace();
-            return null;
+            CrashHandler.getInstance().handleException("Couldn't find file " + fileName + "?!", e, Level.WARN);
         }
         catch (JsonParseException e){
-            LOGGER.error("Error parsing {} to JsonObject! Make sure you have the right syntax for '.json' files!", fileName);
-            CrashHandler.getInstance().addCrashDetails("Couldn't parse file to JsonElement!", Level.ERROR, e);
-            e.printStackTrace();
-            return null;
+            CrashHandler.getInstance().handleException("Error parsing " + fileName + " to JsonObject! Make sure you have the right syntax for '.json' files!", e, Level.ERROR);
         }
-        catch (ClassCastException e){
-            LOGGER.error("Unable to get JsonObject for: " + fileName);
-            e.printStackTrace();
-            CrashHandler.getInstance().addCrashDetails("Failed to create JsonObject from File!", Level.WARN , e);
-            return null;
-        }
+        return new JsonObject();
     }
 
 
     private boolean isCorrectJsonFormat(@NotNull JsonObject json, Path path){
         if(path.toString().contains("recipes" + PATH_SEPARATOR)) {
-            LOGGER.debug("Ignored '.json' format for recipe advancement: " + path.getFileName());
             return true;
         }
         else {
@@ -165,53 +124,40 @@ public class JsonHandler extends FileHandler {
         }
     }
 
+    public static void removeNullFields(JsonElement jsonElement){
+        if(isJsonNull(jsonElement)) throw new NullPointerException("Can't remove null fields from JsonElement that is null! -> " + jsonElement);
+
+        if(jsonElement.isJsonObject()){
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            List<String> nullFields = new ArrayList<>();
+
+            jsonObject.entrySet().forEach(entry -> {
+                if(isJsonNull(entry.getValue())){
+                    nullFields.add(entry.getKey());
+                }
+                else removeNullFields(entry.getValue());
+            });
+
+            nullFields.forEach(jsonObject::remove);
+        }
+        else if(jsonElement.isJsonArray()){
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            jsonArray.forEach(jsonElement1 -> {
+                if(isJsonNull(jsonElement1))
+                    jsonArray.remove(jsonElement1);
+                else removeNullFields(jsonElement1);
+            });
+        }
+    }
+
+    private static boolean isJsonNull(JsonElement jsonElement){
+        return jsonElement.isJsonNull() || (jsonElement.isJsonPrimitive() && jsonElement.getAsString().equals("null"));
+    }
+
+
     public static String formatJsonObject(JsonElement jsonElement){
         StringBuilder stringBuilder = new StringBuilder();
         char[] chars = jsonElement.toString().toCharArray();
-        int i = 0;
-        for (int j = 0; j < chars.length; j++) {
-            char c = chars[j];
-            char previousChar = j - 1 < 0 ? c : chars[j - 1];
-            char nextChar = j + 1 >= chars.length ? c : chars[j + 1];
-
-            if(c == '{'){
-                stringBuilder.append(c);
-                if(nextChar != '}'){
-                    i++;
-                    stringBuilder.append('\n').append(Strings.repeat('\t', i));
-                }
-            }
-            else if (c == '}') {
-                if(previousChar != '{'){
-                    i--;
-                    stringBuilder.append("\n").append(Strings.repeat('\t', i));
-                }
-                stringBuilder.append(c);
-                if(nextChar != ',' && nextChar != '\"' && nextChar != '\'' && nextChar != '}' && nextChar != ']'){
-                    stringBuilder.append('\n').append(Strings.repeat('\t', i));
-                }
-            }
-            else if (c == ',') {
-                stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
-            }
-            else if (c == '[' && (nextChar == '\"' || nextChar == '[')) {
-                i++;
-                stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
-            }
-            else if (c == ']' && (previousChar == '\"' || previousChar == ']')) {
-                i--;
-                stringBuilder.append('\n').append(Strings.repeat('\t', i)).append(c);
-            }
-            else {
-                stringBuilder.append(c);
-            }
-        }
-        return stringBuilder.toString();
-    }
-
-    public static String formatString(String string){
-        StringBuilder stringBuilder = new StringBuilder();
-        char[] chars = string.toCharArray();
         int i = 0;
         for (int j = 0; j < chars.length; j++) {
             char c = chars[j];
