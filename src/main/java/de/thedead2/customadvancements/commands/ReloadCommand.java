@@ -1,33 +1,37 @@
 package de.thedead2.customadvancements.commands;
 
-import com.mojang.brigadier.CommandDispatcher;
-import de.thedead2.customadvancements.util.ModHelper;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_NAME;
+import static de.thedead2.customadvancements.util.ModHelper.reloadAll;
 
-public class ReloadCommand {
-    public ReloadCommand(CommandDispatcher<CommandSourceStack> dispatcher){
-        dispatcher.register(Commands.literal(ModHelper.MOD_ID).then(Commands.literal("reload").executes((command) -> {
-            CommandSourceStack source = command.getSource();
+public class ReloadCommand extends ModCommand {
 
+
+    protected ReloadCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
+        super(literalArgumentBuilder);
+    }
+
+    public static void register() {
+        newModCommand("reload", (commandContext) -> {
             Thread backgroundThread = new Thread(MOD_NAME){
+                final CommandSourceStack source = commandContext.getSource();
                 @Override
                 public void run() {
-                    source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Reloading..."), false);
+                    source.sendSuccess(TranslationKeyProvider.chatMessage("reload_started"), false);
 
                     reloadAll(source.getServer());
 
-                    source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Reload complete!"), false);
+                    source.sendSuccess(TranslationKeyProvider.chatMessage("reload_successful"), false);
                 }
             };
 
             backgroundThread.setDaemon(true);
             backgroundThread.setPriority(5);
             backgroundThread.start();
-            return 1;
-        })));
+            return COMMAND_SUCCESS;
+        });
     }
 }

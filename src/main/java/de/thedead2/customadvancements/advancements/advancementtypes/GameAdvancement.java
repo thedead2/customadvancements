@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.advancements.advancementtypes;
 
 import com.google.gson.JsonObject;
+import de.thedead2.customadvancements.util.handler.FileHandler;
 import net.minecraft.resources.ResourceLocation;
 
 public class GameAdvancement implements IAdvancement{
@@ -13,8 +14,8 @@ public class GameAdvancement implements IAdvancement{
     public GameAdvancement(JsonObject jsonObject, String fileName, String path){
         this.jsonObject = jsonObject;
         this.fileName = fileName;
-        this.resourceLocation = IAdvancement.createResourceLocation(path, this.fileName, false);
-        this.parentAdvancement = this.jsonObject.get("parent") != null ? IAdvancement.createResourceLocation((this.jsonObject.get("parent").getAsString() + ".json"), this.fileName, true) : null;
+        this.resourceLocation = FileHandler.getId(path);
+        this.parentAdvancement = this.jsonObject.get("parent") != null ? FileHandler.getId(this.jsonObject.get("parent").getAsString() + ".json") : null;
     }
 
 

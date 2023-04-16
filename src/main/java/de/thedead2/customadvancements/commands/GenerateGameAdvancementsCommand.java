@@ -1,14 +1,13 @@
 package de.thedead2.customadvancements.commands;
 
-import com.mojang.brigadier.CommandDispatcher;
-import de.thedead2.customadvancements.util.ModHelper;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.thedead2.customadvancements.util.Timer;
-import de.thedead2.customadvancements.util.handler.AdvancementHandler;
 import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.handler.AdvancementHandler;
 import de.thedead2.customadvancements.util.handler.FileHandler;
+import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
@@ -16,58 +15,52 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
-public class GenerateGameAdvancementsCommand {
+public class GenerateGameAdvancementsCommand extends ModCommand {
 
 
     private static final AtomicInteger COUNTER = new AtomicInteger();
-    private final Timer timer = new Timer();
+    private static final Timer timer = new Timer();
 
-
-    public GenerateGameAdvancementsCommand(CommandDispatcher<CommandSourceStack> dispatcher){
-        dispatcher.register(Commands.literal(ModHelper.MOD_ID).then(Commands.literal("generate").then(Commands.literal("advancements").executes((command) -> generateGameAdvancements(command.getSource())))));
+    protected GenerateGameAdvancementsCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
+        super(literalArgumentBuilder);
     }
 
 
-    private int generateGameAdvancements(CommandSourceStack source) {
+    public static void register() {
+        newModCommand("generate/advancement/all", (command) -> {
+            var source = command.getSource();
+            Thread backgroundThread = new Thread(MOD_NAME) {
+                @Override
+                public void run() {
+                    timer.start();
+                    LOGGER.info("Starting to generate files for game advancements...");
+                    source.sendSuccess(TranslationKeyProvider.chatMessage("generating_game_advancements"), false);
 
-        Thread backgroundThread = new Thread(MOD_NAME) {
-            @Override
-            public void run() {
-                timer.start();
-                LOGGER.info("Starting to generate files for game advancements...");
-                source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Starting to generate files for game advancements..."), false);
+                    FileHandler.createDirectory(DIR_PATH.toFile());
 
-                FileHandler.createDirectory(DIR_PATH.toFile());
+                    source.getServer().getAdvancements().getAllAdvancements().forEach((advancement) -> {
+                        try {
+                            AdvancementHandler.writeAdvancementToFile(advancement);
+                            COUNTER.getAndIncrement();
+                        }
+                        catch (IOException e) {
+                            source.sendFailure(TranslationKeyProvider.chatMessage("generating_game_advancements_failed", ChatFormatting.RED, advancement.getId()));
+                            CrashHandler.getInstance().handleException("Unable to write " + advancement.getId() + " to file!", e, Level.WARN);
+                        }
+                    });
+                    LOGGER.info("Generating {} files for game advancements took {} ms", COUNTER.get(), timer.getTime());
+                    source.sendSuccess(TranslationKeyProvider.chatMessage("generating_game_advancements_success", COUNTER.toString()), false);
+                    COUNTER.set(0);
+                    timer.stop(true);
 
-                ALL_DETECTED_GAME_ADVANCEMENTS.forEach((advancement, advancementData) -> {
-                    try {
-                        AdvancementHandler.writeAdvancementToFile(advancement, advancementData);
-                        COUNTER.getAndIncrement();
-                    }
-                    catch (IOException e) {
-                        LOGGER.error("Unable to write {} to file!", advancement);
-                        source.sendFailure(Component.literal("[" + MOD_NAME + "]: Unable to write " + advancement + " to file!"));
-                        CrashHandler.getInstance().addCrashDetails("Unable to write resource location to file!", Level.WARN, e);
-                        e.printStackTrace();
-                    }
-                });
-                LOGGER.info("Generating {} files for game advancements took {} ms", COUNTER.get(), timer.getTime());
-                source.sendSuccess(Component.literal("[" + MOD_NAME + "]: Generated " + COUNTER + " files for game advancements successfully!"), false);
-                COUNTER.set(0);
-                timer.stop(true);
+                    reloadAll(source.getServer());
+                }
+            };
 
-                reloadAll(source.getServer());
-            }
-        };
-
-        backgroundThread.setDaemon(true);
-        backgroundThread.setPriority(3);
-        backgroundThread.start();
-
-        return 1;
+            backgroundThread.setDaemon(true);
+            backgroundThread.setPriority(3);
+            backgroundThread.start();
+            return COMMAND_SUCCESS;
+        });
     }
-
-
-
-
 }
