@@ -33,9 +33,7 @@ public abstract class FileHandler extends ModHelper {
                 LOGGER.debug("Created example advancements!");
             }
             catch (FileCopyException e){
-                LOGGER.error("Unable to create example advancements!");
-                CrashHandler.getInstance().addCrashDetails("Unable to create example advancements!", Level.WARN, e);
-                e.printStackTrace();
+                CrashHandler.getInstance().handleException("Unable to create example advancements!", e, Level.WARN, true);
             }
         }
         createDirectory(DATA_PATH.toFile());
@@ -45,9 +43,7 @@ public abstract class FileHandler extends ModHelper {
                 LOGGER.debug("Created example textures for advancements!");
             }
             catch (FileCopyException e){
-                LOGGER.error("Unable to create example textures for advancements!");
-                CrashHandler.getInstance().addCrashDetails("Unable to create example textures!", Level.WARN, e);
-                e.printStackTrace();
+                CrashHandler.getInstance().handleException("Unable to create example textures!", e, Level.WARN, true);
             }
         }
         if(createDirectory(LANG_PATH.toFile())){
@@ -56,9 +52,7 @@ public abstract class FileHandler extends ModHelper {
                 LOGGER.debug("Created example lang files for advancements!");
             }
             catch (FileCopyException e){
-                LOGGER.error("Unable to create example lang files for advancements!");
-                CrashHandler.getInstance().addCrashDetails("Unable to create example lang files!", Level.WARN, e);
-                e.printStackTrace();
+                CrashHandler.getInstance().handleException("Unable to create example lang files!", e, Level.WARN, true);
             }
         }
     }
@@ -102,7 +96,7 @@ public abstract class FileHandler extends ModHelper {
             return new ResourceLocation(subString);
         }
         catch (Throwable throwable){
-            CrashHandler.getInstance().addCrashDetails("Unable to create ID!", Level.ERROR , throwable);
+            CrashHandler.getInstance().handleException("Unable to create ID!", throwable, Level.ERROR);
             throw throwable;
         }
     }
@@ -159,19 +153,17 @@ public abstract class FileHandler extends ModHelper {
                     writeFile(Files.newInputStream(path), pathOut.resolve(path.getFileName().toString()));
                 }
                 catch (IOException e) {
-                    LOGGER.warn("Failed to copy mod files: " + e);
-                    e.printStackTrace();
-
-                    throw new FileCopyException("Failed to copy files: " + e);
+                    FileCopyException copyException = new FileCopyException("Failed to copy mod files!");
+                    copyException.addSuppressed(e);
+                    throw copyException;
                 }
             });
             LOGGER.debug("Copied files from directory " + MOD_ID + ":" + pathIn + " to directory {}", pathOut);
         }
         catch (IOException e) {
-            LOGGER.warn("Unable to locate directory: " + MOD_ID + ":" + pathIn);
-            e.printStackTrace();
-
-            throw new FileCopyException("Unable to locate directory: " + MOD_ID + ":" + pathIn);
+            FileCopyException copyException = new FileCopyException("Unable to locate directory: " + MOD_ID + ":" + pathIn);
+            copyException.addSuppressed(e);
+            throw copyException;
         }
     }
 

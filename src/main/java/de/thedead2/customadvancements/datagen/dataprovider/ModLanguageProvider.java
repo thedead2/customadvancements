@@ -41,23 +41,7 @@ public class ModLanguageProvider extends LanguageProvider {
                 keyMap.put(chatTranslationKeyFor("generating_game_advancement_failed"), "%s Unable to generate file for: %s");
                 keyMap.put(chatTranslationKeyFor("generating_game_advancement_already_exists"), "%s The file for %s already exist!");
                 keyMap.put(chatTranslationKeyFor("generating_game_advancement_success"), "%s Successfully generated file for: %s");
-            }
-            else if(lang.equals("de_de")) {
-                keyMap.put(chatTranslationKeyFor("reload_failed_message"), "%s Fehler beim neu laden!");
-                keyMap.put(chatTranslationKeyFor("mod_outdated_message"), "%s Mod ist veraltet! Bitte update über den folgenden Link:");
-                keyMap.put(chatTranslationKeyFor("beta_warn_message"), "%s Du nutzt eine Beta Version von diesem Mod! Das Nutzen dieser Beta ist auf eigene Gefahr!");
-                keyMap.put(chatTranslationKeyFor("beta_outdated_message"), "%s Die Beta Version des Mod ist veraltet! Bitte update über den folgenden Link:");
-                keyMap.put(chatTranslationKeyFor("reload_started"), "%s Neu laden...");
-                keyMap.put(chatTranslationKeyFor("reload_successful"), "%s Neu laden abgeschlossen!");
-                keyMap.put(chatTranslationKeyFor("generating_rl_file"), "%s Beginne resource locations in Datei zu schreiben...");
-                keyMap.put(chatTranslationKeyFor("generating_rl_file_success"), "%s Fertig!");
-                keyMap.put(chatTranslationKeyFor("generating_rl_file_failed"), "%s Fehler beim Schreiben der resource locations in die Datei!");
-                keyMap.put(chatTranslationKeyFor("generating_game_advancements"), "%s Beginne Dateien für Spiele advancements zu generieren...");
-                keyMap.put(chatTranslationKeyFor("generating_game_advancements_failed"), "%s Fehler beim speichern von %s als Datei!");
-                keyMap.put(chatTranslationKeyFor("generating_game_advancements_success"), "%s Es wurden erfolgreich %s Dateien für Spiele advancements generiert!");
-                keyMap.put(chatTranslationKeyFor("generating_game_advancement_failed"), "%s Fehler beim speichern von %s als Datei!");
-                keyMap.put(chatTranslationKeyFor("generating_game_advancement_already_exists"), "%s Die Datei für %s existiert bereits!");
-                keyMap.put(chatTranslationKeyFor("generating_game_advancement_success"), "%s Datei für %s wurde erfolgreich generiert!");
+                keyMap.put(chatTranslationKeyFor("advancements_reset"), "%2$s, your advancements have been reset!");
             }
     }
 }

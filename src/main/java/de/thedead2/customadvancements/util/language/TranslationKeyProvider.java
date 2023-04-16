@@ -25,11 +25,18 @@ public abstract class TranslationKeyProvider {
         return key.toLowerCase();
     }
 
-    public static Component chatMessage(String translationKeyName, ChatFormatting color, String... additionalArgs){
-        return Component.translatable(chatTranslationKeyFor(translationKeyName), "[" + MOD_NAME + "]: ", additionalArgs).withStyle(color);
+    public static Component chatMessage(String translationKeyName, ChatFormatting color, Object... additionalArgs){
+        Object[] additionalArgs2 = new Object[additionalArgs.length + 1];
+        System.arraycopy(additionalArgs, 0, additionalArgs2, 1, additionalArgs.length);
+        additionalArgs2[0] = "[" + MOD_NAME + "]: ";
+        return newTranslatableComponent(translationKeyName, color, additionalArgs2);
     }
 
-    public static Component chatMessage(String translationKeyName, String... additionalArgs){
+    public static Component newTranslatableComponent(String translationKey, ChatFormatting color, Object... additionalArgs){
+        return Component.translatable(chatTranslationKeyFor(translationKey), additionalArgs).withStyle(color);
+    }
+
+    public static Component chatMessage(String translationKeyName, Object... additionalArgs){
         return chatMessage(translationKeyName, ChatFormatting.WHITE, additionalArgs);
     }
 
