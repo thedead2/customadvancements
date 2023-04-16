@@ -50,7 +50,7 @@ public enum AdvancementProgressionMode {
 
     public Optional<Boolean> handleAdvancementAchieving(Advancement advancement, PlayerAdvancements playerAdvancements){
         Advancement parentAdvancement = advancement.getParent() != null ? advancement.getParent() : handleConnectedAdvancements(advancement);
-        if(parentAdvancement != null) return this.handleAdvancementAchieving(advancement, parentAdvancement, playerAdvancements);
+        if(parentAdvancement != null && !advancement.getId().getPath().contains("recipes/")) return this.handleAdvancementAchieving(advancement, parentAdvancement, playerAdvancements);
         return Optional.empty();
     }
 
