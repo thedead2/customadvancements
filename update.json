@@ -4,25 +4,25 @@
     "1.16.5-3.4.3-final": "You can now edit advancements."
   },
   "1.18.2": {
-    "1.18.2-4.4.2": "Fixed an issue causing the game to crash when running the mod on an dedicated server, Code and stability improvements, Implementation of a Crash Report Extension: When the game crashes the mod will  append detailed information about all advancements that have been loaded or removed by the mod (except recipe advancements) to minecrafts crash report, as well as a detailed explanation of each execution error that occurred while running Custom Advancements. Furthermore the mod will try to identify whether Custom Advancements caused the game to crash and if so, will provide a direct link to the mods issue url."
+    "1.18.2-4.5.0": "Support for translational text components, new advancement progression system, improved file generation, fixes optifine bug"
   },
   "1.19.2": {
-    "1.19.2-5.4.2": "Fixed an issue causing the game to crash when running the mod on an dedicated server, Code and stability improvements, Implementation of a Crash Report Extension: When the game crashes the mod will  append detailed information about all advancements that have been loaded or removed by the mod (except recipe advancements) to minecrafts crash report, as well as a detailed explanation of each execution error that occurred while running Custom Advancements. Furthermore the mod will try to identify whether Custom Advancements caused the game to crash and if so, will provide a direct link to the mods issue url."
+    "1.19.2-5.7.3": "Support for translational text components, new advancement progression system, improved file generation, fixes optifine bug"
   },
   "1.19.3": {
-    "1.19.3-6.0.0": "Initial port of the mod to 1.19.3"
+    "1.19.3-6.1.2": "Support for translational text components, new advancement progression system, improved file generation, fixes optifine bug"
   },
   "promos": {
     "1.16.5-latest": "1.16.5-3.4.3-final",
     "1.16.5-recommended": "1.16.5-3.4.3-final",
     
-    "1.18.2-latest": "1.18.2-4.4.2",
-    "1.18.2-recommended": "1.18.2-4.4.2",
+    "1.18.2-latest": "1.18.2-4.5.0",
+    "1.18.2-recommended": "1.18.2-4.5.0",
     
-    "1.19.2-latest": "1.19.2-5.4.2",
-    "1.19.2-recommended": "1.19.2-5.4.2",
+    "1.19.2-latest": "1.19.2-5.7.3",
+    "1.19.2-recommended": "1.19.2-5.7.3",
     
-    "1.19.3-latest": "1.19.3-6.0.0",
-    "1.19.3-recommended": "1.19.3-6.0.0"
+    "1.19.3-latest": "1.19.3-6.1.2",
+    "1.19.3-recommended": "1.19.3-6.1.2"
   }
 }
