@@ -1,0 +1,18 @@
+{
+  "customadvancements.chat.advancements_reset": "%2$s, your advancements have been reset!",
+  "customadvancements.chat.beta_outdated_message": "%s This Beta Version is outdated! Please update using the link below:",
+  "customadvancements.chat.beta_warn_message": "%s You're currently using a Beta Version of the mod! Please note that using this beta is at your own risk!",
+  "customadvancements.chat.generating_game_advancement_already_exists": "%s The file for %s already exist!",
+  "customadvancements.chat.generating_game_advancement_failed": "%s Unable to generate file for: %s",
+  "customadvancements.chat.generating_game_advancement_success": "%s Successfully generated file for: %s",
+  "customadvancements.chat.generating_game_advancements": "%s Starting to generate files for game advancements...",
+  "customadvancements.chat.generating_game_advancements_failed": "%s Unable to write %s to file!",
+  "customadvancements.chat.generating_game_advancements_success": "%s Generated %s files for game advancements successfully!",
+  "customadvancements.chat.generating_rl_file": "%s Starting to write resource locations to file...",
+  "customadvancements.chat.generating_rl_file_failed": "%s Unable to write resource locations to file!",
+  "customadvancements.chat.generating_rl_file_success": "%s Finished!",
+  "customadvancements.chat.mod_outdated_message": "%s Mod is outdated! Please update using the link below:",
+  "customadvancements.chat.reload_failed_message": "%s Failed to execute reload!",
+  "customadvancements.chat.reload_started": "%s Reloading...",
+  "customadvancements.chat.reload_successful": "%s Reload complete!"
+}
