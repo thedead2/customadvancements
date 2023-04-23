@@ -37,6 +37,7 @@ public class CrashHandler implements ISystemReportExtender {
     private final Set<ResourceLocation> removedAdvancements = new HashSet<>();
     private final Set<CrashReportException> crashReportExceptions = new HashSet<>();
     private final List<CrashReportSection> sections = new ArrayList<>();
+    private final Set<Runnable> listeners = new HashSet<>();
 
     private CrashHandler(){
         instance = this;
@@ -56,13 +57,24 @@ public class CrashHandler implements ISystemReportExtender {
 
     @Override
     public String get() {
-        StringBuilder stringBuilder = new StringBuilder();
-        this.sections.forEach(stringBuilder::append);
-        stringBuilder.append("\n\n");
-        return stringBuilder.toString();
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            this.sections.forEach(stringBuilder::append);
+            stringBuilder.append("\n\n");
+            return stringBuilder.toString();
+
+        }
+        catch (Throwable throwable){
+            return "\n\tERROR: " + throwable + "\n";
+        }
     }
 
-    private static void onCrash(){
+    private void onCrash(){
+        this.listeners.forEach(Runnable::run);
+    }
+
+    public void registerCrashListener(Runnable runnable){
+        this.listeners.add(runnable);
     }
 
     private void gatherDetails(){
@@ -363,22 +375,46 @@ public class CrashHandler implements ISystemReportExtender {
         private final boolean responsibleForCrash;
 
         CrashReportException(String description, Level level, Throwable throwable, boolean responsibleForCrash) {
-            super(throwable.getClass().getName().substring(throwable.getClass().getName().lastIndexOf(".") + 1));
+            super(throwable.getClass().getName().substring(throwable.getClass().getName().lastIndexOf(".") + 1), true);
             this.description = description;
             this.level = level;
             this.throwable = throwable;
             this.responsibleForCrash = responsibleForCrash;
-            this.subSection = true;
-            this.getErrorDetails();
-            this.getStackTrace();
+            try {
+                this.getErrorDetails();
+                this.getStackTrace();
+            }
+            catch (Throwable throwable1){
+                this.throwable.addSuppressed(throwable1);
+                try {
+                    this.getErrorDetails();
+                    try {
+                        this.getStackTrace();
+                    }
+                    catch (Throwable throwable2){
+                        this.addDetail(new CrashReportDetail("Stacktrace", List.of(this.throwable.getStackTrace())));
+                    }
+                }
+                catch (Throwable throwable2){
+                    this.details.clear();
+                    this.addDetail(new CrashReportDetail("An error occurred gathering exception details!"));
+                    this.addDetail(new CrashReportDetail("Original Exception", this.throwable));
+                    this.addDetail(new CrashReportDetail("Occurred Exception", throwable2));
+                }
+            }
+
         }
 
 
-            private void getErrorDetails() {
+        private void getErrorDetails() {
+            this.details.clear();
             this.addDetail(new CrashReportDetail("Reported Error", getExceptionName(throwable)));
             this.addDetail(new CrashReportDetail("Description", description));
             if (throwable.getCause() != null) {
                 this.addDetail(new CrashReportDetail("Caused by", getExceptionName(throwable.getCause())));
+            }
+            if (throwable.getSuppressed().length != 0) {
+                this.addDetail(new CrashReportDetail("Suppressed", List.of(throwable.getSuppressed())));
             }
             this.addDetail(new CrashReportDetail("Level", level));
             this.addDetail(new CrashReportDetail("Caused Crash", responsibleForCrash ? "Definitely! \n\t\t"
@@ -411,6 +447,7 @@ public class CrashHandler implements ISystemReportExtender {
         }
 
         private Throwable trimStacktrace(Throwable throwable, int length) {
+            if(length > throwable.getStackTrace().length) return throwable;
             StackTraceElement[] stackTraceElements = throwable.getStackTrace();
             StackTraceElement[] astacktraceelement = new StackTraceElement[length];
             System.arraycopy(stackTraceElements, 0, astacktraceelement, 0, astacktraceelement.length);
@@ -445,7 +482,7 @@ public class CrashHandler implements ISystemReportExtender {
 
         @Override
         public String toString() {
-            return super.toString() + "\n" +
+            return super.toString() + "\n\n" +
                     Strings.repeat('-', 200);
         }
     }
@@ -460,8 +497,12 @@ public class CrashHandler implements ISystemReportExtender {
         }
 
         CrashReportSection(String title){
+            this(title, false);
+        }
+
+        public CrashReportSection(String title, boolean subSection) {
             this.title = title;
-            this.subSection = false;
+            this.subSection = subSection;
             if(!(this instanceof CrashReportDetail || this instanceof CrashReportException)) //better via interface!
                 CrashHandler.getInstance().addSection(this);
         }
@@ -526,7 +567,13 @@ public class CrashHandler implements ISystemReportExtender {
             stringBuilder1.append("\t").append(name);
             if(in != null){
                 stringBuilder1.append(": ");
-                stringBuilder1.append(in);
+                if (in instanceof List<?> list) {
+                    list.forEach((o) -> {
+                        stringBuilder1.append("\n\t\t\t");
+                        stringBuilder1.append(o);
+                    });
+                }
+                else stringBuilder1.append(in);
             }
             return stringBuilder1.toString();
         }
