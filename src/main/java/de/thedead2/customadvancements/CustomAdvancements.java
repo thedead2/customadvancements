@@ -13,16 +13,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.CrashReportCallables;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,6 +35,7 @@ public class CustomAdvancements {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::setup);
         modEventBus.addListener(this::onLoadComplete);
+        modEventBus.addListener(this::onConfigChanged);
 
         ModLoadingContext loadingContext = ModLoadingContext.get();
         loadingContext.registerConfig(ModConfig.Type.COMMON, ConfigManager.CONFIG_SPEC, MOD_ID + "-common.toml");
@@ -43,6 +44,7 @@ public class CustomAdvancements {
         forgeEventBus.addListener(this::onCommandsRegister);
         forgeEventBus.addListener(this::onPlayerLogin);
         forgeEventBus.addListener(this::onPlayerDeath);
+        forgeEventBus.addListener(this::onServerStopped);
         forgeEventBus.register(this);
 
         registerLoggerFilter();
@@ -67,7 +69,7 @@ public class CustomAdvancements {
 
 
     private void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
-        if(ConfigManager.OUT_DATED_MESSAGE.get() && !(FMLLoader.getLaunchHandler() instanceof CommonDevLaunchHandler)){
+        if(ConfigManager.OUT_DATED_MESSAGE.get() && !isDevEnv()){
             VersionManager.sendChatMessage(event.getPlayer());
         }
     }
@@ -78,9 +80,23 @@ public class CustomAdvancements {
         }
     }
 
+    private void onServerStopped(final ServerStoppedEvent event){
+        setServer(null);
+    }
+
 
     private void onCommandsRegister(final RegisterCommandsEvent event){
         ModCommand.registerCommands(event.getDispatcher());
+    }
+
+    private void onConfigChanged(final ModConfigEvent event){
+        ModConfig config = event.getConfig();
+        if(config.getModId().equals(MOD_ID)){
+            getServer().ifPresent((server) -> {
+                LOGGER.debug("Config just changed! Attempting to reload...");
+                reloadAll(server);
+            });
+        }
     }
 
 

@@ -21,7 +21,7 @@ apply plugin: 'maven-publish'
 // MixinGradle:
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.18.2-4.5.0'
+version = '1.18.2-4.5.3'
 group = 'de.thedead2.customadvancements' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'customadvancements'
 

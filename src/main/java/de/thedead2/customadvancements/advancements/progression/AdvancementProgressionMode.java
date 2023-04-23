@@ -8,7 +8,6 @@ import net.minecraft.Util;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -72,8 +71,7 @@ public enum AdvancementProgressionMode {
 
         ResourceLocation parent = connectedAdvancements.get(resourceLocation);
 
-        MinecraftServer server = ModHelper.server;
-        return parent != null ? server.getAdvancements().getAdvancement(parent) : null;
+        return parent == null ? null : ModHelper.getServer().orElseThrow(NullPointerException::new).getAdvancements().getAdvancement(parent);
     }
 
     public static void resetAdvancementProgress(ServerPlayer player){

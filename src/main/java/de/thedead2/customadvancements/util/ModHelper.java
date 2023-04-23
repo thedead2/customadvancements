@@ -22,7 +22,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler;
 import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -30,10 +32,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.ADVANCEMENTS;
 
@@ -48,7 +47,7 @@ public abstract class ModHelper {
 
     public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
     public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
-    public static MinecraftServer server = null;
+    private static MinecraftServer SERVER = null;
 
     public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
     public static final char PATH_SEPARATOR = File.separatorChar;
@@ -68,15 +67,41 @@ public abstract class ModHelper {
 
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
+    public static boolean isDevEnv(){
+        return FMLLoader.getLaunchHandler() instanceof CommonDevLaunchHandler;
+    }
+
+    public static Optional<MinecraftServer> getServer(){
+        return Optional.ofNullable(SERVER);
+    }
+
+    public static void setServer(MinecraftServer server) {
+        SERVER = server;
+    }
+
     public static void reloadAll(MinecraftServer server){
-        Timer timer = new Timer(true);
-        LOGGER.info("Reloading...");
+        Thread caThread = new Thread(MOD_NAME){
+            @Override
+            public void run() {
+                try {
+                    Timer timer = new Timer(true);
+                    LOGGER.info("Reloading...");
 
-        init();
-        reloadGameData(server);
+                    init();
 
-        LOGGER.info("Reload completed in {} ms!", timer.getTime());
-        timer.stop(true);
+                    reloadGameData(server);
+
+                    LOGGER.info("Reload completed in {} ms!", timer.getTime());
+                    timer.stop(true);
+                }
+                catch (Exception e){
+                    CrashHandler.getInstance().handleException("Reload failed", e, Level.ERROR, true);
+                }
+            }
+        };
+        caThread.setDaemon(true);
+        caThread.setPriority(5);
+        caThread.start();
     }
 
 
@@ -114,7 +139,7 @@ public abstract class ModHelper {
     }
 
 
-    private static void reloadGameData(MinecraftServer server){
+    private static void reloadGameData(MinecraftServer server) {
         PackRepository packRepository = server.getPackRepository();
         WorldData worldData = server.getWorldData();
 
@@ -122,7 +147,7 @@ public abstract class ModHelper {
         Collection<String> selectedIds = Lists.newArrayList(packRepository.getSelectedIds());
         Collection<String> disabledPacks = worldData.getDataPackConfig().getDisabled();
 
-        for(String ids : packRepository.getAvailableIds()) {
+        for (String ids : packRepository.getAvailableIds()) {
             if (!disabledPacks.contains(ids) && !selectedIds.contains(ids)) {
                 selectedIds.add(ids);
             }
