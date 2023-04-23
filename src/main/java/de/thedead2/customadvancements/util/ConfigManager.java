@@ -1,7 +1,12 @@
 package de.thedead2.customadvancements.util;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import de.thedead2.customadvancements.advancements.AdvancementTabsSorter;
 import de.thedead2.customadvancements.advancements.progression.AdvancementProgressionMode;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.advancements.Advancement;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.*;
@@ -22,10 +27,13 @@ public abstract class ConfigManager {
     public static final ForgeConfigSpec.ConfigValue<Boolean> ADVANCEMENT_PROGRESSION;
     public static final ForgeConfigSpec.ConfigValue<Boolean> RESET_ADVANCEMENTS_ON_DEATH;
     public static final ForgeConfigSpec.ConfigValue<Boolean> ADVANCEMENT_PROGRESSION_MODE_MOD_BLACKLIST_IS_WHITELIST;
+    public static final ForgeConfigSpec.ConfigValue<AdvancementTabsSorter> ADVANCEMENT_TAB_SORTING_MODE;
     public static final ForgeConfigSpec.ConfigValue<AdvancementProgressionMode> ADVANCEMENT_PROGRESSION_MODE;
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_PROGRESSION_MODE_MOD_BLACKLIST;
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> CONNECTED_ADVANCEMENTS;
+
+    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_SORTING_LIST;
 
     static {
         CONFIG_BUILDER.push("Config for " + ModHelper.MOD_NAME);
@@ -37,13 +45,13 @@ public abstract class ConfigManager {
 
         NO_RECIPE_ADVANCEMENTS = CONFIG_BUILDER.comment("Whether the mod should remove all recipe advancements").define("noRecipeAdvancements", false);
 
-        ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod").defineList("advancementsBlacklist", Collections.emptyList(), ConfigManager::isValidResourceLocation);
+        ADVANCEMENT_BLACKLIST = CONFIG_BUILDER.comment("Blacklist of Advancements that should be removed by the mod").defineList("advancementsBlacklist", Collections.emptyList(), ConfigManager::isValidAdvancementId);
 
         BLACKLIST_IS_WHITELIST = CONFIG_BUILDER.comment("Whether the Blacklist of Advancements should be a Whitelist").define("blacklistIsWhitelist", false);
 
         ADVANCEMENT_PROGRESSION = CONFIG_BUILDER.comment("Changing this to true causes each advancement to only be achievable if it's parent has been achieved. Useful for progression systems!").define("advancementProgression", false);
 
-        CONNECTED_ADVANCEMENTS = CONFIG_BUILDER.comment("A list of connected advancements in the format of parent, child").defineList("connectedAdvancementsList", List.of("minecraft:story/follow_ender_eye -> minecraft:end/root", "minecraft:story/form_obsidian -> minecraft:nether/root"), ConfigManager::bothValidResourceLocations);
+        CONNECTED_ADVANCEMENTS = CONFIG_BUILDER.comment("A list of connected advancements in the format of parent -> child").defineList("connectedAdvancementsList", List.of("minecraft:story/follow_ender_eye -> minecraft:end/root", "minecraft:story/form_obsidian -> minecraft:nether/root"), in -> in instanceof String);
 
         RESET_ADVANCEMENTS_ON_DEATH = CONFIG_BUILDER.comment("Whether all advancement progress should be reset when the player dies").define("resetAdvancementProgressOnDeath", false);
 
@@ -53,6 +61,10 @@ public abstract class ConfigManager {
 
         ADVANCEMENT_PROGRESSION_MODE_MOD_BLACKLIST_IS_WHITELIST = CONFIG_BUILDER.comment("Whether the Blacklist of Mods that should not be affected by the advancement progression system should be a Whitelist").define("modBlacklistIsWhitelist", false);
 
+        ADVANCEMENT_TAB_SORTING_MODE = CONFIG_BUILDER.comment("In which order the advancement tabs in the advancement screen should be ordered").defineEnum("advancementTabSortingMode", AdvancementTabsSorter.UNSORTED);
+
+        ADVANCEMENT_SORTING_LIST = CONFIG_BUILDER.comment("Order of the advancement tabs when DEFINED_LIST is selected").defineList("advancementSortingList", Collections.emptyList(), ConfigManager::isValidRootAdvancementID);
+
         DISABLE_STANDARD_ADVANCEMENT_LOAD = CONFIG_BUILDER.comment("Whether the mod should overwrite vanilla advancements with generated ones").define("disableStandardAdvancementLoad", false);
 
         CONFIG_BUILDER.pop();
@@ -60,15 +72,15 @@ public abstract class ConfigManager {
     }
 
 
-    public static Set<ResourceLocation> getBlacklistedResourceLocations() {
+    public static ImmutableSet<ResourceLocation> getBlacklistedResourceLocations() {
         Set<ResourceLocation> blacklistedResourceLocations = new HashSet<>();
 
         ADVANCEMENT_BLACKLIST.get().forEach(String -> blacklistedResourceLocations.add(ResourceLocation.tryParse(String)));
 
-        return blacklistedResourceLocations;
+        return ImmutableSet.copyOf(blacklistedResourceLocations);
     }
 
-    public static Map<ResourceLocation, ResourceLocation> getConnectedAdvancements() {
+    public static ImmutableMap<ResourceLocation, ResourceLocation> getConnectedAdvancements() {
         Map<ResourceLocation, ResourceLocation> connectedAdvancements = new HashMap<>();
         CONNECTED_ADVANCEMENTS.get().forEach(s -> {
             int index = s.indexOf("->");
@@ -76,33 +88,47 @@ public abstract class ConfigManager {
             String s2 = s.substring(index + 3);
             connectedAdvancements.put(ResourceLocation.tryParse(s2), ResourceLocation.tryParse(s1));
         });
-        return connectedAdvancements;
+        return ImmutableMap.copyOf(connectedAdvancements);
     }
 
-    private static boolean bothValidResourceLocations(Object in) {
-        /*if(!(in instanceof String s)) return false;
+    public static ImmutableList<ResourceLocation> getSortedAdvancementList(){
+        List<ResourceLocation> resourceLocations = new ArrayList<>();
+        ADVANCEMENT_SORTING_LIST.get().forEach(s -> resourceLocations.add(ResourceLocation.tryParse(s)));
+        return ImmutableList.copyOf(resourceLocations);
+    }
+
+    /*private static boolean bothValidAdvancementIDs(Object in) {
+        if(!(in instanceof String s)) return false;
         int index = s.indexOf("->");
         String s1 = s.substring(0, index - 1);
         String s2 = s.substring(index + 3);
 
-        return isValidResourceLocation(s1) && isValidResourceLocation(s2);*/
-        return true;
-    }
+        return isValidAdvancementId(s1) && isValidAdvancementId(s2);
+    }*/
 
-    private static boolean isValidResourceLocation(Object in) {
-        /*if(!(in instanceof String s)) return false;
+    private static boolean isValidAdvancementId(Object in) {
+        if(!(in instanceof String s)) return false;
         ResourceLocation resourceLocation = ResourceLocation.tryParse(s);
         if(resourceLocation != null){
-            return ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.isEmpty() || ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.contains(resourceLocation);
+            if(ModHelper.getServer().isEmpty()) return true;
+            else return ModHelper.getServer().get().getAdvancements().getAllAdvancements().stream().map(Advancement::getId).toList().contains(resourceLocation);
         }
-        return false;*/
-        return true;
+        return false;
+    }
+
+    private static boolean isValidRootAdvancementID(Object in){
+        if(!(in instanceof String s)) return false;
+        ResourceLocation resourceLocation = ResourceLocation.tryParse(s);
+        if(resourceLocation != null){
+            if(ModHelper.getServer().isEmpty()) return true;
+            else return ModHelper.getServer().get().getAdvancements().getAllAdvancements().stream().filter(advancement -> advancement.getParent() == null).map(Advancement::getId).toList().contains(resourceLocation);
+        }
+        return false;
     }
 
     private static boolean isValidModID(Object in) {
-        /*if(!(in instanceof String s)) return false;
-        return ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.isEmpty() || !ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.stream().filter((resourceLocation) -> resourceLocation.getNamespace().equals(s)).toList().isEmpty();
-    */
-        return true;
+        if(!(in instanceof String s)) return false;
+        if(ModHelper.getServer().isEmpty()) return true;
+        else return ModHelper.getServer().get().getAdvancements().getAllAdvancements().stream().map(advancement -> advancement.getId().getNamespace()).toList().contains(s);
     }
 }
