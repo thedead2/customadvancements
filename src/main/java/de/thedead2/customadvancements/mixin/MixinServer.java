@@ -14,6 +14,6 @@ public class MixinServer {
 
     @Inject(at = @At("RETURN"), method = "spin(Ljava/util/function/Function;)Lnet/minecraft/server/MinecraftServer;")
     private static <S extends MinecraftServer> void onServerStart(Function<Thread, S> pThreadFunction, CallbackInfoReturnable<S> cir){
-        ModHelper.server = cir.getReturnValue();
+        ModHelper.setServer(cir.getReturnValue());
     }
 }

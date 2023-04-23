@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.ModHelper.isDevEnv;
 
 public class ModCommand {
 
@@ -34,6 +35,7 @@ public class ModCommand {
         GenerateResourceLocationsFileCommand.register();
         ReloadCommand.register();
         GenerateAdvancementCommand.register();
+        if(isDevEnv()) PrintCrashLogCommand.register();
 
         commands.forEach(modCommand -> dispatcher.register(modCommand.getLiteralArgumentBuilder()));
         ConfigCommand.register(dispatcher);
