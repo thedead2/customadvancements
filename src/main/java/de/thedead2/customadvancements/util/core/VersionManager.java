@@ -1,6 +1,5 @@
-package de.thedead2.customadvancements.util;
+package de.thedead2.customadvancements.util.core;
 
-import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fml.VersionChecker;

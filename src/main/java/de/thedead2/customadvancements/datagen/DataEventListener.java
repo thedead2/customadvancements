@@ -2,7 +2,6 @@ package de.thedead2.customadvancements.datagen;
 
 import de.thedead2.customadvancements.datagen.dataprovider.ModAdvancementProvider;
 import de.thedead2.customadvancements.datagen.dataprovider.ModLanguageProvider;
-import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -13,7 +12,7 @@ import net.minecraftforge.fml.common.Mod;
 
 import java.util.concurrent.CompletableFuture;
 
-import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.core.ModHelper.MOD_ID;
 
 @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class DataEventListener {

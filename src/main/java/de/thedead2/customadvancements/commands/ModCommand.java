@@ -14,8 +14,8 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
-import static de.thedead2.customadvancements.util.ModHelper.isDevEnv;
+import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.core.ModHelper.isDevEnv;
 
 public class ModCommand {
 

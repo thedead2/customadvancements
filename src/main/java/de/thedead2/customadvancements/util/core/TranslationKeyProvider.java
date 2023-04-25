@@ -1,10 +1,11 @@
-package de.thedead2.customadvancements.util.language;
+package de.thedead2.customadvancements.util.core;
 
+import de.thedead2.customadvancements.util.language.TranslationKeyType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public abstract class TranslationKeyProvider {
 

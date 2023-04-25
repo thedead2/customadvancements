@@ -1,6 +1,6 @@
 package de.thedead2.customadvancements.mixin;
 
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.core.CrashHandler;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import org.spongepowered.asm.mixin.Final;
@@ -12,6 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static de.thedead2.customadvancements.util.core.ModHelper.MAIN_CLASS_PATH;
 
 @Mixin(CrashReport.class)
 public abstract class MixinCrashReport {
@@ -36,7 +38,7 @@ public abstract class MixinCrashReport {
                     }
                 }
                 else if(key.contains("Screen")){
-                    if(crashReportCategory$Entry.getValue().contains("de.thedead2.customadvancements")){
+                    if(crashReportCategory$Entry.getValue().contains(MAIN_CLASS_PATH)){
                         crashHandler.addScreenCrash(crashReportCategory$Entry, exception);
                         return;
                     }

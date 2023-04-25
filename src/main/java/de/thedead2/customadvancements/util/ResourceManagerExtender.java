@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.util;
 
-import de.thedead2.customadvancements.util.handler.FileHandler;
+import de.thedead2.customadvancements.util.core.FileHandler;
+import de.thedead2.customadvancements.util.core.ModHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.FilePackResources;
 import net.minecraft.server.packs.resources.Resource;
