@@ -10,22 +10,24 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraftforge.server.command.ConfigCommand;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
-import static de.thedead2.customadvancements.util.core.ModHelper.isDevEnv;
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public class ModCommand {
 
     public static final int COMMAND_FAILURE = -1;
     public static final int COMMAND_SUCCESS = 1;
     private static final List<ModCommand> commands = new ArrayList<>();
-    private final LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder;
+    private final LiteralArgumentBuilder<CommandSourceStack> shortLA;
+    private final LiteralArgumentBuilder<CommandSourceStack> longLA;
 
-    protected ModCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
-        this.literalArgumentBuilder = literalArgumentBuilder;
+    protected ModCommand(LiteralArgumentBuilder<CommandSourceStack> shortLA, LiteralArgumentBuilder<CommandSourceStack> longLA) {
+        this.shortLA = shortLA;
+        this.longLA = longLA;
     }
 
     public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher){
@@ -35,72 +37,97 @@ public class ModCommand {
         GenerateResourceLocationsFileCommand.register();
         ReloadCommand.register();
         GenerateAdvancementCommand.register();
-        if(isDevEnv()) PrintCrashLogCommand.register();
+        if(isDevEnv()){
+            PrintCrashLogCommand.register();
+        }
 
-        commands.forEach(modCommand -> dispatcher.register(modCommand.getLiteralArgumentBuilder()));
+        commands.forEach(modCommand -> {
+            dispatcher.register(modCommand.getShortLA());
+            dispatcher.register(modCommand.getLongLA());
+        });
         ConfigCommand.register(dispatcher);
         LOGGER.debug("Command registration complete.");
     }
 
-    private LiteralArgumentBuilder<CommandSourceStack> getLiteralArgumentBuilder() {
-        return this.literalArgumentBuilder;
+    private LiteralArgumentBuilder<CommandSourceStack> getShortLA() {
+        return this.shortLA;
     }
 
-    static void newModCommand(String commandPath, Command<CommandSourceStack> executable) {
-        newModCommand(commandPath, null, null, executable);
+    public LiteralArgumentBuilder<CommandSourceStack> getLongLA() {
+        return longLA;
     }
 
-    static void newModCommand(String commandPath, @Nullable ArgumentType<?> argument, @Nullable SuggestionProvider<CommandSourceStack> suggestion, Command<CommandSourceStack> executable) {
-        var argumentBuilder = Commands.literal("ca");
 
-        List<String> arguments = new ArrayList<>();
-
-        if(commandPath.contains("/")){
-            String sub = commandPath.replace(commandPath.substring(commandPath.indexOf("/")), "");
-            arguments.add(sub);
-
-            String nextSub = commandPath.replace(sub + "/", "");
-            resolvePath(arguments, nextSub);
-        }
-        else {
-            arguments.add(commandPath);
+    protected static class Builder{
+        static void newModCommand(String commandPath, Command<CommandSourceStack> executable) {
+            newModCommand(commandPath, Collections.emptyMap(), Collections.emptyMap(), executable);
         }
 
-        commands.add(new ModCommand(argumentBuilder.then(addToArgumentBuilder(argumentBuilder, arguments, argument, suggestion, executable))));
-    }
+        static void newModCommand(String commandPath, Map<String, ArgumentType<?>> arguments, Map<String, SuggestionProvider<CommandSourceStack>> suggestions, Command<CommandSourceStack> executable) {
+            var ca = Commands.literal("ca");
+            var customadvancements = Commands.literal(MOD_ID);
 
-    private static ArgumentBuilder<CommandSourceStack, ?> addToArgumentBuilder(ArgumentBuilder<CommandSourceStack, ?> argumentBuilder, List<String> arguments, ArgumentType<?> argument, SuggestionProvider<CommandSourceStack> suggestion, Command<CommandSourceStack> command) {
-        String sub;
-        if(!arguments.isEmpty()) { //reload all -> 2
-            sub = arguments.get(0); // reload
-            ArgumentBuilder<CommandSourceStack, ?> argumentBuilder2;
-            if(sub.startsWith("[") && sub.endsWith("]")) {
-                if (argument == null || suggestion == null)
-                    throw new NullPointerException("Can't create command argument because argument or suggestion is null!");
+            List<String> commandParts = new ArrayList<>();
 
-                argumentBuilder2 = Commands.argument(sub.substring(1, sub.length() - 1), argument).suggests(suggestion);
+            if(commandPath.contains("/")){
+                String sub = commandPath.replace(commandPath.substring(commandPath.indexOf("/")), "");
+                commandParts.add(sub);
+
+                String nextSub = commandPath.replace(sub + "/", "");
+                resolvePath(commandParts, nextSub);
             }
             else {
-                argumentBuilder2 = Commands.literal(sub); //enthält reload
+                commandParts.add(commandPath);
             }
-            if(!arguments.subList(1, arguments.size()).isEmpty())
-                argumentBuilder2.then(addToArgumentBuilder(argumentBuilder2, arguments.subList(1, arguments.size() /*sublist 1 -> all */), argument, suggestion, command));
+
+            commands.add(new ModCommand(ca.then(addToArgumentBuilder(ca, commandParts, arguments, suggestions, executable)), customadvancements.then(addToArgumentBuilder(customadvancements, commandParts, arguments, suggestions, executable))));
+        }
+
+        private static ArgumentBuilder<CommandSourceStack, ?> addToArgumentBuilder(ArgumentBuilder<CommandSourceStack, ?> argumentBuilder, List<String> commandParts, Map<String, ArgumentType<?>> arguments, Map<String, SuggestionProvider<CommandSourceStack>> suggestions, Command<CommandSourceStack> command) {
+            if(commandParts.isEmpty()) return addExecutable(argumentBuilder, command);
+            String s = commandParts.get(0);
+            ArgumentBuilder<CommandSourceStack, ?> argumentBuilder2;
+            if(s.startsWith("[") && s.endsWith("]")) {
+                if (arguments.isEmpty() || suggestions.isEmpty())
+                    throw new NullPointerException("Can't create command argument because argument or suggestion is null!");
+
+                argumentBuilder2 = addArgument(s.substring(1, s.length() - 1), arguments.get(s), suggestions.get(s));
+            }
+            else {
+                argumentBuilder2 = addCommandPart(s);
+            }
+            if(!commandParts.subList(1, commandParts.size()).isEmpty())
+                argumentBuilder2.then(addToArgumentBuilder(argumentBuilder2, commandParts.subList(1, commandParts.size()), arguments, suggestions, command));
             return argumentBuilder2.executes(command);
         }
-        else return argumentBuilder.executes(command);
-    }
 
-
-    private static void resolvePath(List<String> arguments, String pathIn){
-        if (pathIn.contains("/")){
-            String temp1 = pathIn.substring(pathIn.indexOf("/"));
-            String temp2 = pathIn.replace(temp1 + "/", "");
-            String temp3 = temp2.replace(temp2.substring(temp2.indexOf("/")), "");
-            arguments.add(temp3);
-
-            String next = pathIn.replace((temp3 + "/"), "");
-            resolvePath(arguments, next);
+        private static ArgumentBuilder<CommandSourceStack, ?> addCommandPart(String literal){
+            return Commands.literal(literal);
         }
-        else arguments.add(pathIn);
+
+        private static ArgumentBuilder<CommandSourceStack, ?> addArgument(String name, ArgumentType<?> argumentType, SuggestionProvider<CommandSourceStack> suggestionProvider){
+            if(name == null || argumentType == null || suggestionProvider == null){
+                throw new NullPointerException("Can't create command argument because argument or suggestion is null!");
+            }
+            return Commands.argument(name, argumentType).suggests(suggestionProvider);
+        }
+
+        private static ArgumentBuilder<CommandSourceStack, ?> addExecutable(ArgumentBuilder<CommandSourceStack, ?> argumentBuilder, Command<CommandSourceStack> commandAction){
+            return argumentBuilder.executes(commandAction);
+        }
+
+
+        private static void resolvePath(List<String> arguments, String pathIn){
+            if (pathIn.contains("/")){
+                String temp1 = pathIn.substring(pathIn.indexOf("/"));
+                String temp2 = pathIn.replace(temp1 + "/", "");
+                String temp3 = temp2.replace(temp2.substring(temp2.indexOf("/")), "");
+                arguments.add(temp3);
+
+                String next = pathIn.replace((temp3 + "/"), "");
+                resolvePath(arguments, next);
+            }
+            else arguments.add(pathIn);
+        }
     }
 }

@@ -28,10 +28,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 
 public abstract class ModHelper {
@@ -44,7 +41,6 @@ public abstract class ModHelper {
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
     public static final String MOD_ISSUES_LINK = "https://github.com/thedead2/customadvancements/issues";
-    public static final String MAIN_CLASS_PATH = MOD_PROPERTIES.getProperty("java_path");
 
     private static MinecraftServer SERVER = null;
 

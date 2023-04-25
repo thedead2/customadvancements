@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.util.core;
 
 import com.google.common.io.ByteStreams;
+import de.thedead2.customadvancements.CustomAdvancements;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.logger.ConsoleColors;
@@ -29,6 +30,7 @@ import static de.thedead2.customadvancements.util.core.ModHelper.*;
 public class CrashHandler implements ISystemReportExtender {
 
     private static CrashHandler instance;
+    private static int crashCounter = 0;
     private IAdvancement activeAdvancement;
     private Advancement activeGameAdvancement;
     private File activeFile;
@@ -97,8 +99,11 @@ public class CrashHandler implements ISystemReportExtender {
     private void getModInformation(){
         CrashReportSection section = new CrashReportSection();
         section.addDetail("Mod ID", MOD_ID);
-        section.addDetail("Version", MOD_VERSION);
-        section.addDetail("Main Path", DIR_PATH);
+        if(crashCounter != 0){
+            section.addDetail("Version", MOD_VERSION);
+            section.addDetail("Main Path", DIR_PATH);
+        }
+        else crashCounter++;
         if(this.activeAdvancement == null && this.activeGameAdvancement == null) {
             section.addDetail("Currently active advancement", "NONE");
         }
@@ -264,7 +269,7 @@ public class CrashHandler implements ISystemReportExtender {
 
     public boolean resolveCrash(Throwable throwable){
         for(StackTraceElement element : throwable.getStackTrace()){
-            if(element.getClassName().contains(MAIN_CLASS_PATH)){
+            if(element.getClassName().contains(CustomAdvancements.MAIN_PACKAGE)){
                 this.addCrashDetails("A fatal error occurred executing " + MOD_NAME, Level.FATAL, throwable, true);
                 return true;
             }

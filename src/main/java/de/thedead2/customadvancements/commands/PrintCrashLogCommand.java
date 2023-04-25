@@ -7,12 +7,12 @@ import net.minecraft.commands.CommandSourceStack;
 
 public class PrintCrashLogCommand extends ModCommand{
 
-    protected PrintCrashLogCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
-        super(literalArgumentBuilder);
+    protected PrintCrashLogCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder, LiteralArgumentBuilder<CommandSourceStack> shortLiteralArgumentBuilder) {
+        super(literalArgumentBuilder, shortLiteralArgumentBuilder);
     }
 
     protected static void register(){
-        newModCommand("test/crash", context -> {
+        Builder.newModCommand("test/crash", context -> {
             CrashHandler.getInstance().printCrashReport(new CrashReport("Just testing", new Throwable()));
             return COMMAND_SUCCESS;
         });

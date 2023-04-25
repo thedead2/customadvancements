@@ -1,6 +1,6 @@
 package de.thedead2.customadvancements.datagen.dataprovider;
 
-import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
+import de.thedead2.customadvancements.util.core.TranslationKeyProvider;
 import de.thedead2.customadvancements.util.language.TranslationKeyType;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementRewards;
@@ -8,9 +8,7 @@ import net.minecraft.advancements.CriterionTriggerInstance;
 import net.minecraft.advancements.FrameType;
 import net.minecraft.advancements.critereon.*;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
-import net.minecraft.data.advancements.AdvancementProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -26,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.core.ModHelper.MOD_ID;
 
 public class ModAdvancementProvider extends ForgeAdvancementProvider {
 

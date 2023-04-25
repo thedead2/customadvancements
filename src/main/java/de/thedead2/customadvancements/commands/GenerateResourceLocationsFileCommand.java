@@ -24,12 +24,12 @@ import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public class GenerateResourceLocationsFileCommand extends ModCommand {
 
-    protected GenerateResourceLocationsFileCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
-        super(literalArgumentBuilder);
+    protected GenerateResourceLocationsFileCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder, LiteralArgumentBuilder<CommandSourceStack> shortLiteralArgumentBuilder) {
+        super(literalArgumentBuilder, shortLiteralArgumentBuilder);
     }
 
     public static void register() {
-        newModCommand( "generate/resource_locations", (command) -> {
+        Builder.newModCommand( "generate/resource_locations", (command) -> {
             CommandSourceStack source = command.getSource();
 
             source.sendSuccess(TranslationKeyProvider.chatMessage("generating_rl_file"), false);

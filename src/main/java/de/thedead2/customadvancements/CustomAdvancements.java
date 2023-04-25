@@ -31,6 +31,8 @@ import static de.thedead2.customadvancements.util.core.ModHelper.*;
 @Mod(MOD_ID)
 public class CustomAdvancements {
 
+    public static final String MAIN_PACKAGE = CustomAdvancements.class.getPackageName();
+
     public CustomAdvancements() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::setup);
