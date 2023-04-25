@@ -1,17 +1,14 @@
-package de.thedead2.customadvancements.util;
+package de.thedead2.customadvancements.util.core;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.gson.JsonElement;
+import de.thedead2.customadvancements.advancements.CustomAdvancementManager;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
-import de.thedead2.customadvancements.util.handler.FileHandler;
+import de.thedead2.customadvancements.util.ResourceManagerExtender;
+import de.thedead2.customadvancements.util.Timer;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.LanguageHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
-import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -31,21 +28,24 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.*;
-
-import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.ADVANCEMENTS;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 
 public abstract class ModHelper {
-
-    public static final String MOD_VERSION = "1.19.2-5.7.3";
     public static final String MOD_ID = "customadvancements";
+    public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
+    public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
+    public static final ModProperties MOD_PROPERTIES = ModProperties.fromPath(THIS_MOD_FILE.findResource("META-INF/mod.properties"));
+
+    public static final String MOD_VERSION = MOD_PROPERTIES.getProperty("mod_version");
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
     public static final String MOD_ISSUES_LINK = "https://github.com/thedead2/customadvancements/issues";
+    public static final String MAIN_CLASS_PATH = MOD_PROPERTIES.getProperty("java_path");
 
-    public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
-    public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
     private static MinecraftServer SERVER = null;
 
     public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
@@ -58,11 +58,6 @@ public abstract class ModHelper {
 
     public static final Map<ResourceLocation, CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, GameAdvancement> GAME_ADVANCEMENTS = new HashMap<>();
-    public static final Map<ResourceLocation, JsonElement> ALL_DETECTED_GAME_ADVANCEMENTS = new HashMap<>();
-
-    public static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
-    public static final Map<ResourceLocation, ResourceLocation> CHILDREN_PARENT_MAP = new HashMap<>();
-    public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
 
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
@@ -83,7 +78,7 @@ public abstract class ModHelper {
             @Override
             public void run() {
                 try {
-                    Timer timer = new Timer(true);
+                    de.thedead2.customadvancements.util.Timer timer = new Timer(true);
                     LOGGER.info("Reloading...");
 
                     init();
@@ -127,11 +122,7 @@ public abstract class ModHelper {
     private static void clearAll(){
         CUSTOM_ADVANCEMENTS.clear();
         GAME_ADVANCEMENTS.clear();
-        ALL_DETECTED_GAME_ADVANCEMENTS.clear();
-        PARENT_CHILDREN_MAP.clear();
-        CHILDREN_PARENT_MAP.clear();
-        ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
-        ADVANCEMENTS.clear();
+        CustomAdvancementManager.clearAll();
         ResourceManagerExtender.clear();
         CrashHandler.getInstance().reset();
 

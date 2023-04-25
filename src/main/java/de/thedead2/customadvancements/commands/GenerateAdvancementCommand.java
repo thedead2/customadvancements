@@ -2,9 +2,9 @@ package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
-import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
+import de.thedead2.customadvancements.util.core.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.commands.CommandSourceStack;
@@ -16,7 +16,7 @@ import org.apache.logging.log4j.Level;
 import java.io.IOException;
 import java.util.Collection;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public class GenerateAdvancementCommand extends ModCommand {
     private static final SuggestionProvider<CommandSourceStack> SUGGEST_ADVANCEMENTS = (commandContext, suggestionsBuilder) -> {

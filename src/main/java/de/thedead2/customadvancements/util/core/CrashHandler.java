@@ -1,8 +1,7 @@
-package de.thedead2.customadvancements.util.exceptions;
+package de.thedead2.customadvancements.util.core;
 
 import com.google.common.io.ByteStreams;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
-import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.logger.ConsoleColors;
 import joptsimple.internal.Strings;
@@ -25,7 +24,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public class CrashHandler implements ISystemReportExtender {
 
@@ -265,7 +264,7 @@ public class CrashHandler implements ISystemReportExtender {
 
     public boolean resolveCrash(Throwable throwable){
         for(StackTraceElement element : throwable.getStackTrace()){
-            if(element.getClassName().contains("de.thedead2.customadvancements")){
+            if(element.getClassName().contains(MAIN_CLASS_PATH)){
                 this.addCrashDetails("A fatal error occurred executing " + MOD_NAME, Level.FATAL, throwable, true);
                 return true;
             }

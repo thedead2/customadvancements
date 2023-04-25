@@ -2,6 +2,7 @@ package de.thedead2.customadvancements.util.handler;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.thedead2.customadvancements.util.core.FileHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
 
@@ -11,6 +12,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public abstract class AdvancementHandler extends FileHandler {
 

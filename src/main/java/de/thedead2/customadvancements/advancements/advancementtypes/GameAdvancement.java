@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.advancements.advancementtypes;
 
 import com.google.gson.JsonObject;
-import de.thedead2.customadvancements.util.handler.FileHandler;
+import de.thedead2.customadvancements.util.core.FileHandler;
 import net.minecraft.resources.ResourceLocation;
 
 public class GameAdvancement implements IAdvancement{

@@ -1,9 +1,10 @@
 package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
-import de.thedead2.customadvancements.util.handler.FileHandler;
-import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
+import de.thedead2.customadvancements.advancements.CustomAdvancementManager;
+import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.core.FileHandler;
+import de.thedead2.customadvancements.util.core.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceLocation;
@@ -19,7 +20,7 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public class GenerateResourceLocationsFileCommand extends ModCommand {
 
@@ -65,7 +66,7 @@ public class GenerateResourceLocationsFileCommand extends ModCommand {
 
 
     private static void writeResourceLocations(OutputStream fileOut) throws IOException {
-        Set<ResourceLocation> temp = new HashSet<>(ALL_DETECTED_GAME_ADVANCEMENTS.keySet());
+        Set<ResourceLocation> temp = new HashSet<>(CustomAdvancementManager.ALL_ADVANCEMENTS_RESOURCE_LOCATIONS);
         temp.addAll(CUSTOM_ADVANCEMENTS.keySet());
 
         for (ResourceLocation resourceLocation: temp) {
