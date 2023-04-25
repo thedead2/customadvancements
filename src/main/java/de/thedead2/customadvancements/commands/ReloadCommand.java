@@ -1,10 +1,10 @@
 package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
+import de.thedead2.customadvancements.util.core.TranslationKeyProvider;
 import net.minecraft.commands.CommandSourceStack;
 
-import static de.thedead2.customadvancements.util.ModHelper.reloadAll;
+import static de.thedead2.customadvancements.util.core.ModHelper.reloadAll;
 
 public class ReloadCommand extends ModCommand {
 

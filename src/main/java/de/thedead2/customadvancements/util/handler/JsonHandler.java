@@ -8,7 +8,8 @@ import com.google.gson.JsonParseException;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import de.thedead2.customadvancements.util.Timer;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.core.FileHandler;
 import joptsimple.internal.Strings;
 import net.minecraft.util.GsonHelper;
 import org.apache.logging.log4j.Level;
@@ -21,6 +22,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 
 public class JsonHandler extends FileHandler {

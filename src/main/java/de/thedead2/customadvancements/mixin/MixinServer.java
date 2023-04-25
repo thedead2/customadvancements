@@ -1,6 +1,6 @@
 package de.thedead2.customadvancements.mixin;
 
-import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.core.ModHelper;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

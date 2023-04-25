@@ -6,7 +6,7 @@ import net.minecraftforge.common.data.LanguageProvider;
 import java.util.HashMap;
 import java.util.Map;
 
-import static de.thedead2.customadvancements.util.language.TranslationKeyProvider.chatTranslationKeyFor;
+import static de.thedead2.customadvancements.util.core.TranslationKeyProvider.chatTranslationKeyFor;
 
 public class ModLanguageProvider extends LanguageProvider {
 

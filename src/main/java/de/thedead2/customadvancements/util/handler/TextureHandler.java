@@ -1,13 +1,16 @@
 package de.thedead2.customadvancements.util.handler;
 
 import de.thedead2.customadvancements.util.ResourceManagerExtender;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.core.FileHandler;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.File;
 import java.util.Objects;
 
-public class TextureHandler extends FileHandler{
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
+
+public class TextureHandler extends FileHandler {
 
     private static TextureHandler instance;
 

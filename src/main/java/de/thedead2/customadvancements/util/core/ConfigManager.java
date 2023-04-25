@@ -1,12 +1,12 @@
-package de.thedead2.customadvancements.util;
+package de.thedead2.customadvancements.util.core;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import de.thedead2.customadvancements.advancements.AdvancementTabsSorter;
 import de.thedead2.customadvancements.advancements.progression.AdvancementProgressionMode;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.advancements.Advancement;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.*;

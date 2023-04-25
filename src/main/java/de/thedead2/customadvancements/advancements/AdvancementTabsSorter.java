@@ -1,7 +1,6 @@
 package de.thedead2.customadvancements.advancements;
 
-import com.google.common.collect.ImmutableList;
-import de.thedead2.customadvancements.util.ConfigManager;
+import de.thedead2.customadvancements.util.core.ConfigManager;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.gui.screens.advancements.AdvancementTab;
 import net.minecraft.resources.ResourceLocation;
@@ -19,7 +18,7 @@ public enum AdvancementTabsSorter {
         @Override
         protected void sort(List<AdvancementTab> tabList) {
             List<AdvancementTab> advancementTabs = new ArrayList<>();
-            ImmutableList<ResourceLocation> list = ConfigManager.getSortedAdvancementList();
+            var list = ConfigManager.getSortedAdvancementList();
             list.forEach(resourceLocation -> getAdvancementTabFor(resourceLocation, tabList).ifPresent(advancementTabs::add));
 
             if(advancementTabs.size() == tabList.size()){

@@ -1,27 +1,29 @@
 package de.thedead2.customadvancements.advancements;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
-import de.thedead2.customadvancements.util.ConfigManager;
+import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.Timer;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.core.CrashHandler;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 
 public abstract class CustomAdvancementManager {
 
     private static long counter = 0;
-    public static final Map<ResourceLocation, JsonElement> ADVANCEMENTS = new HashMap<>();
+    private static final Map<ResourceLocation, JsonElement> ADVANCEMENTS = new HashMap<>();
+    private static final Multimap<ResourceLocation, ResourceLocation> PARENT_CHILDREN_MAP = ArrayListMultimap.create();
+    private static final Map<ResourceLocation, ResourceLocation> CHILDREN_PARENT_MAP = new HashMap<>();
+    public static final Collection<ResourceLocation> ALL_ADVANCEMENTS_RESOURCE_LOCATIONS = new HashSet<>();
     private static final Timer TIMER = new Timer();
     private static boolean safeMode = false;
 
@@ -33,6 +35,7 @@ public abstract class CustomAdvancementManager {
                     if(!ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()){
                         ADVANCEMENTS.putAll(mapIn);
                     }
+                    ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.addAll(mapIn.keySet());
 
                     loadAdvancements(CUSTOM_ADVANCEMENTS);
                     loadAdvancements(GAME_ADVANCEMENTS);
@@ -314,5 +317,12 @@ public abstract class CustomAdvancementManager {
             }
         }
         missingAdvancements.clear();
+    }
+
+    public static void clearAll() {
+        PARENT_CHILDREN_MAP.clear();
+        CHILDREN_PARENT_MAP.clear();
+        ADVANCEMENTS.clear();
+        ALL_ADVANCEMENTS_RESOURCE_LOCATIONS.clear();
     }
 }

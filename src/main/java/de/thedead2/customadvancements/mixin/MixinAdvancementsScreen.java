@@ -1,6 +1,6 @@
 package de.thedead2.customadvancements.mixin;
 
-import de.thedead2.customadvancements.util.ConfigManager;
+import de.thedead2.customadvancements.util.core.ConfigManager;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.client.gui.screens.advancements.AdvancementTab;
