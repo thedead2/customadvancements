@@ -1,7 +1,5 @@
-package de.thedead2.customadvancements.util.handler;
+package de.thedead2.customadvancements.util.core;
 
-import de.thedead2.customadvancements.util.ModHelper;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
@@ -17,7 +15,9 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
-public abstract class FileHandler extends ModHelper {
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
+
+public abstract class FileHandler {
 
     private final File directory;
 

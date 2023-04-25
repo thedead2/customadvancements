@@ -1,7 +1,8 @@
 package de.thedead2.customadvancements.util;
 
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
-import de.thedead2.customadvancements.util.handler.FileHandler;
+import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.core.FileHandler;
+import de.thedead2.customadvancements.util.core.ModHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.SimpleResource;
@@ -9,7 +10,6 @@ import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;

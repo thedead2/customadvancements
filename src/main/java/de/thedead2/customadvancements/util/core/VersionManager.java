@@ -1,11 +1,14 @@
-package de.thedead2.customadvancements.util;
+package de.thedead2.customadvancements.util.core;
 
-import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fml.VersionChecker;
 
+/**
+ * Inner Class VersionManager
+ * handles every Update related action
+ **/
 public abstract class VersionManager {
 
     private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(ModHelper.THIS_MOD_CONTAINER.getModInfo());
@@ -20,7 +23,8 @@ public abstract class VersionManager {
         } else if (RESULT.status().equals(VersionChecker.Status.BETA_OUTDATED)) {
             player.sendMessage(TranslationKeyProvider.chatMessage("beta_warn_message", ChatFormatting.YELLOW), Util.NIL_UUID);
             player.sendMessage(TranslationKeyProvider.chatMessage("beta_outdated_message", ChatFormatting.RED), Util.NIL_UUID);
-            player.sendMessage(TranslationKeyProvider.chatLink(ModHelper.MOD_UPDATE_LINK, ChatFormatting.RED), Util.NIL_UUID);}
+            player.sendMessage(TranslationKeyProvider.chatLink(ModHelper.MOD_UPDATE_LINK, ChatFormatting.RED), Util.NIL_UUID);
+        }
     }
 
     public static void sendLoggerMessage() {

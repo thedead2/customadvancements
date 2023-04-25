@@ -1,13 +1,14 @@
 package de.thedead2.customadvancements.util.handler;
 
-import de.thedead2.customadvancements.util.ConfigManager;
-import de.thedead2.customadvancements.util.ModHelper;
+import de.thedead2.customadvancements.util.core.ConfigManager;
+import de.thedead2.customadvancements.util.core.ModHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
+
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

@@ -2,10 +2,10 @@ package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.thedead2.customadvancements.util.Timer;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
-import de.thedead2.customadvancements.util.handler.FileHandler;
-import de.thedead2.customadvancements.util.language.TranslationKeyProvider;
+import de.thedead2.customadvancements.util.core.FileHandler;
+import de.thedead2.customadvancements.util.core.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import org.apache.logging.log4j.Level;
@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Level;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public class GenerateGameAdvancementsCommand extends ModCommand {
 

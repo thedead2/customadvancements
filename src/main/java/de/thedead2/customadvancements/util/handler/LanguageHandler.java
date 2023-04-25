@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.util.handler;
 
-import de.thedead2.customadvancements.util.ModHelper;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.core.FileHandler;
 import net.minecraft.locale.Language;
 import org.apache.logging.log4j.Level;
 
@@ -16,7 +16,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class LanguageHandler extends FileHandler{
+import static de.thedead2.customadvancements.util.core.ModHelper.LANG_PATH;
+import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
+
+public class LanguageHandler extends FileHandler {
     private static final Map<String, File> LANG_FILES = new HashMap<>();
     private static LanguageHandler instance;
 
@@ -27,7 +30,7 @@ public class LanguageHandler extends FileHandler{
 
     @Override
     protected void readFiles(File directory) {
-        if(!Files.exists(ModHelper.LANG_PATH))
+        if(!Files.exists(LANG_PATH))
             return;
 
         try (Stream<Path> paths = Files.list(directory.toPath())) {

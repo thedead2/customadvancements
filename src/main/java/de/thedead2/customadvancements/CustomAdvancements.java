@@ -2,10 +2,10 @@ package de.thedead2.customadvancements;
 
 import de.thedead2.customadvancements.advancements.progression.AdvancementProgressionMode;
 import de.thedead2.customadvancements.commands.ModCommand;
-import de.thedead2.customadvancements.util.ConfigManager;
+import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.Timer;
-import de.thedead2.customadvancements.util.VersionManager;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.core.VersionManager;
+import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
@@ -26,7 +26,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 @Mod(MOD_ID)
 public class CustomAdvancements {

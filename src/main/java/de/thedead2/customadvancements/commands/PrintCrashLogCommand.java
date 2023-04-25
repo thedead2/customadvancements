@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import de.thedead2.customadvancements.util.exceptions.CrashHandler;
+import de.thedead2.customadvancements.util.core.CrashHandler;
 import net.minecraft.CrashReport;
 import net.minecraft.commands.CommandSourceStack;
 
