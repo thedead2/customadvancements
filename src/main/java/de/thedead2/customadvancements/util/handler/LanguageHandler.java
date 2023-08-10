@@ -19,41 +19,33 @@ import java.util.stream.Stream;
 import static de.thedead2.customadvancements.util.core.ModHelper.LANG_PATH;
 import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
 
-public class LanguageHandler extends FileHandler {
+public abstract class LanguageHandler {
     private static final Map<String, File> LANG_FILES = new HashMap<>();
-    private static LanguageHandler instance;
+    public static void start() {
+        FileHandler.readDirectory(LANG_PATH.toFile(), directory -> {
+            if(!Files.exists(LANG_PATH))
+                return;
 
-    public LanguageHandler(File directory) {
-        super(directory);
-        instance = this;
-    }
-
-    @Override
-    protected void readFiles(File directory) {
-        if(!Files.exists(LANG_PATH))
-            return;
-
-        try (Stream<Path> paths = Files.list(directory.toPath())) {
-            paths.filter(path -> path.toString().endsWith(".json")).forEach(path -> {
-                CrashHandler.getInstance().setActiveFile(path.toFile());
-                String langName = path.getFileName().toString().replace(".json", "");
-                LOGGER.debug("Found language file for {}", langName);
-                LANG_FILES.put(langName, path.toFile());
-            });
-            CrashHandler.getInstance().setActiveFile(null);
-        }
-        catch (IOException e){
-            CrashHandler.getInstance().handleException("Can't list files of directory: " + directory, e, Level.WARN);
-        }
-
-
+            try (Stream<Path> paths = Files.list(directory.toPath())) {
+                paths.filter(path -> path.toString().endsWith(".json")).forEach(path -> {
+                    CrashHandler.getInstance().setActiveFile(path.toFile());
+                    String langName = path.getFileName().toString().replace(".json", "");
+                    LOGGER.debug("Found language file for {}", langName);
+                    LANG_FILES.put(langName, path.toFile());
+                });
+                CrashHandler.getInstance().setActiveFile(null);
+            }
+            catch (IOException e){
+                CrashHandler.getInstance().handleException("Can't list files of directory: " + directory, e, Level.WARN);
+            }
+        });
     }
 
     public static int size(){
         return LANG_FILES.size();
     }
 
-    public void inject(String langName, Map<String, String> map){
+    public static void inject(String langName, Map<String, String> map){
         File langFile = LANG_FILES.get(langName);
         if(langFile == null)
             return;
@@ -63,9 +55,5 @@ public class LanguageHandler extends FileHandler {
         catch (FileNotFoundException e) {
             CrashHandler.getInstance().handleException("Didn't find file " + langFile + "! That shouldn't be possible?!", e, Level.FATAL);
         }
-    }
-
-    public static LanguageHandler getInstance() {
-        return Objects.requireNonNullElseGet(instance, () -> new LanguageHandler(LANG_PATH.toFile()));
     }
 }

@@ -3,6 +3,7 @@ package de.thedead2.customadvancements.util.core;
 import com.google.common.io.ByteStreams;
 import de.thedead2.customadvancements.CustomAdvancements;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
+import de.thedead2.customadvancements.util.ReflectionHelper;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.logger.ConsoleColors;
 import joptsimple.internal.Strings;
@@ -15,6 +16,8 @@ import net.minecraftforge.fml.ISystemReportExtender;
 import net.minecraftforge.logging.CrashReportExtender;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -252,7 +255,7 @@ public class CrashHandler implements ISystemReportExtender {
 
     public void addScreenCrash(CrashReportCategory.Entry crashReportCategory$Entry, Throwable exception){
         this.addCrashDetails("Error while rendering screen: " + crashReportCategory$Entry.getValue() +
-                        "\n\t\t\t\t" + ConsoleColors.italic + " Please note that this error was not caused by " + ModHelper.MOD_NAME + "! So don't report it to the mod author!" + ConsoleColors.reset,
+                        "\n\t\t\t\t" + ConsoleColors.italic + " Please note that this error was not caused by " + MOD_NAME + "! So don't report it to the mod author!" + ConsoleColors.reset,
                 Level.FATAL, exception, true
         );
     }
@@ -269,7 +272,7 @@ public class CrashHandler implements ISystemReportExtender {
 
     public boolean resolveCrash(Throwable throwable){
         for(StackTraceElement element : throwable.getStackTrace()){
-            if(element.getClassName().contains(CustomAdvancements.MAIN_PACKAGE)){
+            if(element.getClassName().contains(JAVA_PATH)){
                 this.addCrashDetails("A fatal error occurred executing " + MOD_NAME, Level.FATAL, throwable, true);
                 return true;
             }
@@ -340,22 +343,31 @@ public class CrashHandler implements ISystemReportExtender {
         Bootstrap.realStdoutPrintln(crashReport.getFriendlyReport());
     }
 
-    public void handleException(String description, Throwable e, Level level, boolean log) {
-        if (level.equals(Level.DEBUG))LOGGER.debug(description);
-        else if(level.equals(Level.WARN)) LOGGER.warn(description);
-        else if(level.equals(Level.ERROR)) LOGGER.error(description);
-        else if(level.equals(Level.FATAL)) LOGGER.fatal(description);
-        else LOGGER.info(description);
 
-        if (log) e.printStackTrace();
-        this.addCrashDetails(description, level, e);
-        if(activeFile != null){
-            printFileDataToConsole(activeFile);
+
+    public void handleException(String description, String callingClass, Throwable e, Level level) {
+        try {
+            String callingClassName = ReflectionHelper.getCallerCallerClassName();
+            String exceptionClass = callingClass != null ? callingClass : callingClassName.substring(callingClassName.lastIndexOf(".") + 1);;
+            Marker marker = new MarkerManager.Log4jMarker(exceptionClass);
+            if (level.equals(Level.DEBUG))LOGGER.debug(marker, description);
+            else if(level.equals(Level.WARN)) LOGGER.warn(marker, description);
+            else if(level.equals(Level.ERROR)) LOGGER.error(marker, description, e);
+            else if(level.equals(Level.FATAL)) LOGGER.fatal(marker, description, e);
+            else LOGGER.info(marker, description);
+
+            this.addCrashDetails(description, level, e);
+            if(activeFile != null){
+                printFileDataToConsole(activeFile);
+            }
+        }
+        catch (Exception e1){
+            LogManager.getLogger().fatal("Error while handling exception: {} \n-> original exception: {}", e1, description + ":\n" + e);
         }
     }
 
     public void handleException(String description, Throwable e, Level level) {
-        handleException(description, e, level, false);
+        handleException(description, null, e, level);
     }
 
     private void printFileDataToConsole(File file){
@@ -379,46 +391,22 @@ public class CrashHandler implements ISystemReportExtender {
         private final boolean responsibleForCrash;
 
         CrashReportException(String description, Level level, Throwable throwable, boolean responsibleForCrash) {
-            super(throwable.getClass().getName().substring(throwable.getClass().getName().lastIndexOf(".") + 1), true);
+            super(throwable.getClass().getName().substring(throwable.getClass().getName().lastIndexOf(".") + 1));
             this.description = description;
             this.level = level;
             this.throwable = throwable;
             this.responsibleForCrash = responsibleForCrash;
-            try {
-                this.getErrorDetails();
-                this.getStackTrace();
-            }
-            catch (Throwable throwable1){
-                this.throwable.addSuppressed(throwable1);
-                try {
-                    this.getErrorDetails();
-                    try {
-                        this.getStackTrace();
-                    }
-                    catch (Throwable throwable2){
-                        this.addDetail(new CrashReportDetail("Stacktrace", List.of(this.throwable.getStackTrace())));
-                    }
-                }
-                catch (Throwable throwable2){
-                    this.details.clear();
-                    this.addDetail(new CrashReportDetail("An error occurred gathering exception details!"));
-                    this.addDetail(new CrashReportDetail("Original Exception", this.throwable));
-                    this.addDetail(new CrashReportDetail("Occurred Exception", throwable2));
-                }
-            }
-
+            this.subSection = true;
+            this.getErrorDetails();
+            this.getStackTrace();
         }
 
 
-        private void getErrorDetails() {
-            this.details.clear();
+            private void getErrorDetails() {
             this.addDetail(new CrashReportDetail("Reported Error", getExceptionName(throwable)));
             this.addDetail(new CrashReportDetail("Description", description));
             if (throwable.getCause() != null) {
                 this.addDetail(new CrashReportDetail("Caused by", getExceptionName(throwable.getCause())));
-            }
-            if (throwable.getSuppressed().length != 0) {
-                this.addDetail(new CrashReportDetail("Suppressed", List.of(throwable.getSuppressed())));
             }
             this.addDetail(new CrashReportDetail("Level", level));
             this.addDetail(new CrashReportDetail("Caused Crash", responsibleForCrash ? "Definitely! \n\t\t"
@@ -501,12 +489,8 @@ public class CrashHandler implements ISystemReportExtender {
         }
 
         CrashReportSection(String title){
-            this(title, false);
-        }
-
-        public CrashReportSection(String title, boolean subSection) {
             this.title = title;
-            this.subSection = subSection;
+            this.subSection = false;
             if(!(this instanceof CrashReportDetail || this instanceof CrashReportException)) //better via interface!
                 CrashHandler.getInstance().addSection(this);
         }

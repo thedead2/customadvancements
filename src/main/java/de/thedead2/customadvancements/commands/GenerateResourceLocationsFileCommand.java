@@ -48,7 +48,7 @@ public class GenerateResourceLocationsFileCommand extends ModCommand {
             }
             catch (IOException e){
                 source.sendFailure(TranslationKeyProvider.chatMessage("generating_rl_file_failed", ChatFormatting.RED));
-                CrashHandler.getInstance().handleException("Unable to write resource locations to file!", e, Level.ERROR, true);
+                CrashHandler.getInstance().handleException("Unable to write resource locations to file!", e, Level.ERROR);
                 return COMMAND_FAILURE;
             }
             finally {
