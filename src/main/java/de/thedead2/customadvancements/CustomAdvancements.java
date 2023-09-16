@@ -36,7 +36,6 @@ public class CustomAdvancements {
     public CustomAdvancements() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::setup);
-        modEventBus.addListener(this::onLoadComplete);
         modEventBus.addListener(this::onConfigChanged);
 
         ModLoadingContext loadingContext = ModLoadingContext.get();
@@ -44,12 +43,12 @@ public class CustomAdvancements {
 
         IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
         forgeEventBus.addListener(this::onCommandsRegister);
-        forgeEventBus.addListener(this::onPlayerLogin);
         forgeEventBus.addListener(this::onPlayerDeath);
         forgeEventBus.addListener(this::onServerStopped);
         forgeEventBus.register(this);
 
         registerLoggerFilter();
+        VersionManager.register(modEventBus, forgeEventBus);
     }
 
 
@@ -62,18 +61,6 @@ public class CustomAdvancements {
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());
         timer.stop(true);
-    }
-
-
-    private void onLoadComplete(final FMLLoadCompleteEvent event){
-        VersionManager.sendLoggerMessage();
-    }
-
-
-    private void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
-        if(ConfigManager.OUT_DATED_MESSAGE.get() && !isDevEnv()){
-            VersionManager.sendChatMessage(event.getEntity());
-        }
     }
 
     private void onPlayerDeath(final PlayerEvent.PlayerRespawnEvent event){

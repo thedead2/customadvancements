@@ -1,29 +1,23 @@
 package de.thedead2.customadvancements.util.core;
 
+import de.thedead2.customadvancements.util.ModDaemonThread;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.commons.compress.utils.ByteUtils;
 import org.apache.logging.log4j.Level;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public abstract class FileHandler {
-
-    private final File directory;
-
-    public FileHandler(File directory){
-        this.directory = directory;
-    }
 
     public static void checkForMainDirectories() {
         createDirectory(DIR_PATH.toFile());
@@ -33,7 +27,7 @@ public abstract class FileHandler {
                 LOGGER.debug("Created example advancements!");
             }
             catch (FileCopyException e){
-                CrashHandler.getInstance().handleException("Unable to create example advancements!", e, Level.WARN, true);
+                CrashHandler.getInstance().handleException("Unable to create example advancements!", e, Level.WARN);
             }
         }
         createDirectory(DATA_PATH.toFile());
@@ -43,7 +37,7 @@ public abstract class FileHandler {
                 LOGGER.debug("Created example textures for advancements!");
             }
             catch (FileCopyException e){
-                CrashHandler.getInstance().handleException("Unable to create example textures!", e, Level.WARN, true);
+                CrashHandler.getInstance().handleException("Unable to create example textures!", e, Level.WARN);
             }
         }
         if(createDirectory(LANG_PATH.toFile())){
@@ -52,36 +46,36 @@ public abstract class FileHandler {
                 LOGGER.debug("Created example lang files for advancements!");
             }
             catch (FileCopyException e){
-                CrashHandler.getInstance().handleException("Unable to create example lang files!", e, Level.WARN, true);
+                CrashHandler.getInstance().handleException("Unable to create example lang files!", e, Level.WARN);
             }
         }
     }
 
-    public void start() {
-        if (this.directory.exists()){
-            File[] folders = this.directory.listFiles();
+    public static void readDirectory(File directory, Consumer<File> fileReader) {
+        if (directory.exists()){
+            File[] folders = directory.listFiles();
 
             assert folders != null;
             if(Arrays.stream(folders).anyMatch(File::isFile)){
-                this.readFiles(this.directory);
+                fileReader.accept(directory);
             }
 
             for(File subfolder : folders){
                 if(subfolder.isDirectory()){
-                    this.readFiles(subfolder);
+                    fileReader.accept(subfolder);
 
-                    readSubDirectories(subfolder);
+                    readSubDirectories(subfolder, fileReader);
                 }
             }
         }
     }
 
 
-    private void readSubDirectories(File folderIn){
+    private static void readSubDirectories(File folderIn, Consumer<File> fileReader){
         for(File folder: Objects.requireNonNull(folderIn.listFiles())){
             if(folder.isDirectory()){
-                this.readFiles(folder);
-                readSubDirectories(folder);
+                fileReader.accept(folder);
+                readSubDirectories(folder, fileReader);
             }
         }
     }
@@ -145,7 +139,7 @@ public abstract class FileHandler {
 
 
     public static void copyModFiles(String pathIn, Path pathOut, String filter) throws FileCopyException {
-        Path filespath = THIS_MOD_FILE.findResource(pathIn);
+        Path filespath = THIS_MOD_FILE.get().findResource(pathIn);
 
         try (Stream<Path> paths = Files.list(filespath)) {
             paths.filter(path -> path.toString().endsWith(filter)).forEach(path -> {
@@ -167,5 +161,21 @@ public abstract class FileHandler {
         }
     }
 
-    protected abstract void readFiles(File directory);
+    public static InputStream outputStreamToInputStream(ByteArrayOutputStream out){
+        try {
+            PipedInputStream inputStream = new PipedInputStream();
+            PipedOutputStream outputStream = new PipedOutputStream(inputStream);
+            try (inputStream) {
+                new ModDaemonThread(() -> {
+                    try (outputStream) {
+                        out.writeTo(outputStream);
+                    } catch (IOException ignored) {}
+                }).start();
+            }
+            return new ByteArrayInputStream(inputStream.readAllBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return InputStream.nullInputStream();
+        }
+    }
 }

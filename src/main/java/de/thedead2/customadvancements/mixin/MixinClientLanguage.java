@@ -16,6 +16,6 @@ public class MixinClientLanguage {
 
     @Inject(at = @At("TAIL"), method = "appendFrom(Ljava/lang/String;Ljava/util/List;Ljava/util/Map;)V")
     private static void onLoad(String pLanguageName, List<Resource> pResources, Map<String, String> pDestinationMap, CallbackInfo ci){
-        LanguageHandler.getInstance().inject(pLanguageName, pDestinationMap);
+        LanguageHandler.inject(pLanguageName, pDestinationMap);
     }
 }

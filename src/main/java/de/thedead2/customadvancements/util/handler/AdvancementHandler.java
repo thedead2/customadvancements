@@ -2,27 +2,24 @@ package de.thedead2.customadvancements.util.handler;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.thedead2.customadvancements.util.core.FileHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.*;
+import static de.thedead2.customadvancements.util.core.FileHandler.createDirectory;
+import static de.thedead2.customadvancements.util.core.FileHandler.writeFile;
+import static de.thedead2.customadvancements.util.core.ModHelper.DIR_PATH;
+import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
 
-public abstract class AdvancementHandler extends FileHandler {
+public abstract class AdvancementHandler {
 
     private static final List<String> FOLDER_NAMES = new ArrayList<>();
     public static boolean grantingAllAdvancements = false;
-
-    public AdvancementHandler(File directory) {
-        super(directory);
-    }
 
     public static void writeAdvancementToFile(ResourceLocation advancementId, JsonElement advancementData) throws IOException {
         LOGGER.debug("Generating file: " + advancementId);

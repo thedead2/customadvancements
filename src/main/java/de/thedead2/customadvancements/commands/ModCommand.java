@@ -6,9 +6,14 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import de.thedead2.customadvancements.util.CommandWrapperFunction;
+import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.core.TranslationKeyProvider;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraftforge.server.command.ConfigCommand;
+import org.apache.logging.log4j.Level;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,20 +59,31 @@ public class ModCommand {
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> getLongLA() {
-        return longLA;
+        return this.longLA;
     }
 
 
-    protected static class Builder{
-        static void newModCommand(String commandPath, Command<CommandSourceStack> executable) {
+    public static class Builder{
+        static void newModCommand(String commandPath, CommandWrapperFunction executable) {
             newModCommand(commandPath, Collections.emptyMap(), Collections.emptyMap(), executable);
         }
 
-        static void newModCommand(String commandPath, Map<String, ArgumentType<?>> arguments, Map<String, SuggestionProvider<CommandSourceStack>> suggestions, Command<CommandSourceStack> executable) {
-            var ca = Commands.literal("ca");
-            var customadvancements = Commands.literal(MOD_ID);
+        static void newModCommand(String commandPath, Map<String, ArgumentType<?>> arguments, Map<String, SuggestionProvider<CommandSourceStack>> suggestions, CommandWrapperFunction executable) {
+            var shortAB = Commands.literal("ca");
+            var longAB = Commands.literal(MOD_ID);
 
             List<String> commandParts = new ArrayList<>();
+
+            Command<CommandSourceStack> command = (context) -> {
+                try {
+                    return executable.runCommand(context);
+                }
+                catch (Throwable throwable){
+                    CrashHandler.getInstance().handleException("Something went wrong executing this command!", throwable, Level.ERROR);
+                    context.getSource().sendFailure(TranslationKeyProvider.chatMessage("command_failed", ChatFormatting.RED));
+                    return COMMAND_FAILURE;
+                }
+            };
 
             if(commandPath.contains("/")){
                 String sub = commandPath.replace(commandPath.substring(commandPath.indexOf("/")), "");
@@ -80,7 +96,7 @@ public class ModCommand {
                 commandParts.add(commandPath);
             }
 
-            commands.add(new ModCommand(ca.then(addToArgumentBuilder(ca, commandParts, arguments, suggestions, executable)), customadvancements.then(addToArgumentBuilder(customadvancements, commandParts, arguments, suggestions, executable))));
+            commands.add(new ModCommand(shortAB.then(addToArgumentBuilder(shortAB, commandParts, arguments, suggestions, command)), longAB.then(addToArgumentBuilder(longAB, commandParts, arguments, suggestions, command))));
         }
 
         private static ArgumentBuilder<CommandSourceStack, ?> addToArgumentBuilder(ArgumentBuilder<CommandSourceStack, ?> argumentBuilder, List<String> commandParts, Map<String, ArgumentType<?>> arguments, Map<String, SuggestionProvider<CommandSourceStack>> suggestions, Command<CommandSourceStack> command) {
@@ -88,7 +104,7 @@ public class ModCommand {
             String s = commandParts.get(0);
             ArgumentBuilder<CommandSourceStack, ?> argumentBuilder2;
             if(s.startsWith("[") && s.endsWith("]")) {
-                if (arguments.isEmpty() || suggestions.isEmpty())
+                if (arguments.isEmpty())
                     throw new NullPointerException("Can't create command argument because argument or suggestion is null!");
 
                 argumentBuilder2 = addArgument(s.substring(1, s.length() - 1), arguments.get(s), suggestions.get(s));
@@ -106,10 +122,11 @@ public class ModCommand {
         }
 
         private static ArgumentBuilder<CommandSourceStack, ?> addArgument(String name, ArgumentType<?> argumentType, SuggestionProvider<CommandSourceStack> suggestionProvider){
-            if(name == null || argumentType == null || suggestionProvider == null){
+            if(name == null || argumentType == null){
                 throw new NullPointerException("Can't create command argument because argument or suggestion is null!");
             }
-            return Commands.argument(name, argumentType).suggests(suggestionProvider);
+            if(suggestionProvider == null) return Commands.argument(name, argumentType);
+            else return Commands.argument(name, argumentType).suggests(suggestionProvider);
         }
 
         private static ArgumentBuilder<CommandSourceStack, ?> addExecutable(ArgumentBuilder<CommandSourceStack, ?> argumentBuilder, Command<CommandSourceStack> commandAction){
