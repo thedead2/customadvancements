@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.MAIN_CLASS_PATH;
+import static de.thedead2.customadvancements.CustomAdvancements.MAIN_PACKAGE;
 
 @Mixin(CrashReport.class)
 public abstract class MixinCrashReport {
@@ -38,7 +38,7 @@ public abstract class MixinCrashReport {
                     }
                 }
                 else if(key.contains("Screen")){
-                    if(crashReportCategory$Entry.getValue().contains(MAIN_CLASS_PATH)){
+                    if(crashReportCategory$Entry.getValue().contains(MAIN_PACKAGE)){
                         crashHandler.addScreenCrash(crashReportCategory$Entry, exception);
                         return;
                     }

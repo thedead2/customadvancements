@@ -2,10 +2,10 @@ package de.thedead2.customadvancements;
 
 import de.thedead2.customadvancements.advancements.progression.AdvancementProgressionMode;
 import de.thedead2.customadvancements.commands.ModCommand;
-import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.Timer;
-import de.thedead2.customadvancements.util.core.VersionManager;
+import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.core.VersionManager;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
@@ -13,7 +13,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.CrashReportCallables;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -30,6 +29,7 @@ import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 @Mod(MOD_ID)
 public class CustomAdvancements {
+    public static final String MAIN_PACKAGE = CustomAdvancements.class.getPackageName();
 
     public CustomAdvancements() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -44,7 +44,6 @@ public class CustomAdvancements {
         forgeEventBus.addListener(this::onCommandsRegister);
         forgeEventBus.addListener(this::onPlayerLogin);
         forgeEventBus.addListener(this::onPlayerDeath);
-        forgeEventBus.addListener(this::onServerStopped);
         forgeEventBus.register(this);
 
         registerLoggerFilter();
@@ -79,11 +78,6 @@ public class CustomAdvancements {
             AdvancementProgressionMode.resetAdvancementProgress((ServerPlayer) event.getEntity());
         }
     }
-
-    private void onServerStopped(final ServerStoppedEvent event){
-        setServer(null);
-    }
-
 
     private void onCommandsRegister(final RegisterCommandsEvent event){
         ModCommand.registerCommands(event.getDispatcher());

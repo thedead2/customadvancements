@@ -6,7 +6,7 @@ import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.core.ModHelper.MOD_ID;
 
 @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class DataEventListener {

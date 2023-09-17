@@ -23,7 +23,7 @@ public class CustomAdvancement implements IAdvancement {
         this.fileName = fileName;
         this.resourceLocation = FileHandler.getId(path);
         this.backgroundImage = hasBackgroundImage();
-        this.parentAdvancement = this.jsonObject.get("parent") != null ? FileHandler.getId(this.jsonObject.get("parent").getAsString() + ".json") : null;
+        this.parentAdvancement = this.jsonObject.get("parent") != null ? FileHandler.getId(this.jsonObject.get("parent").getAsString() + ".json", true) : null;
     }
 
 

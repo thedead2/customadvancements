@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 
+import static de.thedead2.customadvancements.CustomAdvancements.MAIN_PACKAGE;
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public class CrashHandler implements ISystemReportExtender {
@@ -264,7 +265,7 @@ public class CrashHandler implements ISystemReportExtender {
 
     public boolean resolveCrash(Throwable throwable){
         for(StackTraceElement element : throwable.getStackTrace()){
-            if(element.getClassName().contains(MAIN_CLASS_PATH)){
+            if(element.getClassName().contains(MAIN_PACKAGE)){
                 this.addCrashDetails("A fatal error occurred executing " + MOD_NAME, Level.FATAL, throwable, true);
                 return true;
             }
