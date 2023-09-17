@@ -1,17 +1,18 @@
 package de.thedead2.customadvancements.util.core;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.logger.ConsoleColors;
 import joptsimple.internal.Strings;
-import net.minecraft.CrashReport;
-import net.minecraft.CrashReportCategory;
+import net.minecraft.crash.CrashReport;
+import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.Bootstrap;
-import net.minecraftforge.fml.ISystemReportExtender;
-import net.minecraftforge.logging.CrashReportExtender;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Bootstrap;
+import net.minecraftforge.fml.common.ICrashCallable;
+import net.minecraftforge.fml.CrashReportExtender;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 
@@ -24,9 +25,10 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 
+import static de.thedead2.customadvancements.CustomAdvancements.MAIN_PACKAGE;
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
-public class CrashHandler implements ISystemReportExtender {
+public class CrashHandler implements ICrashCallable {
 
     private static CrashHandler instance;
     private IAdvancement activeAdvancement;
@@ -44,7 +46,10 @@ public class CrashHandler implements ISystemReportExtender {
     }
 
     public static CrashHandler getInstance(){
-        return Objects.requireNonNullElseGet(instance, CrashHandler::new);
+        if(instance != null){
+            return instance;
+        }
+        else return new CrashHandler();
     }
 
     @Override
@@ -52,20 +57,6 @@ public class CrashHandler implements ISystemReportExtender {
         gatherDetails();
         onCrash();
         return "\n\n" + "-- " + MOD_NAME + " --" + "\n" + "Details";
-    }
-
-    @Override
-    public String get() {
-        try {
-            StringBuilder stringBuilder = new StringBuilder();
-            this.sections.forEach(stringBuilder::append);
-            stringBuilder.append("\n\n");
-            return stringBuilder.toString();
-
-        }
-        catch (Throwable throwable){
-            return "\n\tERROR: " + throwable + "\n";
-        }
     }
 
     private void onCrash(){
@@ -150,7 +141,7 @@ public class CrashHandler implements ISystemReportExtender {
                 section.addDetail(this.activeAdvancement.getResourceLocation().toString(),"\n\n" + JsonHandler.formatJsonObject(this.activeAdvancement.getJsonObject()));
             }
             else {
-                section.addDetail(this.activeGameAdvancement.getId().toString(),"\n\n" + JsonHandler.formatJsonObject(this.activeGameAdvancement.deconstruct().serializeToJson()));
+                section.addDetail(this.activeGameAdvancement.getId().toString(),"\n\n" + JsonHandler.formatJsonObject(this.activeGameAdvancement.copy().serialize()));
             }
         }
     }
@@ -216,14 +207,14 @@ public class CrashHandler implements ISystemReportExtender {
 
 
     public <T> void setActiveAdvancement(T advancement){
-        if(advancement instanceof IAdvancement activeAdvancement1){
-            this.activeAdvancement = activeAdvancement1;
-            if(!activeAdvancement1.getResourceLocation().toString().contains("recipes/")){
-                this.advancements.add(activeAdvancement1);
+        if(advancement instanceof IAdvancement){
+            this.activeAdvancement = (IAdvancement) advancement;
+            if(!this.activeAdvancement.getResourceLocation().toString().contains("recipes/")){
+                this.advancements.add(this.activeAdvancement);
             }
         }
-        else if(advancement instanceof Advancement advancement1){
-            this.activeGameAdvancement = advancement1;
+        else if(advancement instanceof Advancement){
+            this.activeGameAdvancement = (Advancement) advancement;
         }
         else if(advancement == null) {
             this.activeAdvancement = null;
@@ -264,7 +255,7 @@ public class CrashHandler implements ISystemReportExtender {
 
     public boolean resolveCrash(Throwable throwable){
         for(StackTraceElement element : throwable.getStackTrace()){
-            if(element.getClassName().contains(MAIN_CLASS_PATH)){
+            if(element.getClassName().contains(MAIN_PACKAGE)){
                 this.addCrashDetails("A fatal error occurred executing " + MOD_NAME, Level.FATAL, throwable, true);
                 return true;
             }
@@ -305,8 +296,8 @@ public class CrashHandler implements ISystemReportExtender {
                     object = exceptionClass.getDeclaredConstructor().newInstance();
                 }
 
-                if(object instanceof Throwable t) {
-                    throwable = t;
+                if(object instanceof Throwable) {
+                    throwable = (Throwable) object;
                 }
                 else {
                     throw new IllegalStateException();
@@ -332,7 +323,7 @@ public class CrashHandler implements ISystemReportExtender {
     }
 
     public void printCrashReport(CrashReport crashReport){
-        Bootstrap.realStdoutPrintln(crashReport.getFriendlyReport());
+        Bootstrap.printToSYSOUT(crashReport.getCompleteReport());
     }
 
     public void handleException(String description, Throwable e, Level level, boolean log) {
@@ -367,6 +358,22 @@ public class CrashHandler implements ISystemReportExtender {
         }
     }
 
+
+    @Override
+    public String call() {
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            this.sections.forEach(stringBuilder::append);
+            stringBuilder.append("\n\n");
+            return stringBuilder.toString();
+
+        }
+        catch (Throwable throwable){
+            return "\n\tERROR: " + throwable + "\n";
+        }
+    }
+
+
     private static class CrashReportException extends CrashReportSection{
         private final String description;
         private final Level level;
@@ -391,7 +398,7 @@ public class CrashHandler implements ISystemReportExtender {
                         this.getStackTrace();
                     }
                     catch (Throwable throwable2){
-                        this.addDetail(new CrashReportDetail("Stacktrace", List.of(this.throwable.getStackTrace())));
+                        this.addDetail(new CrashReportDetail("Stacktrace", Lists.newArrayList(this.throwable.getStackTrace())));
                     }
                 }
                 catch (Throwable throwable2){
@@ -413,7 +420,7 @@ public class CrashHandler implements ISystemReportExtender {
                 this.addDetail(new CrashReportDetail("Caused by", getExceptionName(throwable.getCause())));
             }
             if (throwable.getSuppressed().length != 0) {
-                this.addDetail(new CrashReportDetail("Suppressed", List.of(throwable.getSuppressed())));
+                this.addDetail(new CrashReportDetail("Suppressed", Lists.newArrayList(throwable.getSuppressed())));
             }
             this.addDetail(new CrashReportDetail("Level", level));
             this.addDetail(new CrashReportDetail("Caused Crash", responsibleForCrash ? "Definitely! \n\t\t"
@@ -566,8 +573,8 @@ public class CrashHandler implements ISystemReportExtender {
             stringBuilder1.append("\t").append(name);
             if(in != null){
                 stringBuilder1.append(": ");
-                if (in instanceof List<?> list) {
-                    list.forEach((o) -> {
+                if (in instanceof List<?>) {
+                    ((List<?>) in).forEach((o) -> {
                         stringBuilder1.append("\n\t\t\t");
                         stringBuilder1.append(o);
                     });

@@ -3,30 +3,30 @@ package de.thedead2.customadvancements.util.handler;
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.ModHelper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.screens.PauseScreen;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraft.client.gui.advancements.AdvancementsScreen;
+import net.minecraft.client.gui.screen.IngameMenuScreen;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.List;
 import java.util.Optional;
 
-@Mod.EventBusSubscriber(modid = ModHelper.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@Mod.EventBusSubscriber(modid = ModHelper.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ScreenHandler {
     @SubscribeEvent
-    public static void afterScreenInit(ScreenEvent.Init.Post event) {
-        Screen screen = event.getScreen();
-        if(screen instanceof PauseScreen pauseScreen){
-            if(!pauseScreen.showPauseMenu) return;
+    public static void afterScreenInit(GuiScreenEvent.InitGuiEvent.Post event) {
+        Screen screen = event.getGui();
+        if(screen instanceof IngameMenuScreen){
+            if(!screen.isPauseScreen()) return;
             if (ConfigManager.NO_ADVANCEMENTS.get()) {
-                findButton(event.getListenersList(), "gui.advancements").ifPresent(event::removeListener);
-                findButton(event.getListenersList(), "gui.stats").ifPresent(button1 -> {
+                findButton(event.getWidgetList(), "gui.advancements").ifPresent(event::removeWidget);
+                findButton(event.getWidgetList(), "gui.stats").ifPresent(button1 -> {
                     button1.setWidth(204);
                     button1.x = button1.x - (204 / 2 + 4);
                 });
@@ -35,19 +35,19 @@ public class ScreenHandler {
     }
 
     @SubscribeEvent
-    public static void beforeScreenInit(ScreenEvent.Init.Pre event){
-        if (event.getScreen() instanceof AdvancementsScreen) {
+    public static void beforeScreenInit(GuiScreenEvent.InitGuiEvent.Pre event){
+        if (event.getGui() instanceof AdvancementsScreen) {
             if(ConfigManager.NO_ADVANCEMENTS.get()){
-                Minecraft.getInstance().setScreen(null);
+                Minecraft.getInstance().displayGuiScreen(null);
             }
         }
     }
 
-    private static Optional<Button> findButton(List<? extends GuiEventListener> listeners, String name) {
-        for (GuiEventListener listener : listeners) {
-            if (listener instanceof Button button && button.getMessage() instanceof MutableComponent mutableComponent && mutableComponent.getContents() instanceof TranslatableContents translatableContents) {
-                if (translatableContents.getKey().equals(name))
-                    return Optional.of(button);
+    private static Optional<Button> findButton(List<Widget> widgets, String name) {
+        for (Widget widget : widgets) {
+            if (widget instanceof Button && widget.getMessage() instanceof TranslationTextComponent) {
+                if (((TranslationTextComponent) widget.getMessage()).getKey().equals(name))
+                    return Optional.of((Button) widget);
             }
         }
         return Optional.empty();

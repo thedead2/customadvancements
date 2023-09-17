@@ -2,23 +2,23 @@ package de.thedead2.customadvancements.advancements;
 
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.client.gui.screens.advancements.AdvancementTab;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.gui.advancements.AdvancementTabGui;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.*;
 
 public enum AdvancementTabsSorter {
     ALPHABETICALLY{
         @Override
-        protected void sort(List<AdvancementTab> tabList) {
+        protected void sort(List<AdvancementTabGui> tabList) {
             tabList.sort(Comparator.comparing(o -> o.getTitle().getString()));
         }
     },
     DEFINED_LIST {
         @Override
-        protected void sort(List<AdvancementTab> tabList) {
-            List<AdvancementTab> advancementTabs = new ArrayList<>();
-            var list = ConfigManager.getSortedAdvancementList();
+        protected void sort(List<AdvancementTabGui> tabList) {
+            List<AdvancementTabGui> advancementTabs = new ArrayList<>();
+            com.google.common.collect.ImmutableList<ResourceLocation> list = ConfigManager.getSortedAdvancementList();
             list.forEach(resourceLocation -> getAdvancementTabFor(resourceLocation, tabList).ifPresent(advancementTabs::add));
 
             if(advancementTabs.size() == tabList.size()){
@@ -33,8 +33,8 @@ public enum AdvancementTabsSorter {
             }
         }
 
-        private Optional<AdvancementTab> getAdvancementTabFor(ResourceLocation resourceLocation, List<AdvancementTab> tabList){
-            for (AdvancementTab advancementTab : tabList){
+        private Optional<AdvancementTabGui> getAdvancementTabFor(ResourceLocation resourceLocation, List<AdvancementTabGui> tabList){
+            for (AdvancementTabGui advancementTab : tabList){
                 ResourceLocation resourceLocation1 = advancementTab.getAdvancement().getId();
                 if(resourceLocation1.equals(resourceLocation)) return Optional.of(advancementTab);
             }
@@ -43,11 +43,11 @@ public enum AdvancementTabsSorter {
     },
     UNSORTED{
         @Override
-        protected void sort(List<AdvancementTab> tabList) {}
+        protected void sort(List<AdvancementTabGui> tabList) {}
     };
 
-    public void sortAdvancementTabs(Map<Advancement, AdvancementTab> tabs){
-        List<AdvancementTab> tabList = new ArrayList<>(tabs.values());
+    public void sortAdvancementTabs(Map<Advancement, AdvancementTabGui> tabs){
+        List<AdvancementTabGui> tabList = new ArrayList<>(tabs.values());
         this.sort(tabList);
         tabs.clear();
         tabList.forEach(advancementTab -> {
@@ -56,5 +56,5 @@ public enum AdvancementTabsSorter {
         });
     }
 
-    protected abstract void sort(List<AdvancementTab> tabList);
+    protected abstract void sort(List<AdvancementTabGui> tabList);
 }

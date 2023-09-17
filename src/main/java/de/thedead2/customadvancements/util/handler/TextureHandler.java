@@ -3,10 +3,9 @@ package de.thedead2.customadvancements.util.handler;
 import de.thedead2.customadvancements.util.ResourceManagerExtender;
 import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.core.FileHandler;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ResourceLocation;
 
 import java.io.File;
-import java.util.Objects;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
@@ -31,7 +30,7 @@ public class TextureHandler extends FileHandler {
             if (texture.getName().endsWith(".png")) {
                 LOGGER.debug("Found file: " + texture.getName());
 
-                ResourceManagerExtender.addResource(ResourceLocation.tryParse(MOD_ID + ":" + "textures" + "/" + texture.getName()), texture);
+                ResourceManagerExtender.addResource(ResourceLocation.tryCreate(MOD_ID + ":" + "textures" + "/" + texture.getName()), texture);
             }
             else {
                 LOGGER.warn("File '" + texture.getName() + "' is not a '.png' file, ignoring it!");
@@ -40,5 +39,7 @@ public class TextureHandler extends FileHandler {
         CrashHandler.getInstance().setActiveFile(null);
     }
 
-    public static TextureHandler getInstance(){return Objects.requireNonNullElseGet(instance, () -> new TextureHandler(TEXTURES_PATH.toFile()));}
+    public static TextureHandler getInstance(){
+        return instance != null ? instance : new TextureHandler(TEXTURES_PATH.toFile());
+    }
 }

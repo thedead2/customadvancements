@@ -1,13 +1,15 @@
 package de.thedead2.customadvancements.commands;
 
+
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.ArgumentType;
+
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
 import net.minecraftforge.server.command.ConfigCommand;
 
 import javax.annotation.Nullable;
@@ -22,13 +24,13 @@ public class ModCommand {
     public static final int COMMAND_FAILURE = -1;
     public static final int COMMAND_SUCCESS = 1;
     private static final List<ModCommand> commands = new ArrayList<>();
-    private final LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder;
+    private final LiteralArgumentBuilder<CommandSource> literalArgumentBuilder;
 
-    protected ModCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
+    protected ModCommand(LiteralArgumentBuilder<CommandSource> literalArgumentBuilder) {
         this.literalArgumentBuilder = literalArgumentBuilder;
     }
 
-    public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher){
+    public static void registerCommands(CommandDispatcher<CommandSource> dispatcher){
         LOGGER.debug("Registering commands...");
 
         GenerateGameAdvancementsCommand.register();
@@ -42,16 +44,16 @@ public class ModCommand {
         LOGGER.debug("Command registration complete.");
     }
 
-    private LiteralArgumentBuilder<CommandSourceStack> getLiteralArgumentBuilder() {
+    private LiteralArgumentBuilder<CommandSource> getLiteralArgumentBuilder() {
         return this.literalArgumentBuilder;
     }
 
-    static void newModCommand(String commandPath, Command<CommandSourceStack> executable) {
+    static void newModCommand(String commandPath, Command<CommandSource> executable) {
         newModCommand(commandPath, null, null, executable);
     }
 
-    static void newModCommand(String commandPath, @Nullable ArgumentType<?> argument, @Nullable SuggestionProvider<CommandSourceStack> suggestion, Command<CommandSourceStack> executable) {
-        var argumentBuilder = Commands.literal("ca");
+    static void newModCommand(String commandPath, @Nullable ArgumentType<?> argument, @Nullable SuggestionProvider<CommandSource> suggestion, Command<CommandSource> executable) {
+        LiteralArgumentBuilder<CommandSource> argumentBuilder = Commands.literal("ca");
 
         List<String> arguments = new ArrayList<>();
 
@@ -69,11 +71,11 @@ public class ModCommand {
         commands.add(new ModCommand(argumentBuilder.then(addToArgumentBuilder(argumentBuilder, arguments, argument, suggestion, executable))));
     }
 
-    private static ArgumentBuilder<CommandSourceStack, ?> addToArgumentBuilder(ArgumentBuilder<CommandSourceStack, ?> argumentBuilder, List<String> arguments, ArgumentType<?> argument, SuggestionProvider<CommandSourceStack> suggestion, Command<CommandSourceStack> command) {
+    private static ArgumentBuilder<CommandSource, ?> addToArgumentBuilder(ArgumentBuilder<CommandSource, ?> argumentBuilder, List<String> arguments, ArgumentType<?> argument, SuggestionProvider<CommandSource> suggestion, Command<CommandSource> command) {
         String sub;
         if(!arguments.isEmpty()) { //reload all -> 2
             sub = arguments.get(0); // reload
-            ArgumentBuilder<CommandSourceStack, ?> argumentBuilder2;
+            ArgumentBuilder<CommandSource, ?> argumentBuilder2;
             if(sub.startsWith("[") && sub.endsWith("]")) {
                 if (argument == null || suggestion == null)
                     throw new NullPointerException("Can't create command argument because argument or suggestion is null!");

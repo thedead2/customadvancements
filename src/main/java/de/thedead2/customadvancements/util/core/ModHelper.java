@@ -9,18 +9,19 @@ import de.thedead2.customadvancements.util.Timer;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
 import de.thedead2.customadvancements.util.handler.LanguageHandler;
 import de.thedead2.customadvancements.util.handler.TextureHandler;
-import net.minecraft.ChatFormatting;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourcePackList;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.packs.repository.PackRepository;
-import net.minecraft.world.level.storage.WorldData;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Util;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.storage.IServerConfiguration;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -44,9 +45,6 @@ public abstract class ModHelper {
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
     public static final String MOD_ISSUES_LINK = "https://github.com/thedead2/customadvancements/issues";
-    public static final String MAIN_CLASS_PATH = MOD_PROPERTIES.getProperty("java_path");
-
-    private static MinecraftServer SERVER = null;
 
     public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
     public static final char PATH_SEPARATOR = File.separatorChar;
@@ -62,15 +60,11 @@ public abstract class ModHelper {
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
     public static boolean isDevEnv(){
-        return FMLLoader.getLaunchHandler() instanceof CommonDevLaunchHandler;
+        return FMLLoader.launcherHandlerName().equals("fmluserdevclient") || FMLLoader.launcherHandlerName().equals("fmluserdevserver");
     }
 
     public static Optional<MinecraftServer> getServer(){
-        return Optional.ofNullable(SERVER);
-    }
-
-    public static void setServer(MinecraftServer server) {
-        SERVER = server;
+        return Optional.ofNullable(ServerLifecycleHooks.getCurrentServer());
     }
 
     public static void reloadAll(MinecraftServer server){
@@ -130,23 +124,25 @@ public abstract class ModHelper {
 
 
     private static void reloadGameData(MinecraftServer server) {
-        PackRepository packRepository = server.getPackRepository();
-        WorldData worldData = server.getWorldData();
+        ResourcePackList resourcePackList = server.getResourcePacks();
+        IServerConfiguration serverConfiguration = server.getServerConfiguration();
+        Collection<String> ids = resourcePackList.func_232621_d_();
 
-        packRepository.reload();
-        Collection<String> selectedIds = Lists.newArrayList(packRepository.getSelectedIds());
-        Collection<String> disabledPacks = worldData.getDataPackConfig().getDisabled();
+        resourcePackList.reloadPacksFromFinders();
+        Collection<String> selectedIds = Lists.newArrayList(ids);
+        Collection<String> disabledPacks = serverConfiguration.getDatapackCodec().getDisabled();
 
-        for (String ids : packRepository.getAvailableIds()) {
-            if (!disabledPacks.contains(ids) && !selectedIds.contains(ids)) {
-                selectedIds.add(ids);
+        for(String s : resourcePackList.func_232616_b_()) {
+            if (!disabledPacks.contains(s) && !selectedIds.contains(s)) {
+                selectedIds.add(s);
             }
         }
 
-        server.reloadResources(selectedIds).exceptionally((e) -> {
-            server.sendSystemMessage(TranslationKeyProvider.chatMessage("reload_failed_message", ChatFormatting.RED));
+        server.func_240780_a_(selectedIds).exceptionally((e) -> {
+            server.sendMessage(TranslationKeyProvider.chatMessage("reload_failed_message", TextFormatting.RED), Util.DUMMY_UUID);
             CrashHandler.getInstance().handleException("Failed to execute reload!", e, Level.ERROR, true);
             return null;
         });
     }
+
 }

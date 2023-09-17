@@ -1,27 +1,23 @@
 package de.thedead2.customadvancements.util.handler;
 
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
+
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
 import de.thedead2.customadvancements.util.Timer;
 import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.core.FileHandler;
 import joptsimple.internal.Strings;
-import net.minecraft.util.GsonHelper;
 import org.apache.logging.log4j.Level;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
@@ -56,7 +52,7 @@ public class JsonHandler extends FileHandler {
                 if (file.isFile() && fileName.endsWith(".json")) {
                     LOGGER.debug("Found file: " + fileName);
 
-                    JsonObject jsonObject = getJsonObject(file);
+                    JsonObject jsonObject = (JsonObject) getJsonObject(file);
 
                     assert jsonObject != null;
                     if (isCorrectJsonFormat(jsonObject, file.toPath())) {
@@ -94,11 +90,11 @@ public class JsonHandler extends FileHandler {
     }
 
 
-    public JsonObject getJsonObject(File file){
+    public JsonElement getJsonObject(File file){
         final String fileName = file.getName();
 
         try{
-            return GsonHelper.parse(new FileReader(file));
+            return new JsonParser().parse(new FileReader(file));
         }
         catch (FileNotFoundException e) {
             CrashHandler.getInstance().handleException("Couldn't find file " + fileName + "?!", e, Level.WARN);
@@ -110,7 +106,7 @@ public class JsonHandler extends FileHandler {
     }
 
 
-    private boolean isCorrectJsonFormat(@NotNull JsonObject json, Path path){
+    private boolean isCorrectJsonFormat(@Nonnull JsonObject json, Path path){
         if(path.toString().contains("recipes" + PATH_SEPARATOR)) {
             return true;
         }
@@ -202,5 +198,7 @@ public class JsonHandler extends FileHandler {
         return stringBuilder.toString();
     }
 
-    public static JsonHandler getInstance(){return Objects.requireNonNullElseGet(instance, () -> new JsonHandler(DIR_PATH.toFile()));}
+    public static JsonHandler getInstance(){
+        return instance != null ? instance : new JsonHandler(DIR_PATH.toFile());
+    }
 }

@@ -4,12 +4,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.thedead2.customadvancements.util.core.FileHandler;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ResourceLocation;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public abstract class AdvancementHandler extends FileHandler {
         LOGGER.debug("Generating file: " + advancementId);
 
         FOLDER_NAMES.clear();
-        Path basePath = Path.of(String.valueOf(DIR_PATH), advancementId.getNamespace());
+        Path basePath = Paths.get(String.valueOf(DIR_PATH), advancementId.getNamespace());
 
         createDirectory(basePath.toFile());
 
@@ -41,7 +42,7 @@ public abstract class AdvancementHandler extends FileHandler {
     }
 
     public static JsonObject serializeToJson(Advancement advancementIn){
-        JsonObject jsonObject = advancementIn.deconstruct().serializeToJson();
+        JsonObject jsonObject = advancementIn.copy().serialize();
         JsonHandler.removeNullFields(jsonObject);
         return jsonObject;
     }
@@ -69,14 +70,14 @@ public abstract class AdvancementHandler extends FileHandler {
             getSubDirectories(nextSubString);
 
             for(String folderName: FOLDER_NAMES){
-                basePath = Path.of(String.valueOf(basePath), folderName);
+                basePath = Paths.get(String.valueOf(basePath), folderName);
                 createDirectory(basePath.toFile());
             }
 
-            return Path.of(String.valueOf(basePath), advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
+            return Paths.get(String.valueOf(basePath), advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
         }
         else {
-            return Path.of(String.valueOf(basePath), advancementPath + ".json");
+            return Paths.get(String.valueOf(basePath), advancementPath + ".json");
         }
     }
 }

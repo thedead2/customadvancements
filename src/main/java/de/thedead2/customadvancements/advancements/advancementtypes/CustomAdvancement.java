@@ -3,7 +3,8 @@ package de.thedead2.customadvancements.advancements.advancementtypes;
 import com.google.gson.JsonObject;
 import de.thedead2.customadvancements.util.ResourceManagerExtender;
 import de.thedead2.customadvancements.util.core.FileHandler;
-import net.minecraft.resources.ResourceLocation;
+
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
@@ -23,7 +24,7 @@ public class CustomAdvancement implements IAdvancement {
         this.fileName = fileName;
         this.resourceLocation = FileHandler.getId(path);
         this.backgroundImage = hasBackgroundImage();
-        this.parentAdvancement = this.jsonObject.get("parent") != null ? FileHandler.getId(this.jsonObject.get("parent").getAsString() + ".json") : null;
+        this.parentAdvancement = this.jsonObject.get("parent") != null ? FileHandler.getId(this.jsonObject.get("parent").getAsString() + ".json", true) : null;
     }
 
 
@@ -52,7 +53,7 @@ public class CustomAdvancement implements IAdvancement {
 
     private boolean hasBackgroundImage(){
         if(this.jsonObject.get("display").getAsJsonObject().get("background") != null) {
-            ResourceLocation textureLocation = ResourceLocation.tryParse(this.jsonObject.get("display").getAsJsonObject().get("background").getAsString());
+            ResourceLocation textureLocation = ResourceLocation.tryCreate(this.jsonObject.get("display").getAsJsonObject().get("background").getAsString());
 
             this.textureLocation = textureLocation;
             assert textureLocation != null;

@@ -3,12 +3,13 @@ package de.thedead2.customadvancements.advancements.progression;
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.ModHelper;
 import de.thedead2.customadvancements.util.core.TranslationKeyProvider;
-import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.PlayerAdvancements;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.advancements.PlayerAdvancements;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Util;
+import net.minecraft.util.text.TextFormatting;
 
 import java.util.Optional;
 
@@ -54,7 +55,7 @@ public enum AdvancementProgressionMode {
     }
 
     protected Optional<Boolean> defaultAction(Advancement parentAdvancement, PlayerAdvancements playerAdvancements){
-        AdvancementProgress progress = playerAdvancements.getOrStartProgress(parentAdvancement);
+        AdvancementProgress progress = playerAdvancements.getProgress(parentAdvancement);
         if(!progress.isDone()){
             return Optional.of(false);
         }
@@ -66,19 +67,19 @@ public enum AdvancementProgressionMode {
     public Advancement handleConnectedAdvancements(Advancement advancement){
         ResourceLocation resourceLocation = advancement.getId();
 
-        var connectedAdvancements = ConfigManager.getConnectedAdvancements();
+        com.google.common.collect.ImmutableMap<ResourceLocation, ResourceLocation> connectedAdvancements = ConfigManager.getConnectedAdvancements();
 
         ResourceLocation parent = connectedAdvancements.get(resourceLocation);
 
-        return parent == null ? null : ModHelper.getServer().orElseThrow(NullPointerException::new).getAdvancements().getAdvancement(parent);
+        return parent == null ? null : ModHelper.getServer().orElseThrow(NullPointerException::new).getAdvancementManager().getAdvancement(parent);
     }
 
-    public static void resetAdvancementProgress(ServerPlayer player){
-        player.sendSystemMessage(TranslationKeyProvider.chatMessage("advancements_reset", ChatFormatting.RED, player.getDisplayName()));
-        for(Advancement advancement : player.getServer().getAdvancements().getAllAdvancements()){
-            AdvancementProgress advancementProgress = player.getAdvancements().getOrStartProgress(advancement);
+    public static void resetAdvancementProgress(ServerPlayerEntity player){
+        player.sendMessage(TranslationKeyProvider.chatMessage("advancements_reset", TextFormatting.RED, player.getDisplayName()), Util.DUMMY_UUID);
+        for(Advancement advancement : player.getServer().getAdvancementManager().getAllAdvancements()){
+            AdvancementProgress advancementProgress = player.getAdvancements().getProgress(advancement);
             for(String s : advancementProgress.getCompletedCriteria()) {
-                player.getAdvancements().revoke(advancement, s);
+                player.getAdvancements().revokeCriterion(advancement, s);
             }
         }
     }

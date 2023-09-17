@@ -2,24 +2,22 @@ package de.thedead2.customadvancements;
 
 import de.thedead2.customadvancements.advancements.progression.AdvancementProgressionMode;
 import de.thedead2.customadvancements.commands.ModCommand;
-import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.Timer;
-import de.thedead2.customadvancements.util.core.VersionManager;
+import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.core.VersionManager;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.CrashReportCallables;
+import net.minecraftforge.fml.CrashReportExtender;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -30,6 +28,9 @@ import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 @Mod(MOD_ID)
 public class CustomAdvancements {
+
+    public static final String MAIN_PACKAGE = CustomAdvancements.class.getPackage().getName();
+
 
     public CustomAdvancements() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -44,7 +45,6 @@ public class CustomAdvancements {
         forgeEventBus.addListener(this::onCommandsRegister);
         forgeEventBus.addListener(this::onPlayerLogin);
         forgeEventBus.addListener(this::onPlayerDeath);
-        forgeEventBus.addListener(this::onServerStopped);
         forgeEventBus.register(this);
 
         registerLoggerFilter();
@@ -55,7 +55,6 @@ public class CustomAdvancements {
         Timer timer = new Timer(true);
 
         LOGGER.info("Starting " + MOD_NAME + ", Version: " + MOD_VERSION);
-
         init();
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());
@@ -70,18 +69,14 @@ public class CustomAdvancements {
 
     private void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
         if(ConfigManager.OUT_DATED_MESSAGE.get() && !isDevEnv()){
-            VersionManager.sendChatMessage(event.getEntity());
+            VersionManager.sendChatMessage(event.getPlayer());
         }
     }
 
     private void onPlayerDeath(final PlayerEvent.PlayerRespawnEvent event){
-        if(ConfigManager.RESET_ADVANCEMENTS_ON_DEATH.get()){
-            AdvancementProgressionMode.resetAdvancementProgress((ServerPlayer) event.getEntity());
+        if(event.getPlayer() instanceof ServerPlayerEntity && ConfigManager.RESET_ADVANCEMENTS_ON_DEATH.get()){
+            AdvancementProgressionMode.resetAdvancementProgress((ServerPlayerEntity) event.getPlayer());
         }
-    }
-
-    private void onServerStopped(final ServerStoppedEvent event){
-        setServer(null);
     }
 
 
@@ -89,7 +84,7 @@ public class CustomAdvancements {
         ModCommand.registerCommands(event.getDispatcher());
     }
 
-    private void onConfigChanged(final ModConfigEvent event){
+    private void onConfigChanged(final ModConfig.ModConfigEvent event){
         ModConfig config = event.getConfig();
         if(config.getModId().equals(MOD_ID)){
             getServer().ifPresent((server) -> {
@@ -103,10 +98,11 @@ public class CustomAdvancements {
     private void registerLoggerFilter(){
         Logger rootLogger = LogManager.getRootLogger();
 
-        if (rootLogger instanceof org.apache.logging.log4j.core.Logger logger) {
-            logger.addFilter(new MissingAdvancementFilter());
-            logger.addFilter(new UnknownRecipeCategoryFilter());
-            logger.addFilter(new UnknownAdvancementFilter());
+        if (rootLogger instanceof org.apache.logging.log4j.core.Logger) {
+
+            ((org.apache.logging.log4j.core.Logger) rootLogger).addFilter(new MissingAdvancementFilter());
+            ((org.apache.logging.log4j.core.Logger) rootLogger).addFilter(new UnknownRecipeCategoryFilter());
+            ((org.apache.logging.log4j.core.Logger) rootLogger).addFilter(new UnknownAdvancementFilter());
         }
         else {
             LOGGER.error("Unable to register filter for Logger with unexpected class: {}", rootLogger.getClass().getName());
@@ -114,6 +110,6 @@ public class CustomAdvancements {
     }
 
     static {
-        CrashReportCallables.registerCrashCallable(CrashHandler.getInstance());
+        CrashReportExtender.registerCrashCallable(CrashHandler.getInstance());
     }
 }

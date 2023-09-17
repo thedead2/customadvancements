@@ -2,12 +2,14 @@ package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.thedead2.customadvancements.util.core.CrashHandler;
-import net.minecraft.CrashReport;
-import net.minecraft.commands.CommandSourceStack;
+
+import net.minecraft.command.CommandSource;
+import net.minecraft.crash.CrashReport;
+
 
 public class PrintCrashLogCommand extends ModCommand{
 
-    protected PrintCrashLogCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
+    protected PrintCrashLogCommand(LiteralArgumentBuilder<CommandSource> literalArgumentBuilder) {
         super(literalArgumentBuilder);
     }
 

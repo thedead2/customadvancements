@@ -5,9 +5,11 @@ import de.thedead2.customadvancements.advancements.CustomAdvancementManager;
 import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.core.FileHandler;
 import de.thedead2.customadvancements.util.core.TranslationKeyProvider;
-import net.minecraft.ChatFormatting;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.resources.ResourceLocation;
+
+import net.minecraft.command.CommandSource;
+
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
 import org.apache.logging.log4j.Level;
 
 import java.io.ByteArrayInputStream;
@@ -24,15 +26,15 @@ import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public class GenerateResourceLocationsFileCommand extends ModCommand {
 
-    protected GenerateResourceLocationsFileCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
+    protected GenerateResourceLocationsFileCommand(LiteralArgumentBuilder<CommandSource> literalArgumentBuilder) {
         super(literalArgumentBuilder);
     }
 
     public static void register() {
         newModCommand( "generate/resource_locations", (command) -> {
-            CommandSourceStack source = command.getSource();
+            CommandSource source = command.getSource();
 
-            source.sendSuccess(TranslationKeyProvider.chatMessage("generating_rl_file"), false);
+            source.sendFeedback(TranslationKeyProvider.chatMessage("generating_rl_file"), false);
             LOGGER.info("Starting to write resource locations to file...");
 
             OutputStream fileOut = null;
@@ -43,11 +45,11 @@ public class GenerateResourceLocationsFileCommand extends ModCommand {
 
                 writeResourceLocations(fileOut);
 
-                source.sendSuccess(TranslationKeyProvider.chatMessage("generating_rl_file_success"), false);
+                source.sendFeedback(TranslationKeyProvider.chatMessage("generating_rl_file_success"), false);
                 return COMMAND_SUCCESS;
             }
             catch (IOException e){
-                source.sendFailure(TranslationKeyProvider.chatMessage("generating_rl_file_failed", ChatFormatting.RED));
+                source.sendErrorMessage(TranslationKeyProvider.chatMessage("generating_rl_file_failed", TextFormatting.RED));
                 CrashHandler.getInstance().handleException("Unable to write resource locations to file!", e, Level.ERROR, true);
                 return COMMAND_FAILURE;
             }

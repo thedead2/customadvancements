@@ -7,9 +7,10 @@ import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.Timer;
 import de.thedead2.customadvancements.util.core.CrashHandler;
-import net.minecraft.CrashReport;
-import net.minecraft.ReportedException;
-import net.minecraft.resources.ResourceLocation;
+
+import net.minecraft.crash.CrashReport;
+import net.minecraft.crash.ReportedException;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -126,15 +127,15 @@ public abstract class CustomAdvancementManager {
 
             for (ResourceLocation resourceLocation : ALL_ADVANCEMENTS_RESOURCE_LOCATIONS){
                 if (resourceLocation.toString().contains("recipes/")){
-                    int jsonExtensionLength = ".json".length();
+                    /*int jsonExtensionLength = ".json".length();
                     int folderNameLength = "advancements".length() + 1;
                     String resourceLocationPath = resourceLocation.getPath();
 
                     ResourceLocation resourceLocation1 = new ResourceLocation(resourceLocation.getNamespace(), resourceLocationPath.substring(folderNameLength, resourceLocationPath.length() - jsonExtensionLength));
+*/
+                    ADVANCEMENTS.remove(resourceLocation);
 
-                    ADVANCEMENTS.remove(resourceLocation1);
-
-                    CrashHandler.getInstance().addRemovedAdvancement(resourceLocation1);
+                    CrashHandler.getInstance().addRemovedAdvancement(resourceLocation);
                     counter++;
                     LOGGER.debug("Removed recipe advancement: " + resourceLocation);
                 }
@@ -232,7 +233,7 @@ public abstract class CustomAdvancementManager {
 
             if (mapIn.get(resourceLocation) instanceof JsonElement) {
                 JsonElement parentField = ((JsonElement) mapIn.get(resourceLocation)).getAsJsonObject().get("parent");
-                parent = parentField != null ? ResourceLocation.tryParse(parentField.getAsString()) : null;
+                parent = parentField != null ? ResourceLocation.tryCreate(parentField.getAsString()) : null;
             }
             else if (mapIn.get(resourceLocation) instanceof IAdvancement) {
                 parent = ((IAdvancement) mapIn.get(resourceLocation)).getParentAdvancement();
@@ -252,7 +253,7 @@ public abstract class CustomAdvancementManager {
         JsonElement parent = ADVANCEMENTS.get(resourceLocation).getAsJsonObject().get("parent");
 
         if(parent != null && (ConfigManager.getBlacklistedResourceLocations().contains(resourceLocation) || !checkForBlacklist)){
-            ResourceLocation parentResourceLocation = ResourceLocation.tryParse(parent.getAsString());
+            ResourceLocation parentResourceLocation = ResourceLocation.tryCreate(parent.getAsString());
 
             CHILDREN_PARENT_MAP.put(resourceLocation, parentResourceLocation);
 
@@ -271,7 +272,7 @@ public abstract class CustomAdvancementManager {
                 }
                 else if(mapIn.get(childAdvancement) instanceof JsonElement){
                     JsonElement parentField = ((JsonElement) mapIn.get(childAdvancement)).getAsJsonObject().get("parent");
-                    parent = parentField != null ? ResourceLocation.tryParse(parentField.getAsString()) : null;
+                    parent = parentField != null ? ResourceLocation.tryCreate(parentField.getAsString()) : null;
                 }
                 else {
                     throw new RuntimeException("Unexpected input: Map<ResourceLocation, " + mapIn.get(childAdvancement).getClass().getName() + ">!");

@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.util.core;
 
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
 import java.io.File;
@@ -88,11 +88,16 @@ public abstract class FileHandler {
 
 
     public static ResourceLocation getId(String filePath){
+        return getId(filePath, false);
+    }
+    public static ResourceLocation getId(String filePath, boolean onlyWrap){
         try{
             String subString = filePath.replace(String.valueOf(DIR_PATH), "");
-            subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
-            subString = subString.replaceFirst("/", "");
-            subString = subString.replaceFirst("/", ":");
+            if(!onlyWrap){
+                subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
+                subString = subString.replaceFirst("/", "");
+                subString = subString.replaceFirst("/", ":");
+            }
             return new ResourceLocation(subString);
         }
         catch (Throwable throwable){

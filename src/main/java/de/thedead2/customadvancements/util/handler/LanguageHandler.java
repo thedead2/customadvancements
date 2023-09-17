@@ -2,7 +2,7 @@ package de.thedead2.customadvancements.util.handler;
 
 import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.core.FileHandler;
-import net.minecraft.locale.Language;
+import net.minecraft.util.text.LanguageMap;
 import org.apache.logging.log4j.Level;
 
 import java.io.File;
@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.LANG_PATH;
@@ -58,7 +57,7 @@ public class LanguageHandler extends FileHandler {
         if(langFile == null)
             return;
         try {
-            Language.loadFromJson(new FileInputStream(langFile), map::put);
+            LanguageMap.func_240593_a_(new FileInputStream(langFile), map::put);
         }
         catch (FileNotFoundException e) {
             CrashHandler.getInstance().handleException("Didn't find file " + langFile + "! That shouldn't be possible?!", e, Level.FATAL);
@@ -66,6 +65,6 @@ public class LanguageHandler extends FileHandler {
     }
 
     public static LanguageHandler getInstance() {
-        return Objects.requireNonNullElseGet(instance, () -> new LanguageHandler(LANG_PATH.toFile()));
+        return instance != null ? instance : new LanguageHandler(LANG_PATH.toFile());
     }
 }

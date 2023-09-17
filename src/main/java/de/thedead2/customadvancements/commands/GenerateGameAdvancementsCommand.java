@@ -6,8 +6,9 @@ import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.handler.AdvancementHandler;
 import de.thedead2.customadvancements.util.core.FileHandler;
 import de.thedead2.customadvancements.util.core.TranslationKeyProvider;
-import net.minecraft.ChatFormatting;
-import net.minecraft.commands.CommandSourceStack;
+
+import net.minecraft.command.CommandSource;
+import net.minecraft.util.text.TextFormatting;
 import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
@@ -21,35 +22,35 @@ public class GenerateGameAdvancementsCommand extends ModCommand {
     private static final AtomicInteger COUNTER = new AtomicInteger();
     private static final Timer timer = new Timer();
 
-    protected GenerateGameAdvancementsCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
+    protected GenerateGameAdvancementsCommand(LiteralArgumentBuilder<CommandSource> literalArgumentBuilder) {
         super(literalArgumentBuilder);
     }
 
 
     public static void register() {
         newModCommand("generate/advancement/all", (command) -> {
-            var source = command.getSource();
+            CommandSource source = command.getSource();
             Thread backgroundThread = new Thread(MOD_NAME) {
                 @Override
                 public void run() {
                     timer.start();
                     LOGGER.info("Starting to generate files for game advancements...");
-                    source.sendSuccess(TranslationKeyProvider.chatMessage("generating_game_advancements"), false);
+                    source.sendFeedback(TranslationKeyProvider.chatMessage("generating_game_advancements"), false);
 
                     FileHandler.createDirectory(DIR_PATH.toFile());
 
-                    source.getServer().getAdvancements().getAllAdvancements().forEach((advancement) -> {
+                    source.getServer().getAdvancementManager().getAllAdvancements().forEach((advancement) -> {
                         try {
                             AdvancementHandler.writeAdvancementToFile(advancement);
                             COUNTER.getAndIncrement();
                         }
                         catch (IOException e) {
-                            source.sendFailure(TranslationKeyProvider.chatMessage("generating_game_advancements_failed", ChatFormatting.RED, advancement.getId()));
+                            source.sendErrorMessage(TranslationKeyProvider.chatMessage("generating_game_advancements_failed", TextFormatting.RED, advancement.getId()));
                             CrashHandler.getInstance().handleException("Unable to write " + advancement.getId() + " to file!", e, Level.WARN);
                         }
                     });
                     LOGGER.info("Generating {} files for game advancements took {} ms", COUNTER.get(), timer.getTime());
-                    source.sendSuccess(TranslationKeyProvider.chatMessage("generating_game_advancements_success", COUNTER.toString()), false);
+                    source.sendFeedback(TranslationKeyProvider.chatMessage("generating_game_advancements_success", COUNTER.toString()), false);
                     COUNTER.set(0);
                     timer.stop(true);
 

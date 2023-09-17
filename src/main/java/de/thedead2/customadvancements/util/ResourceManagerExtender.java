@@ -1,11 +1,15 @@
 package de.thedead2.customadvancements.util;
 
+import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.core.FileHandler;
 import de.thedead2.customadvancements.util.core.ModHelper;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.resources.IResource;
+import net.minecraft.resources.SimpleResource;
+import net.minecraft.util.ResourceLocation;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,9 +20,14 @@ public abstract class ResourceManagerExtender {
     private static final Map<ResourceLocation, File> RESOURCES = new HashMap<>();
     private static final String FAKE_PACK_ID = "CA_Extended";
 
-    public static Optional<Resource> handleResourceRequest(ResourceLocation resourceLocation){
+    public static Optional<IResource> handleResourceRequest(ResourceLocation resourceLocation){
         if(isValidResourceLocation(resourceLocation)){
-            return RESOURCES.containsKey(resourceLocation) ? Optional.of(new Resource(FAKE_PACK_ID, () -> Files.newInputStream(RESOURCES.get(resourceLocation).toPath()))) : Optional.empty();
+            try {
+                return RESOURCES.containsKey(resourceLocation) ? Optional.of(new SimpleResource(FAKE_PACK_ID, resourceLocation, Files.newInputStream(RESOURCES.get(resourceLocation).toPath()), null)) : Optional.empty();
+            }
+            catch(IOException e) {
+                CrashHandler.getInstance().handleException("Failed to create new resource!", e, Level.ERROR);
+            }
         }
         return Optional.empty();
     }
