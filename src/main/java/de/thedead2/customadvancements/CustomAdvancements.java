@@ -2,10 +2,10 @@ package de.thedead2.customadvancements;
 
 import de.thedead2.customadvancements.advancements.progression.AdvancementProgressionMode;
 import de.thedead2.customadvancements.commands.ModCommand;
-import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.Timer;
-import de.thedead2.customadvancements.util.core.VersionManager;
+import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.core.VersionManager;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
@@ -13,7 +13,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.CrashReportCallables;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -21,7 +20,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,7 +42,6 @@ public class CustomAdvancements {
         IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
         forgeEventBus.addListener(this::onCommandsRegister);
         forgeEventBus.addListener(this::onPlayerDeath);
-        forgeEventBus.addListener(this::onServerStopped);
         forgeEventBus.register(this);
 
         registerLoggerFilter();
@@ -67,10 +64,6 @@ public class CustomAdvancements {
         if(ConfigManager.RESET_ADVANCEMENTS_ON_DEATH.get()){
             AdvancementProgressionMode.resetAdvancementProgress((ServerPlayer) event.getEntity());
         }
-    }
-
-    private void onServerStopped(final ServerStoppedEvent event){
-        setServer(null);
     }
 
 

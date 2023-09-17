@@ -15,7 +15,7 @@ public class GameAdvancement implements IAdvancement{
         this.jsonObject = jsonObject;
         this.fileName = fileName;
         this.resourceLocation = FileHandler.getId(path);
-        this.parentAdvancement = this.jsonObject.get("parent") != null ? FileHandler.getId(this.jsonObject.get("parent").getAsString() + ".json") : null;
+        this.parentAdvancement = this.jsonObject.get("parent") != null ? FileHandler.getId(this.jsonObject.get("parent").getAsString() + ".json", true) : null;
     }
 
 

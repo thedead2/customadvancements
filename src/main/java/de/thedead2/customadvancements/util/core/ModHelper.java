@@ -16,24 +16,24 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.level.storage.WorldData;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.common.ForgeStatesProvider;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler;
 import net.minecraftforge.forgespi.locating.IModFile;
-import net.minecraftforge.versions.forge.ForgeVersion;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 
@@ -49,8 +49,6 @@ public abstract class ModHelper {
     public static final String MOD_UPDATE_LINK = MOD_PROPERTIES.getProperty("mod_update_link");
     public static final String MOD_ISSUES_LINK = MOD_PROPERTIES.getProperty("mod_issues_link");
 
-    private static MinecraftServer SERVER = null;
-
     public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
     public static final char PATH_SEPARATOR = File.separatorChar;
     public static final Path DIR_PATH = GAME_DIR.resolve(MOD_ID);
@@ -58,7 +56,6 @@ public abstract class ModHelper {
     public static final Path CUSTOM_ADVANCEMENTS_PATH = DIR_PATH.resolve(MOD_ID);
     public static final Path TEXTURES_PATH = DATA_PATH.resolve("textures");
     public static final Path LANG_PATH = DATA_PATH.resolve("lang");
-    public static final String JAVA_PATH = MOD_PROPERTIES.getProperty("java_path");
 
     public static final Map<ResourceLocation, CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashMap<>();
     public static final Map<ResourceLocation, GameAdvancement> GAME_ADVANCEMENTS = new HashMap<>();
@@ -78,11 +75,7 @@ public abstract class ModHelper {
     }
 
     public static Optional<MinecraftServer> getServer(){
-        return Optional.ofNullable(SERVER);
-    }
-
-    public static void setServer(MinecraftServer server) {
-        SERVER = server;
+        return Optional.ofNullable(ServerLifecycleHooks.getCurrentServer());
     }
 
     public static void reloadAll(MinecraftServer server){

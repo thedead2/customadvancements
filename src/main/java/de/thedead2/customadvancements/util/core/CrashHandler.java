@@ -1,7 +1,6 @@
 package de.thedead2.customadvancements.util.core;
 
 import com.google.common.io.ByteStreams;
-import de.thedead2.customadvancements.CustomAdvancements;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
 import de.thedead2.customadvancements.util.ReflectionHelper;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
@@ -28,12 +27,12 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 
+import static de.thedead2.customadvancements.CustomAdvancements.MAIN_PACKAGE;
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public class CrashHandler implements ISystemReportExtender {
 
     private static CrashHandler instance;
-    private static int crashCounter = 0;
     private IAdvancement activeAdvancement;
     private Advancement activeGameAdvancement;
     private File activeFile;
@@ -102,11 +101,8 @@ public class CrashHandler implements ISystemReportExtender {
     private void getModInformation(){
         CrashReportSection section = new CrashReportSection();
         section.addDetail("Mod ID", MOD_ID);
-        if(crashCounter != 0){
-            section.addDetail("Version", MOD_VERSION);
-            section.addDetail("Main Path", DIR_PATH);
-        }
-        else crashCounter++;
+        section.addDetail("Version", MOD_VERSION);
+        section.addDetail("Main Path", DIR_PATH);
         if(this.activeAdvancement == null && this.activeGameAdvancement == null) {
             section.addDetail("Currently active advancement", "NONE");
         }
@@ -272,7 +268,7 @@ public class CrashHandler implements ISystemReportExtender {
 
     public boolean resolveCrash(Throwable throwable){
         for(StackTraceElement element : throwable.getStackTrace()){
-            if(element.getClassName().contains(JAVA_PATH)){
+            if(element.getClassName().contains(MAIN_PACKAGE)){
                 this.addCrashDetails("A fatal error occurred executing " + MOD_NAME, Level.FATAL, throwable, true);
                 return true;
             }
@@ -348,7 +344,7 @@ public class CrashHandler implements ISystemReportExtender {
     public void handleException(String description, String callingClass, Throwable e, Level level) {
         try {
             String callingClassName = ReflectionHelper.getCallerCallerClassName();
-            String exceptionClass = callingClass != null ? callingClass : callingClassName.substring(callingClassName.lastIndexOf(".") + 1);;
+            String exceptionClass = callingClass != null ? callingClass : callingClassName.substring(callingClassName.lastIndexOf(".") + 1);
             Marker marker = new MarkerManager.Log4jMarker(exceptionClass);
             if (level.equals(Level.DEBUG))LOGGER.debug(marker, description);
             else if(level.equals(Level.WARN)) LOGGER.warn(marker, description);
