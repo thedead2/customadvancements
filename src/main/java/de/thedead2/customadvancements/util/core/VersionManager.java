@@ -11,7 +11,7 @@ import net.minecraftforge.fml.VersionChecker;
  **/
 public abstract class VersionManager {
 
-    private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(ModHelper.THIS_MOD_CONTAINER.getModInfo());
+    private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(ModHelper.THIS_MOD_CONTAINER.get().getModInfo());
 
 
     public static void sendChatMessage(Player player) {

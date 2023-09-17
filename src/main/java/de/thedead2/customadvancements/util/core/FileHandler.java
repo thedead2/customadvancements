@@ -88,11 +88,18 @@ public abstract class FileHandler {
 
 
     public static ResourceLocation getId(String filePath){
+        return getId(filePath, false);
+    }
+
+    public static ResourceLocation getId(String filePath, boolean onlyWrap){
         try{
             String subString = filePath.replace(String.valueOf(DIR_PATH), "");
-            subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
-            subString = subString.replaceFirst("/", "");
-            subString = subString.replaceFirst("/", ":");
+            if(!onlyWrap){
+                subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
+                subString = subString.replaceFirst("/", "");
+                subString = subString.replaceFirst("/", ":");
+            }
+
             return new ResourceLocation(subString);
         }
         catch (Throwable throwable){
@@ -145,7 +152,7 @@ public abstract class FileHandler {
 
 
     public static void copyModFiles(String pathIn, Path pathOut, String filter) throws FileCopyException {
-        Path filespath = THIS_MOD_FILE.findResource(pathIn);
+        Path filespath = THIS_MOD_FILE.get().findResource(pathIn);
 
         try (Stream<Path> paths = Files.list(filespath)) {
             paths.filter(path -> path.toString().endsWith(filter)).forEach(path -> {

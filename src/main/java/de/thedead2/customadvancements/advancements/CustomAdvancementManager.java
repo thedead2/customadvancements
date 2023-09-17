@@ -126,15 +126,15 @@ public abstract class CustomAdvancementManager {
 
             for (ResourceLocation resourceLocation : ALL_ADVANCEMENTS_RESOURCE_LOCATIONS){
                 if (resourceLocation.toString().contains("recipes/")){
-                    int jsonExtensionLength = ".json".length();
+                    /*int jsonExtensionLength = ".json".length();
                     int folderNameLength = "advancements".length() + 1;
                     String resourceLocationPath = resourceLocation.getPath();
 
                     ResourceLocation resourceLocation1 = new ResourceLocation(resourceLocation.getNamespace(), resourceLocationPath.substring(folderNameLength, resourceLocationPath.length() - jsonExtensionLength));
+*/
+                    ADVANCEMENTS.remove(resourceLocation);
 
-                    ADVANCEMENTS.remove(resourceLocation1);
-
-                    CrashHandler.getInstance().addRemovedAdvancement(resourceLocation1);
+                    CrashHandler.getInstance().addRemovedAdvancement(resourceLocation);
                     counter++;
                     LOGGER.debug("Removed recipe advancement: " + resourceLocation);
                 }

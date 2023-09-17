@@ -23,6 +23,7 @@ import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler;
 import net.minecraftforge.forgespi.locating.IModFile;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,21 +34,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 
 public abstract class ModHelper {
     public static final String MOD_ID = "customadvancements";
-    public static final IModFile THIS_MOD_FILE = ModList.get().getModFileById(MOD_ID).getFile();
-    public static final ModContainer THIS_MOD_CONTAINER = ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
-    public static final ModProperties MOD_PROPERTIES = ModProperties.fromPath(THIS_MOD_FILE.findResource("META-INF/mod.properties"));
+    public static final Supplier<IModFile> THIS_MOD_FILE = () -> ModList.get().getModFileById(MOD_ID).getFile();
+    public static final Supplier<ModContainer> THIS_MOD_CONTAINER = () -> ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
+    public static final ModProperties MOD_PROPERTIES = ModProperties.fromInputStream(ModHelper.class.getClassLoader().getResourceAsStream("META-INF/mod.properties"));
 
     public static final String MOD_VERSION = MOD_PROPERTIES.getProperty("mod_version");
     public static final String MOD_NAME = "Custom Advancements";
     public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
     public static final String MOD_ISSUES_LINK = "https://github.com/thedead2/customadvancements/issues";
-    public static final String MAIN_CLASS_PATH = MOD_PROPERTIES.getProperty("java_path");
-
-    private static MinecraftServer SERVER = null;
 
     public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
     public static final char PATH_SEPARATOR = File.separatorChar;
@@ -67,11 +66,7 @@ public abstract class ModHelper {
     }
 
     public static Optional<MinecraftServer> getServer(){
-        return Optional.ofNullable(SERVER);
-    }
-
-    public static void setServer(MinecraftServer server) {
-        SERVER = server;
+        return Optional.ofNullable(ServerLifecycleHooks.getCurrentServer());
     }
 
     public static void reloadAll(MinecraftServer server){

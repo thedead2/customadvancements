@@ -8,7 +8,6 @@
     "MixinCrashReport",
     "MixinJsonReloadListener",
     "MixinLanguageHook",
-    "MixinServer",
     "MixinPlayerAdvancements",
     "MixinResourceManager"
   ],
