@@ -45,7 +45,7 @@ public class GenerateAdvancementCommand extends ModCommand {
                 CrashHandler.getInstance().handleException("Unable to generate file for: " + advancement, e, Level.WARN);
                 return COMMAND_FAILURE;
             }
-            command.getSource().sendSuccess(TranslationKeyProvider.chatMessage("generating_game_advancement_success", advancement.toString()), false);
+            command.getSource().sendSuccess(() -> TranslationKeyProvider.chatMessage("generating_game_advancement_success", advancement.toString()), false);
             LOGGER.debug("Successfully generated file for: " + advancement);
             reloadAll(command.getSource().getServer());
             return COMMAND_SUCCESS;

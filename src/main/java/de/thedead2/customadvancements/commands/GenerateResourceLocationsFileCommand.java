@@ -32,7 +32,7 @@ public class GenerateResourceLocationsFileCommand extends ModCommand {
         Builder.newModCommand( "generate/resource_locations", (command) -> {
             CommandSourceStack source = command.getSource();
 
-            source.sendSuccess(TranslationKeyProvider.chatMessage("generating_rl_file"), false);
+            source.sendSuccess(() -> TranslationKeyProvider.chatMessage("generating_rl_file"), false);
             LOGGER.info("Starting to write resource locations to file...");
 
             OutputStream fileOut = null;
@@ -43,7 +43,7 @@ public class GenerateResourceLocationsFileCommand extends ModCommand {
 
                 writeResourceLocations(fileOut);
 
-                source.sendSuccess(TranslationKeyProvider.chatMessage("generating_rl_file_success"), false);
+                source.sendSuccess(() -> TranslationKeyProvider.chatMessage("generating_rl_file_success"), false);
                 return COMMAND_SUCCESS;
             }
             catch (IOException e){

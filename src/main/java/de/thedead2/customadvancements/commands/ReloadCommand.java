@@ -16,11 +16,11 @@ public class ReloadCommand extends ModCommand {
     public static void register() {
         Builder.newModCommand("reload", (commandContext) -> {
             var source = commandContext.getSource();
-            source.sendSuccess(TranslationKeyProvider.chatMessage("reload_started"), false);
+            source.sendSuccess(() -> TranslationKeyProvider.chatMessage("reload_started"), false);
 
             reloadAll(source.getServer());
 
-            source.sendSuccess(TranslationKeyProvider.chatMessage("reload_successful"), false);
+            source.sendSuccess(() -> TranslationKeyProvider.chatMessage("reload_successful"), false);
             return COMMAND_SUCCESS;
         });
     }

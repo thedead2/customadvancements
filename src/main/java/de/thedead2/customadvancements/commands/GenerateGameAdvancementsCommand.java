@@ -34,7 +34,7 @@ public class GenerateGameAdvancementsCommand extends ModCommand {
                 public void run() {
                     timer.start();
                     LOGGER.info("Starting to generate files for game advancements...");
-                    source.sendSuccess(TranslationKeyProvider.chatMessage("generating_game_advancements"), false);
+                    source.sendSuccess(() -> TranslationKeyProvider.chatMessage("generating_game_advancements"), false);
 
                     FileHandler.createDirectory(DIR_PATH.toFile());
 
@@ -49,7 +49,7 @@ public class GenerateGameAdvancementsCommand extends ModCommand {
                         }
                     });
                     LOGGER.info("Generating {} files for game advancements took {} ms", COUNTER.get(), timer.getTime());
-                    source.sendSuccess(TranslationKeyProvider.chatMessage("generating_game_advancements_success", COUNTER.toString()), false);
+                    source.sendSuccess(() -> TranslationKeyProvider.chatMessage("generating_game_advancements_success", COUNTER.toString()), false);
                     COUNTER.set(0);
                     timer.stop(true);
 

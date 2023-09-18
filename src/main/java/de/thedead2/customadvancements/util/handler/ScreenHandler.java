@@ -4,7 +4,6 @@ import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.ModHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.GridWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -27,19 +26,12 @@ public class ScreenHandler {
         if(screen instanceof PauseScreen pauseScreen){
             if(!pauseScreen.showPauseMenu) return;
             if (ConfigManager.NO_ADVANCEMENTS.get()) {
-                findButton(event.getListenersList(), "gui.advancements").ifPresentOrElse(event::removeListener, () -> {
-                    for (GuiEventListener eventListener : event.getListenersList()) {
-                        if (eventListener instanceof GridWidget gridWidget) {
-                            findButtonInGrid(gridWidget, "gui.advancements").ifPresent(button -> {
-                                List<? extends GuiEventListener> children = gridWidget.children();
-                                children.remove(button);
-                                findButtonInGrid(gridWidget, "gui.stats").ifPresent(button1 -> {
-                                    button1.setWidth(204);
-                                    button1.setX(button1.getX() - (204 / 2 + 4));
-                                });
-                            });
-                        }
-                    }
+                findButton(event.getListenersList(), "gui.advancements").ifPresent((button) -> {
+                    event.removeListener(button);
+                    findButton(event.getListenersList(), "gui.stats").ifPresent(button1 -> {
+                        button1.setWidth(204);
+                        button1.setX(button1.getX() - (204 / 2 + 4));
+                    });
                 });
             }
         }
@@ -62,10 +54,6 @@ public class ScreenHandler {
             }
         }
         return Optional.empty();
-    }
-
-    private static Optional<Button> findButtonInGrid(GridWidget gridWidget, String name){
-        return findButton(gridWidget.children(), name);
     }
 }
 
