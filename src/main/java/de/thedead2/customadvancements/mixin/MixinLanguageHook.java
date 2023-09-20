@@ -14,7 +14,7 @@ import java.util.Map;
 @Mixin(LanguageHook.class)
 public abstract class MixinLanguageHook {
 
-    @Shadow
+    @Shadow(remap = false)
     private static Map<String, String> modTable;
 
     @Inject(at = @At("TAIL"), method = "loadLanguage(Ljava/lang/String;Lnet/minecraft/server/MinecraftServer;)V", remap = false)
