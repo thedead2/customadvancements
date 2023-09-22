@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.util.handler;
+package de.thedead2.customadvancements.client;
 
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.ModHelper;

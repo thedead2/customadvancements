@@ -6,6 +6,8 @@ import de.thedead2.customadvancements.util.core.FileHandler;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
+import javax.annotation.Nullable;
+
 import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
 import static de.thedead2.customadvancements.util.core.ModHelper.MOD_ID;
 
@@ -13,8 +15,10 @@ public class CustomAdvancement implements IAdvancement {
     private final JsonObject jsonObject;
     private final String fileName;
     private final ResourceLocation resourceLocation;
+    @Nullable
     private final ResourceLocation parentAdvancement;
     private final boolean backgroundImage;
+
     private ResourceLocation textureLocation;
 
 
@@ -41,9 +45,41 @@ public class CustomAdvancement implements IAdvancement {
     public ResourceLocation getResourceLocation(){return this.resourceLocation;}
 
     @Override
+    @Nullable
     public ResourceLocation getParentAdvancement() {
         return this.parentAdvancement;
     }
+
+
+    @Override
+    public boolean hasLargeBackground() {
+        JsonObject display = jsonObject.get("display").getAsJsonObject();
+        if(display.has("largeBackground")){
+            return display.get("largeBackground").getAsBoolean();
+        }
+        return false;
+    }
+
+
+    @Override
+    public boolean shouldBackgroundClip() {
+        JsonObject display = this.jsonObject.get("display").getAsJsonObject();
+        if(display.has("shouldBgClip")){
+            return display.get("shouldBgClip").getAsBoolean();
+        }
+        return false;
+    }
+
+
+    @Override
+    public float getBackgroundAspectRatio() {
+        JsonObject display = this.jsonObject.get("display").getAsJsonObject();
+        if(display.has("bgRatio")){
+            return display.get("bgRatio").getAsFloat();
+        }
+        return 1f;
+    }
+
 
     @Override
     public String toString(){
