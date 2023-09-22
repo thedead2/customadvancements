@@ -21,7 +21,6 @@ import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
@@ -66,9 +65,6 @@ public abstract class JsonHandler {
                             LOGGER.error(fileName + " does not match the required '.json' format!");
                         }
                     }
-                    else if(file.isFile() && !fileName.equals("resource_locations.txt") && !fileName.endsWith(".png")) {
-                        LOGGER.warn("File '" + fileName + "' is not a '.json' file, ignoring it!");
-                    }
                 }
                 catch (NullPointerException e){
                     CrashHandler.getInstance().handleException("Failed to create JsonObject from file: " + fileName, e, Level.WARN);
@@ -107,11 +103,13 @@ public abstract class JsonHandler {
             return true;
         }
         else {
-            if(json.get("parent") != null && json.get("criteria") != null && json.get("display") != null){
-                return true;
-            }
-            else if(json.get("parent") == null && json.get("display") != null){
-                return json.get("display").getAsJsonObject().get("background") != null;
+            if(json.has("criteria") && json.has("display")){
+                if(json.has("parent")){
+                    return true;
+                }
+                else {
+                    return json.get("display").getAsJsonObject().has("background");
+                }
             }
             else {
                 return false;
