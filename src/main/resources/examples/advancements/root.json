@@ -9,7 +9,10 @@
     "description":{
       "translate":"customadvancements.advancements.example_root.description"
     },
-    "background": "customadvancements:textures/logo.png",
+    "background": "customadvancements:textures/screenshot.png",
+    "largeBackground": true,
+    "shouldBgClip": true,
+    "bgRatio": 1.7208029197,
     "show_toast": false,
     "announce_to_chat": false,
     "hidden": false
