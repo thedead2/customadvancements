@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import de.thedead2.customadvancements.advancements.CustomAdvancementManager;
 import de.thedead2.customadvancements.advancements.advancementtypes.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.advancementtypes.GameAdvancement;
+import de.thedead2.customadvancements.util.ReflectionHelper;
 import de.thedead2.customadvancements.util.ResourceManagerExtender;
 import de.thedead2.customadvancements.util.Timer;
 import de.thedead2.customadvancements.util.handler.JsonHandler;
@@ -38,15 +39,15 @@ import java.util.function.Supplier;
 
 public abstract class ModHelper {
     public static final String MOD_ID = "customadvancements";
-    public static final Supplier<IModFile> THIS_MOD_FILE = () -> ModList.get().getModFileById(MOD_ID).getFile();
-    public static final Supplier<ModContainer> THIS_MOD_CONTAINER = () -> ModList.get().getModContainerById(MOD_ID).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + MOD_ID));
-    public static final ModProperties MOD_PROPERTIES = ModProperties.fromInputStream(CustomAdvancement.class.getClassLoader().getResourceAsStream("META-INF/mod.properties"));
+    public static Supplier<IModFile> THIS_MOD_FILE = () -> getModFileFor(MOD_ID);
+    public static Supplier<ModContainer> THIS_MOD_CONTAINER = () -> getModContainerFor(MOD_ID);
+
+    public static final ModProperties MOD_PROPERTIES = ModProperties.fromInputStream(ReflectionHelper.findResource("META-INF/mod.properties"));
 
     public static final String MOD_VERSION = MOD_PROPERTIES.getProperty("mod_version");
-    public static final String MOD_NAME = "Custom Advancements";
-    public static final String MOD_UPDATE_LINK = "https://www.curseforge.com/minecraft/mc-mods/custom-advancements/files";
-    public static final String MOD_ISSUES_LINK = "https://github.com/thedead2/customadvancements/issues";
-
+    public static final String MOD_NAME = MOD_PROPERTIES.getProperty("mod_name");
+    public static final String MOD_UPDATE_LINK = MOD_PROPERTIES.getProperty("mod_update_link");
+    public static final String MOD_ISSUES_LINK = MOD_PROPERTIES.getProperty("mod_issues_link");
 
     public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
     public static final char PATH_SEPARATOR = File.separatorChar;
@@ -65,10 +66,17 @@ public abstract class ModHelper {
         return FMLLoader.getLaunchHandler() instanceof CommonDevLaunchHandler;
     }
 
+    public static ModContainer getModContainerFor(String id){
+        return ModList.get().getModContainerById(id).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + id));
+    }
+
+    public static IModFile getModFileFor(String id){
+        return ModList.get().getModFileById(id).getFile();
+    }
+
     public static Optional<MinecraftServer> getServer(){
         return Optional.ofNullable(ServerLifecycleHooks.getCurrentServer());
     }
-
 
     public static void reloadAll(MinecraftServer server){
         Thread caThread = new Thread(MOD_NAME){
@@ -86,7 +94,7 @@ public abstract class ModHelper {
                     timer.stop(true);
                 }
                 catch (Exception e){
-                    CrashHandler.getInstance().handleException("Reload failed", e, Level.ERROR, true);
+                    CrashHandler.getInstance().handleException("Reload failed", e, Level.ERROR);
                 }
             }
         };
@@ -100,9 +108,9 @@ public abstract class ModHelper {
         clearAll();
         FileHandler.checkForMainDirectories();
 
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> TextureHandler.getInstance().start());
-        JsonHandler.getInstance().start();
-        LanguageHandler.getInstance().start();
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> TextureHandler::start);
+        JsonHandler.start();
+        LanguageHandler.start();
 
         logLoadStatus(CUSTOM_ADVANCEMENTS.size(), "Custom Advancement");
         logLoadStatus(GAME_ADVANCEMENTS.size(), "Game Advancement");
@@ -142,7 +150,7 @@ public abstract class ModHelper {
 
         server.reloadResources(selectedIds).exceptionally((e) -> {
             server.sendSystemMessage(TranslationKeyProvider.chatMessage("reload_failed_message", ChatFormatting.RED));
-            CrashHandler.getInstance().handleException("Failed to execute reload!", e, Level.ERROR, true);
+            CrashHandler.getInstance().handleException("Failed to execute reload!", e, Level.ERROR);
             return null;
         });
     }

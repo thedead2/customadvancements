@@ -19,6 +19,6 @@ public abstract class MixinLanguageHook {
 
     @Inject(at = @At("TAIL"), method = "loadLanguage(Ljava/lang/String;Lnet/minecraft/server/MinecraftServer;)V", remap = false)
     private static void loadLanguage(String langName, MinecraftServer server, CallbackInfo ci){
-        LanguageHandler.getInstance().inject(langName, modTable);
+        LanguageHandler.inject(langName, modTable);
     }
 }

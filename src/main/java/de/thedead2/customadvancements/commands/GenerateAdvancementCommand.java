@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
@@ -24,13 +25,13 @@ public class GenerateAdvancementCommand extends ModCommand {
         return SharedSuggestionProvider.suggestResource(collection.stream().map(Advancement::getId), suggestionsBuilder);
     };
 
-    protected GenerateAdvancementCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
-        super(literalArgumentBuilder);
+    protected GenerateAdvancementCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder, LiteralArgumentBuilder<CommandSourceStack> shortLiteralArgumentBuilder) {
+        super(literalArgumentBuilder, shortLiteralArgumentBuilder);
     }
 
 
     public static void register(){
-        newModCommand("generate/advancement/[advancement]", ResourceLocationArgument.id(), SUGGEST_ADVANCEMENTS, command -> {
+        Builder.newModCommand("generate/advancement/[advancement]", Map.of("[advancement]", ResourceLocationArgument.id()), Map.of("[advancement]", SUGGEST_ADVANCEMENTS), command -> {
 
             ResourceLocation advancement = ResourceLocationArgument.getAdvancement(command, "advancement").getId();
             if (advancement.getNamespace().equals(MOD_ID)){

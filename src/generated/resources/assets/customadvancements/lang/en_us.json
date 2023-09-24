@@ -14,5 +14,6 @@
   "customadvancements.chat.mod_outdated_message": "%s Mod is outdated! Please update using the link below:",
   "customadvancements.chat.reload_failed_message": "%s Failed to execute reload!",
   "customadvancements.chat.reload_started": "%s Reloading...",
-  "customadvancements.chat.reload_successful": "%s Reload complete!"
+  "customadvancements.chat.reload_successful": "%s Reload complete!",
+  "customadvancements.chat.command_failed": "%s Failed to execute the command!"
 }

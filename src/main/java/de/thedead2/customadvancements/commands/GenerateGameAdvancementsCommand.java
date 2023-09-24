@@ -21,13 +21,13 @@ public class GenerateGameAdvancementsCommand extends ModCommand {
     private static final AtomicInteger COUNTER = new AtomicInteger();
     private static final Timer timer = new Timer();
 
-    protected GenerateGameAdvancementsCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
-        super(literalArgumentBuilder);
+    protected GenerateGameAdvancementsCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder, LiteralArgumentBuilder<CommandSourceStack> shortLiteralArgumentBuilder) {
+        super(literalArgumentBuilder, shortLiteralArgumentBuilder);
     }
 
 
     public static void register() {
-        newModCommand("generate/advancement/all", (command) -> {
+        Builder.newModCommand("generate/advancement/all", (command) -> {
             var source = command.getSource();
             Thread backgroundThread = new Thread(MOD_NAME) {
                 @Override

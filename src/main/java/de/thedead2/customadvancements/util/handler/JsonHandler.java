@@ -21,80 +21,68 @@ import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 
-public class JsonHandler extends FileHandler {
+public abstract class JsonHandler {
+    public static void start() {
+        FileHandler.readDirectory(DIR_PATH.toFile(), directory -> {
+            Timer timer = new Timer();
+            if(directory.getPath().contains(String.valueOf(DATA_PATH))){
+                return;
+            }
 
-    private static JsonHandler instance;
+            LOGGER.debug("Starting to read json files in: " + directory.getPath());
 
-    private JsonHandler(File directory){
-        super(directory);
-        instance = this;
-    }
+            File[] fileList = directory.listFiles();
 
-    @Override
-    public void readFiles(File directory) {
-        Timer timer = new Timer();
-        if(directory.getPath().contains(String.valueOf(DATA_PATH))){
-            return;
-        }
+            assert fileList != null;
+            for(File file : fileList) {
+                timer.start();
+                String fileName = file.getName();
+                CrashHandler.getInstance().setActiveFile(file);
 
-        LOGGER.debug("Starting to read json files in: " + directory.getPath());
+                try {
+                    if (file.isFile() && fileName.endsWith(".json")) {
+                        LOGGER.debug("Found file: " + fileName);
 
-        File[] fileList = directory.listFiles();
+                        JsonObject jsonObject = getJsonObject(file);
 
-        assert fileList != null;
-        for(File file : fileList) {
-            timer.start();
-            String fileName = file.getName();
-            CrashHandler.getInstance().setActiveFile(file);
-
-            try {
-                if (file.isFile() && fileName.endsWith(".json")) {
-                    LOGGER.debug("Found file: " + fileName);
-
-                    JsonObject jsonObject = getJsonObject(file);
-
-                    assert jsonObject != null;
-                    if (isCorrectJsonFormat(jsonObject, file.toPath())) {
-                        if (directory.getPath().contains(String.valueOf(CUSTOM_ADVANCEMENTS_PATH))){
-                            CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
-                            CrashHandler.getInstance().setActiveAdvancement(customadvancement);
-                            CUSTOM_ADVANCEMENTS.put(customadvancement.getResourceLocation(), customadvancement);
+                        if (isCorrectJsonFormat(jsonObject, file.toPath())) {
+                            if (directory.getPath().contains(String.valueOf(CUSTOM_ADVANCEMENTS_PATH))){
+                                CustomAdvancement customadvancement = new CustomAdvancement(jsonObject, fileName, file.getPath());
+                                CrashHandler.getInstance().setActiveAdvancement(customadvancement);
+                                CUSTOM_ADVANCEMENTS.put(customadvancement.getResourceLocation(), customadvancement);
+                            }
+                            else {
+                                GameAdvancement gameAdvancement = new GameAdvancement(jsonObject, fileName, file.getPath());
+                                CrashHandler.getInstance().setActiveAdvancement(gameAdvancement);
+                                GAME_ADVANCEMENTS.put(gameAdvancement.getResourceLocation(), gameAdvancement);
+                            }
                         }
                         else {
-                            GameAdvancement gameAdvancement = new GameAdvancement(jsonObject, fileName, file.getPath());
-                            CrashHandler.getInstance().setActiveAdvancement(gameAdvancement);
-                            GAME_ADVANCEMENTS.put(gameAdvancement.getResourceLocation(), gameAdvancement);
+                            LOGGER.error(fileName + " does not match the required '.json' format!");
                         }
                     }
-                    else {
-                        LOGGER.error(fileName + " does not match the required '.json' format!");
-                    }
                 }
-                else if(file.isFile() && !fileName.equals("resource_locations.txt") && !fileName.endsWith(".png")) {
-                    LOGGER.warn("File '" + fileName + "' is not a '.json' file, ignoring it!");
+                catch (NullPointerException e){
+                    CrashHandler.getInstance().handleException("Failed to create JsonObject from file: " + fileName, e, Level.WARN);
                 }
-            }
-            catch (NullPointerException e){
-                CrashHandler.getInstance().handleException("Failed to create JsonObject from file: " + fileName, e, Level.WARN);
-            }
 
-            if (timer.getTime() >= 500){
-                LOGGER.warn("Reading file {} took {} ms! Max. is 500 ms!",fileName, timer.getTime());
-                throw new RuntimeException("Reading a file took " + timer.getTime() + " ms! Max. is 500 ms!");
+                if (timer.getTime() >= 500){
+                    LOGGER.warn("Reading file {} took {} ms! Max. is 500 ms!",fileName, timer.getTime());
+                    throw new RuntimeException("Reading a file took " + timer.getTime() + " ms! Max. is 500 ms!");
+                }
+                timer.stop();
             }
-            timer.stop();
-        }
-        CrashHandler.getInstance().setActiveAdvancement(null);
-        CrashHandler.getInstance().setActiveFile(null);
+            CrashHandler.getInstance().setActiveAdvancement(null);
+            CrashHandler.getInstance().setActiveFile(null);
+        });
     }
 
 
-    public JsonObject getJsonObject(File file){
+    public static JsonObject getJsonObject(File file){
         final String fileName = file.getName();
 
         try{
@@ -110,16 +98,18 @@ public class JsonHandler extends FileHandler {
     }
 
 
-    private boolean isCorrectJsonFormat(@NotNull JsonObject json, Path path){
+    private static boolean isCorrectJsonFormat(@NotNull JsonObject json, Path path){
         if(path.toString().contains("recipes" + PATH_SEPARATOR)) {
             return true;
         }
         else {
-            if(json.get("parent") != null && json.get("criteria") != null && json.get("display") != null){
-                return true;
-            }
-            else if(json.get("parent") == null && json.get("display") != null){
-                return json.get("display").getAsJsonObject().get("background") != null;
+            if(json.has("criteria") && json.has("display")){
+                if(json.has("parent")){
+                    return true;
+                }
+                else {
+                    return json.get("display").getAsJsonObject().has("background");
+                }
             }
             else {
                 return false;
@@ -158,7 +148,7 @@ public class JsonHandler extends FileHandler {
     }
 
 
-    public static String formatJsonObject(JsonElement jsonElement){
+    public static String formatJsonObject(JsonElement jsonElement) {
         StringBuilder stringBuilder = new StringBuilder();
         char[] chars = jsonElement.toString().toCharArray();
         int i = 0;
@@ -167,40 +157,33 @@ public class JsonHandler extends FileHandler {
             char previousChar = j - 1 < 0 ? c : chars[j - 1];
             char nextChar = j + 1 >= chars.length ? c : chars[j + 1];
 
-            if(c == '{'){
+            if (c == '{') {
                 stringBuilder.append(c);
-                if(nextChar != '}'){
+                if (nextChar != '}') {
                     i++;
                     stringBuilder.append('\n').append(Strings.repeat('\t', i));
                 }
-            }
-            else if (c == '}') {
-                if(previousChar != '{'){
+            } else if (c == '}') {
+                if (previousChar != '{') {
                     i--;
                     stringBuilder.append("\n").append(Strings.repeat('\t', i));
                 }
                 stringBuilder.append(c);
-                if(nextChar != ',' && nextChar != '\"' && nextChar != '\'' && nextChar != '}' && nextChar != ']'){
+                if (nextChar != ',' && nextChar != '\"' && nextChar != '\'' && nextChar != '}' && nextChar != ']') {
                     stringBuilder.append('\n').append(Strings.repeat('\t', i));
                 }
-            }
-            else if (c == ',') {
+            } else if (c == ',') {
                 stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
-            }
-            else if (c == '[' && (nextChar == '\"' || nextChar == '[')) {
+            } else if (c == '[' && (nextChar == '\"' || nextChar == '[')) {
                 i++;
                 stringBuilder.append(c).append('\n').append(Strings.repeat('\t', i));
-            }
-            else if (c == ']' && (previousChar == '\"' || previousChar == ']')) {
+            } else if (c == ']' && (previousChar == '\"' || previousChar == ']')) {
                 i--;
                 stringBuilder.append('\n').append(Strings.repeat('\t', i)).append(c);
-            }
-            else {
+            } else {
                 stringBuilder.append(c);
             }
         }
         return stringBuilder.toString();
     }
-
-    public static JsonHandler getInstance(){return Objects.requireNonNullElseGet(instance, () -> new JsonHandler(DIR_PATH.toFile()));}
 }
