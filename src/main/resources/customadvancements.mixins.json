@@ -14,6 +14,8 @@
   "client": [
     "MixinAdvancementsScreen",
     "MixinAdvancementTab",
+    "MixinBetterAdvancementsScreen",
+    "MixinBetterAdvancementTab",
     "MixinClientLanguage",
     "MixinWorldOpenFlows"
   ],
