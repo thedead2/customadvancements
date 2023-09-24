@@ -1,6 +1,5 @@
 package de.thedead2.customadvancements.util.core;
 
-import de.thedead2.customadvancements.util.ModDaemonThread;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
@@ -166,24 +165,6 @@ public abstract class FileHandler {
             FileCopyException copyException = new FileCopyException("Unable to locate directory: " + MOD_ID + ":" + pathIn);
             copyException.addSuppressed(e);
             throw copyException;
-        }
-    }
-
-    public static InputStream outputStreamToInputStream(ByteArrayOutputStream out){
-        try {
-            PipedInputStream inputStream = new PipedInputStream();
-            PipedOutputStream outputStream = new PipedOutputStream(inputStream);
-            try (inputStream) {
-                new ModDaemonThread(() -> {
-                    try (outputStream) {
-                        out.writeTo(outputStream);
-                    } catch (IOException ignored) {}
-                }).start();
-            }
-            return new ByteArrayInputStream(inputStream.readAllBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return InputStream.nullInputStream();
         }
     }
 }
