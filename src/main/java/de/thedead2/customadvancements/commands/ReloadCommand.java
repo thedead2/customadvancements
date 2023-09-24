@@ -9,12 +9,12 @@ import static de.thedead2.customadvancements.util.core.ModHelper.reloadAll;
 public class ReloadCommand extends ModCommand {
 
 
-    protected ReloadCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder) {
-        super(literalArgumentBuilder);
+    protected ReloadCommand(LiteralArgumentBuilder<CommandSourceStack> literalArgumentBuilder, LiteralArgumentBuilder<CommandSourceStack> shortLiteralArgumentBuilder) {
+        super(literalArgumentBuilder, shortLiteralArgumentBuilder);
     }
 
     public static void register() {
-        newModCommand("reload", (commandContext) -> {
+        Builder.newModCommand("reload", (commandContext) -> {
             var source = commandContext.getSource();
             source.sendSuccess(TranslationKeyProvider.chatMessage("reload_started"), false);
 

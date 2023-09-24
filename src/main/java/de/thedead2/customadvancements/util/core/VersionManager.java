@@ -3,17 +3,30 @@ package de.thedead2.customadvancements.util.core;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.VersionChecker;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 
-/**
- * Inner Class VersionManager
- * handles every Update related action
- **/
+import static de.thedead2.customadvancements.util.core.ModHelper.isDevEnv;
+
 public abstract class VersionManager {
 
     private static final VersionChecker.CheckResult RESULT = VersionChecker.getResult(ModHelper.THIS_MOD_CONTAINER.get().getModInfo());
 
+    public static void register(IEventBus modEventBus, IEventBus forgeEventBus){
+        modEventBus.addListener(VersionManager::onLoadComplete);
+        forgeEventBus.addListener(VersionManager::onPlayerLogin);
+    }
+    public static void onLoadComplete(final FMLLoadCompleteEvent event){
+        VersionManager.sendLoggerMessage();
+    }
 
+    public static void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
+        if(ConfigManager.OUT_DATED_MESSAGE.get() && !isDevEnv()){
+            VersionManager.sendChatMessage((Player) event.getEntity());
+        }
+    }
     public static void sendChatMessage(Player player) {
         if (RESULT.status().equals(VersionChecker.Status.OUTDATED)) {
             player.sendMessage(TranslationKeyProvider.chatMessage("mod_outdated_message", ChatFormatting.RED), Util.NIL_UUID);

@@ -83,16 +83,19 @@ minecraft {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+repositories {
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+}
 dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.2.0'
     // https://mvnrepository.com/artifact/com.google.guava/guava
     implementation group: 'com.google.guava', name: 'guava', version: '32.1.2-jre'
-
-
-    // For more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
+    compileOnly fg.deobf("curse.maven:better-advancements-272515:4111314")
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
@@ -100,8 +103,8 @@ mixin {
     add sourceSets.main, 'customadvancements.refmap.json'
     config 'customadvancements.mixins.json'
 
-    debug.verbose = true
-    debug.export = true
+    mixin.debug.verbose = true
+    mixin.debug.export = true
 }
 
 jar {
@@ -147,6 +150,7 @@ repositories {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.warnings = false
 }
 
 processResources.dependsOn('handleModProperties')

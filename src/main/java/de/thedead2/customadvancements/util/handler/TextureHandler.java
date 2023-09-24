@@ -6,39 +6,36 @@ import de.thedead2.customadvancements.util.core.FileHandler;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.File;
-import java.util.Objects;
+import java.util.Arrays;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
-public class TextureHandler extends FileHandler {
+public abstract class TextureHandler {
+    private static final String[] valid_file_extensions = {".png", ".jpeg", ".jpg", ".hdr", ".bmp", ".tga", ".psd", ".gif", ".pic", ".pnm"};
 
-    private static TextureHandler instance;
+    public static void start() {
+        FileHandler.readDirectory(TEXTURES_PATH.toFile(), directory -> {
+            File[] texture_files = directory.listFiles();
 
-    private TextureHandler(File directory){
-        super(directory);
-        instance = this;
-    }
+            LOGGER.debug("Starting to read texture files in: " + directory.getPath());
 
-    @Override
-    public void readFiles(File directory) {
-        File[] texture_files = directory.listFiles();
+            assert texture_files != null;
+            for (File texture : texture_files) {
+                CrashHandler.getInstance().setActiveFile(texture);
 
-        LOGGER.debug("Starting to read texture files in: " + directory.getPath());
+                final String fileName = texture.getName();
+                final String fileExtension = fileName.substring(texture.getName().lastIndexOf('.'));
 
-        assert texture_files != null;
-        for (File texture : texture_files) {
-            CrashHandler.getInstance().setActiveFile(texture);
-            if (texture.getName().endsWith(".png")) {
-                LOGGER.debug("Found file: " + texture.getName());
+                if (fileExtension.matches("(?i)" + String.join("|", valid_file_extensions))) {
+                    LOGGER.debug("Found file: " + fileName);
 
-                ResourceManagerExtender.addResource(ResourceLocation.tryParse(MOD_ID + ":" + "textures" + "/" + texture.getName()), texture);
+                    ResourceManagerExtender.addResource(ResourceLocation.tryParse(MOD_ID + ":" + "textures" + "/" + fileName), texture);
+                }
+                else {
+                    LOGGER.warn("File '" + fileName + "' is not a valid texture file, ignoring it! --> supported file types: {}", Arrays.toString(valid_file_extensions));
+                }
             }
-            else {
-                LOGGER.warn("File '" + texture.getName() + "' is not a '.png' file, ignoring it!");
-            }
-        }
-        CrashHandler.getInstance().setActiveFile(null);
+            CrashHandler.getInstance().setActiveFile(null);
+        });
     }
-
-    public static TextureHandler getInstance(){return Objects.requireNonNullElseGet(instance, () -> new TextureHandler(TEXTURES_PATH.toFile()));}
 }

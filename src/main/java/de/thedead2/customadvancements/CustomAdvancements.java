@@ -20,7 +20,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,13 +28,12 @@ import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 @Mod(MOD_ID)
 public class CustomAdvancements {
-    public static final String MAIN_PACKAGE = CustomAdvancements.class.getPackageName();
 
+    public static final String MAIN_PACKAGE = CustomAdvancements.class.getPackageName();
 
     public CustomAdvancements() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::setup);
-        modEventBus.addListener(this::onLoadComplete);
         modEventBus.addListener(this::onConfigChanged);
 
         ModLoadingContext loadingContext = ModLoadingContext.get();
@@ -43,11 +41,11 @@ public class CustomAdvancements {
 
         IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
         forgeEventBus.addListener(this::onCommandsRegister);
-        forgeEventBus.addListener(this::onPlayerLogin);
         forgeEventBus.addListener(this::onPlayerDeath);
         forgeEventBus.register(this);
 
         registerLoggerFilter();
+        VersionManager.register(modEventBus, forgeEventBus);
     }
 
 
@@ -60,18 +58,6 @@ public class CustomAdvancements {
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());
         timer.stop(true);
-    }
-
-
-    private void onLoadComplete(final FMLLoadCompleteEvent event){
-        VersionManager.sendLoggerMessage();
-    }
-
-
-    private void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
-        if(ConfigManager.OUT_DATED_MESSAGE.get() && !isDevEnv()){
-            VersionManager.sendChatMessage(event.getPlayer());
-        }
     }
 
     private void onPlayerDeath(final PlayerEvent.PlayerRespawnEvent event){

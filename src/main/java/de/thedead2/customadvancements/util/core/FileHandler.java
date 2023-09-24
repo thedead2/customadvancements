@@ -12,18 +12,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 public abstract class FileHandler {
-
-    private final File directory;
-
-    public FileHandler(File directory){
-        this.directory = directory;
-    }
 
     public static void checkForMainDirectories() {
         createDirectory(DIR_PATH.toFile());
@@ -33,7 +28,7 @@ public abstract class FileHandler {
                 LOGGER.debug("Created example advancements!");
             }
             catch (FileCopyException e){
-                CrashHandler.getInstance().handleException("Unable to create example advancements!", e, Level.WARN, true);
+                CrashHandler.getInstance().handleException("Unable to create example advancements!", e, Level.WARN);
             }
         }
         createDirectory(DATA_PATH.toFile());
@@ -43,7 +38,7 @@ public abstract class FileHandler {
                 LOGGER.debug("Created example textures for advancements!");
             }
             catch (FileCopyException e){
-                CrashHandler.getInstance().handleException("Unable to create example textures!", e, Level.WARN, true);
+                CrashHandler.getInstance().handleException("Unable to create example textures!", e, Level.WARN);
             }
         }
         if(createDirectory(LANG_PATH.toFile())){
@@ -52,39 +47,40 @@ public abstract class FileHandler {
                 LOGGER.debug("Created example lang files for advancements!");
             }
             catch (FileCopyException e){
-                CrashHandler.getInstance().handleException("Unable to create example lang files!", e, Level.WARN, true);
+                CrashHandler.getInstance().handleException("Unable to create example lang files!", e, Level.WARN);
             }
         }
     }
 
-    public void start() {
-        if (this.directory.exists()){
-            File[] folders = this.directory.listFiles();
+    public static void readDirectory(File directory, Consumer<File> fileReader) {
+        if (directory.exists()){
+            File[] folders = directory.listFiles();
 
             assert folders != null;
             if(Arrays.stream(folders).anyMatch(File::isFile)){
-                this.readFiles(this.directory);
+                fileReader.accept(directory);
             }
 
             for(File subfolder : folders){
                 if(subfolder.isDirectory()){
-                    this.readFiles(subfolder);
+                    fileReader.accept(subfolder);
 
-                    readSubDirectories(subfolder);
+                    readSubDirectories(subfolder, fileReader);
                 }
             }
         }
     }
 
 
-    private void readSubDirectories(File folderIn){
+    private static void readSubDirectories(File folderIn, Consumer<File> fileReader){
         for(File folder: Objects.requireNonNull(folderIn.listFiles())){
             if(folder.isDirectory()){
-                this.readFiles(folder);
-                readSubDirectories(folder);
+                fileReader.accept(folder);
+                readSubDirectories(folder, fileReader);
             }
         }
     }
+
 
 
     public static ResourceLocation getId(String filePath){
@@ -94,6 +90,7 @@ public abstract class FileHandler {
     public static ResourceLocation getId(String filePath, boolean onlyWrap){
         try{
             String subString = filePath.replace(String.valueOf(DIR_PATH), "");
+
             if(!onlyWrap){
                 subString = subString.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
                 subString = subString.replaceFirst("/", "");
@@ -173,6 +170,4 @@ public abstract class FileHandler {
             throw copyException;
         }
     }
-
-    protected abstract void readFiles(File directory);
 }
