@@ -3,10 +3,10 @@ package de.thedead2.customadvancements.util.core;
 
 import org.apache.logging.log4j.Level;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Properties;
 
 
@@ -43,22 +43,5 @@ public class ModProperties extends Properties {
             CrashHandler.getInstance().handleException("IOException while loading ModProperties", e, Level.ERROR);
         }
         return properties;
-    }
-
-    @Override
-    public ModProperties setProperty(String name, String value){
-        super.setProperty(name, value);
-        if(propertiesFilePath != null){
-            try {
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                this.store(outputStream, null);
-                InputStream inputStream = FileHandler.outputStreamToInputStream(outputStream);
-                this.load(inputStream);
-                FileHandler.writeToFile(inputStream, Files.newOutputStream(propertiesFilePath, StandardOpenOption.WRITE));
-            } catch (IOException e) {
-                CrashHandler.getInstance().handleException("IOException while writing ModProperties", e, Level.ERROR);
-            }
-        }
-        return this;
     }
 }
