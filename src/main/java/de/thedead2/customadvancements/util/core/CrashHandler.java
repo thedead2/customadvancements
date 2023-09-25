@@ -163,18 +163,9 @@ public class CrashHandler implements ISystemReportExtender {
         if(this.activeFile != null){
             CrashReportSection section = new CrashReportSection("Currently active file");
             section.addDetail("Name", this.activeFile.getName());
+            section.addDetail("Path", this.activeFile.toPath());
             section.addDetail("Is File", this.activeFile.isFile());
             section.addDetail("Is Readable", this.activeFile.canRead());
-            try {
-                InputStream fileInput = Files.newInputStream(this.activeFile.toPath());
-                String file_data = new String(ByteStreams.toByteArray(fileInput), StandardCharsets.UTF_8);
-                file_data = file_data.replaceAll("\n", "\n\t\t");
-                section.addDetail("Data", "\n\t" + file_data);
-                fileInput.close();
-            }
-            catch (Exception e) {
-                section.addDetail("Data", "\n\t" + "ERROR while reading file data: " + e.getMessage());
-            }
         }
     }
 

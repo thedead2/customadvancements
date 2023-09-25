@@ -4,10 +4,7 @@ import de.thedead2.customadvancements.util.exceptions.FileCopyException;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;

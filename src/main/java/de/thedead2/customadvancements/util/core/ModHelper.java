@@ -22,7 +22,6 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler;
 import net.minecraftforge.forgespi.locating.IModFile;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.Level;
@@ -64,8 +63,10 @@ public abstract class ModHelper {
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
     public static boolean isDevEnv(){
-        return FMLLoader.getLaunchHandler() instanceof CommonDevLaunchHandler;
+        return !FMLLoader.isProduction();
     }
+
+    public static final Supplier<Boolean> BA_COMPATIBILITY = () -> ModList.get().isLoaded("betteradvancements");
 
     public static ModContainer getModContainerFor(String id){
         return ModList.get().getModContainerById(id).orElseThrow(() -> new RuntimeException("Unable to retrieve ModContainer for id: " + id));

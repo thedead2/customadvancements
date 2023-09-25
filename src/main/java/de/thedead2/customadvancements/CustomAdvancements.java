@@ -54,6 +54,7 @@ public class CustomAdvancements {
 
         LOGGER.info("Starting " + MOD_NAME + ", Version: " + MOD_VERSION);
 
+        if(BA_COMPATIBILITY.get()) LOGGER.info("Found BetterAdvancements to be present! Enabling compatibility mode...");
         init();
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());
@@ -75,7 +76,7 @@ public class CustomAdvancements {
         ModConfig config = event.getConfig();
         if(config.getModId().equals(MOD_ID)){
             getServer().ifPresent((server) -> {
-                LOGGER.debug("Config just changed! Attempting to reload...");
+                LOGGER.info("Config just changed! Attempting to reload...");
                 reloadAll(server);
             });
         }
