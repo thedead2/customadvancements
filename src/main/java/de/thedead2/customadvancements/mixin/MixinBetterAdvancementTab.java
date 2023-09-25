@@ -1,5 +1,6 @@
 package de.thedead2.customadvancements.mixin;
 
+import betteradvancements.gui.BetterAdvancementTab;
 import betteradvancements.gui.BetterAdvancementWidget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.thedead2.customadvancements.advancements.advancementtypes.IAdvancement;
@@ -19,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Pseudo
-@Mixin(targets = "betteradvancements.gui.BetterAdvancementTab")
+@Mixin(BetterAdvancementTab.class)
 public class MixinBetterAdvancementTab {
 
     @Shadow @Final private Advancement advancement;
