@@ -4,31 +4,31 @@
     "1.16.5-3.5.3-final": "Backport of the mod from 1.19.2 to 1.16.5 to fix issue #6. This version includes all features of custom advancements 1.19.2"
   },
   "1.18.2": {
-    "1.18.2-4.7.2": "Advancement tab sorting and code improvements"
+    "1.18.2-4.7.5": "Large background images, compatibility for Better Advancements, broader compatibility for image files, code improvements"
   },
   "1.19.2": {
-    "1.19.2-5.8.5": "Advancement tab sorting and code improvements"
+    "1.19.2-5.8.7": "Large background images, compatibility for Better Advancements, broader compatibility for image files, code improvements"
   },
   "1.19.3": {
-    "1.19.3-6.3.2": "Advancement tab sorting and code improvements"
+    "1.19.3-6.3.5": "Large background images, compatibility for Better Advancements, broader compatibility for image files, code improvements"
   },
   "1.20.1": {
-    "1.20.1-7.0.2": "Initial port of the mod to 1.20.1"
+    "1.20.1-7.0.8": "Large background images, compatibility for Better Advancements, broader compatibility for image files, code improvements"
   },
   "promos": {
     "1.16.5-latest": "1.16.5-3.5.3-final",
     "1.16.5-recommended": "1.16.5-3.5.3-final",
     
-    "1.18.2-latest": "1.18.2-4.7.2",
-    "1.18.2-recommended": "1.18.2-4.7.2",
+    "1.18.2-latest": "1.18.2-4.7.5",
+    "1.18.2-recommended": "1.18.2-4.7.5",
     
-    "1.19.2-latest": "1.19.2-5.8.5",
-    "1.19.2-recommended": "1.19.2-5.8.5",
+    "1.19.2-latest": "1.19.2-5.8.7",
+    "1.19.2-recommended": "1.19.2-5.8.7",
     
-    "1.19.3-latest": "1.19.3-6.3.2",
-    "1.19.3-recommended": "1.19.3-6.3.2",
+    "1.19.3-latest": "1.19.3-6.3.5",
+    "1.19.3-recommended": "1.19.3-6.3.5",
 
-    "1.20.1-latest": "1.20.1-7.0.2",
-    "1.20.1-recommended": "1.20.1-7.0.2"
+    "1.20.1-latest": "1.20.1-7.0.8",
+    "1.20.1-recommended": "1.20.1-7.0.8"
   }
 }
