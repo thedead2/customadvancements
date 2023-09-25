@@ -1,5 +1,6 @@
 package de.thedead2.customadvancements.mixin;
 
+import betteradvancements.gui.BetterAdvancementTab;
 import betteradvancements.gui.BetterAdvancementWidget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -23,22 +24,22 @@ import static net.minecraft.client.gui.GuiComponent.fill;
 
 
 @Pseudo
-@Mixin(targets = "betteradvancements.gui.BetterAdvancementTab")
+@Mixin(BetterAdvancementTab.class)
 public class MixinBetterAdvancementTab {
 
-    @Shadow(remap = false) @Final private Advancement advancement;
+    @Shadow @Final private Advancement advancement;
 
 
-    @Shadow(remap = false) @Final private DisplayInfo display;
+    @Shadow @Final private DisplayInfo display;
 
 
-    @Shadow(remap = false) protected int scrollX;
+    @Shadow protected int scrollX;
 
 
-    @Shadow(remap = false) protected int scrollY;
+    @Shadow protected int scrollY;
 
 
-    @Shadow(remap = false) @Final private BetterAdvancementWidget root;
+    @Shadow @Final private BetterAdvancementWidget root;
 
 
     @Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.BEFORE), method = "drawContents(Lcom/mojang/blaze3d/vertex/PoseStack;II)V", cancellable = true)

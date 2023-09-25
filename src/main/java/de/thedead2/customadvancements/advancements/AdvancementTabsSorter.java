@@ -2,12 +2,17 @@ package de.thedead2.customadvancements.advancements;
 
 import betteradvancements.gui.BetterAdvancementTab;
 import de.thedead2.customadvancements.util.core.ConfigManager;
+import de.thedead2.customadvancements.util.core.CrashHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.gui.screens.advancements.AdvancementTab;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.Level;
 
 import java.lang.reflect.Field;
 import java.util.*;
+
+import static de.thedead2.customadvancements.util.core.ModHelper.BA_COMPATIBILITY;
+
 
 public enum AdvancementTabsSorter {
     ALPHABETICALLY{
@@ -15,7 +20,7 @@ public enum AdvancementTabsSorter {
         protected <T> void sort(List<T> tabList) {
             tabList.sort(Comparator.comparing(t -> {
                 if(t instanceof AdvancementTab advancementTab) return advancementTab.getTitle().getString();
-                else if (t instanceof BetterAdvancementTab advancementTab) return advancementTab.getTitle().getString();
+                else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) return advancementTab.getTitle().getString();
                 else throw new IllegalArgumentException("Unknown Advancement Tab Type: " + t.getClass());
             }));
         }
@@ -45,7 +50,7 @@ public enum AdvancementTabsSorter {
                 if(t instanceof AdvancementTab advancementTab){
                     resourceLocation1 = advancementTab.getAdvancement().getId();
                 }
-                else if(t instanceof BetterAdvancementTab advancementTab){
+                else if(BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab){
                     resourceLocation1 = advancementTab.getAdvancement().getId();
                 }
                 else throw new IllegalArgumentException("Unknown Advancement Tab Type: " + t.getClass());
@@ -69,7 +74,7 @@ public enum AdvancementTabsSorter {
                 advancementTab.index = tabList.indexOf(t);
                 tabs.put(advancementTab.getAdvancement(), t);
             }
-            else if(t instanceof BetterAdvancementTab advancementTab){
+            else if(BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab){
                 try {
                     var clazz = advancementTab.getClass();
                     Field indexField = clazz.getDeclaredField("index");
@@ -77,7 +82,7 @@ public enum AdvancementTabsSorter {
                     indexField.set(advancementTab, tabList.indexOf(t));
                 }
                 catch(NoSuchFieldException | IllegalAccessException e) {
-                    throw new RuntimeException(e);
+                    CrashHandler.getInstance().handleException("Failed to sort advancement tabs of BetterAdvancementsScreen!", "AdvancementTabsSorter", e, Level.ERROR);
                 }
                 tabs.put(advancementTab.getAdvancement(), t);
             }
