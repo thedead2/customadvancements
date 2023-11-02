@@ -1,4 +1,5 @@
-![CurseForge Downloads](https://img.shields.io/curseforge/dt/771473?logo=curseforge&link=https%3A%2F%2Fwww.curseforge.com%2Fminecraft%2Fmc-mods%2Fcustom-advancements)
+![CurseForge Downloads](https://cf.way2muchnoise.eu/full_771473_downloads.svg)
+![CurseForge Available Versions](https://cf.way2muchnoise.eu/versions/771473.svg)
 ![Modrinth Downloads](https://img.shields.io/modrinth/dt/cvjKMjpc?logo=modrinth&link=https%3A%2F%2Fmodrinth.com%2Fmod%2Fcustom-advancements)
 
 # Custom Advancements
