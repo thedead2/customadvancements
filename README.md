@@ -1,6 +1,6 @@
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_771473_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/custom-advancements)
 [![CurseForge Available Versions](https://cf.way2muchnoise.eu/versions/771473.svg)](https://www.curseforge.com/minecraft/mc-mods/custom-advancements)
-![Modrinth Downloads](https://img.shields.io/modrinth/dt/cvjKMjpc?logo=modrinth&link=https%3A%2F%2Fmodrinth.com%2Fmod%2Fcustom-advancements)
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/cvjKMjpc?logo=modrinth)](https://modrinth.com/mod/custom-advancements)
 
 # Custom Advancements
 A minecraft mod that gives players creative freedom about advancements
