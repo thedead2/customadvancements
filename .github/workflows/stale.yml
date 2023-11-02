@@ -1,0 +1,65 @@
+# This workflow warns and then closes issues and PRs that have had no activity for a specified amount of time.
+#
+# You can adjust the behavior by modifying this file.
+# For more information, see:
+# https://github.com/actions/stale
+name: Mark stale issues and pull requests
+
+on:
+  schedule:
+  - cron: '45 17 * * *'
+
+jobs:
+  stale:
+
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+    - uses: actions/stale@v8.0.0
+      with:
+        # Token for the repository. Can be passed in using `{{ secrets.GITHUB_TOKEN }}`.
+        repo-token: '{{ secrets.GITHUB_TOKEN }}' # optional, default is ${{ github.token }}
+        # The message to post on the issue when tagging it. If none provided, will not mark issues stale.
+        stale-issue-message: 'This issue has been marked as stale due to no activity for a long time and will be closed if no further activity occurs. If this issue is still relevant and should remain open, please reply with a short explanation why. Thank you for your contributions!' # optional
+        # The message to post on the pull request when tagging it. If none provided, will not mark pull requests stale.
+        stale-pr-message: 'This pull request has been marked as stale due to no activity for a long time and will be closed if no further activity occurs. If this pull request was overlooked, forgotten, or should remain open for any other reason, please reply here to call attention to it and remove the stale status. Thank you for your contributions!'# optional
+        # The message to post on the issue when closing it. If none provided, will not comment when closing an issue.
+        close-issue-message: 'This issue has been closed due to no activity for a long time. Please feel free to reopen it or create a new issue.' # optional
+        # The message to post on the pull request when closing it. If none provided, will not comment when closing a pull requests.
+        close-pr-message: 'This pull request has been closed due to no activity for a long time. Please feel free to update or reopen it.'# optional
+        # The number of days old an issue or a pull request can be before marking it stale. Set to -1 to never mark issues or pull requests as stale automatically.
+        days-before-stale: 60 # optional, default is 60
+        # The number of days to wait to close an issue or a pull request after it being marked stale. Set to -1 to never close stale issues or pull requests.
+        days-before-close: 14 # optional, default is 7
+        # The label to apply when an issue is stale.
+        # stale-issue-label: # optional, default is Stale
+        # The label to apply when an issue is closed.
+        # close-issue-label: # optional
+        # The labels that mean an issue is exempt from being marked stale. Separate multiple labels with commas (eg. "label1,label2").
+        exempt-issue-labels: 'fixed in dev' # optional, default is
+        # The reason to use when closing an issue.
+        # close-issue-reason: # optional, default is not_planned
+        # The label to apply when a pull request is stale.
+        # stale-pr-label: # optional, default is Stale
+        # The label to apply when a pull request is closed.
+        # close-pr-label: # optional
+        # The labels that mean a pull request is exempt from being marked as stale. Separate multiple labels with commas (eg. "label1,label2").
+        # exempt-pr-labels: # optional, default is
+        # The maximum number of operations per run, used to control rate limiting (GitHub API CRUD related).
+        operations-per-run: 1# optional, default is 30
+        # The assignees which exempt an issue or a pull request from being marked as stale. Separate multiple assignees with commas (eg. "user1,user2").
+        exempt-assignees: thedead2 # optional, default is
+        # Exempt draft pull requests from being marked as stale. Default to false.
+        exempt-draft-pr: true # optional, default is false
+        # Display some statistics at the end regarding the stale workflow (only when the logs are enabled).
+        # enable-statistics: # optional, default is true
+        # A comma delimited list of labels to add when an issue or pull request becomes unstale.
+        # labels-to-add-when-unstale: # optional, default is
+        # A comma delimited list of labels to remove when an issue or pull request becomes stale.
+        # labels-to-remove-when-stale: # optional, default is
+        # A comma delimited list of labels to remove when an issue or pull request becomes unstale.
+        # labels-to-remove-when-unstale: # optional, default is
+        
