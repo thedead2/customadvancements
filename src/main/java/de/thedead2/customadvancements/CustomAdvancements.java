@@ -9,6 +9,8 @@ import de.thedead2.customadvancements.util.core.VersionManager;
 import de.thedead2.customadvancements.util.logger.MissingAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownAdvancementFilter;
 import de.thedead2.customadvancements.util.logger.UnknownRecipeCategoryFilter;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -23,6 +25,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.lang.reflect.Method;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
@@ -42,6 +46,11 @@ public class CustomAdvancements {
         IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
         forgeEventBus.addListener(this::onCommandsRegister);
         forgeEventBus.addListener(this::onPlayerDeath);
+
+        if(isDevEnv()) {
+            forgeEventBus.addListener(this::testSafetyMechanisms);
+        }
+
         forgeEventBus.register(this);
 
         registerLoggerFilter();
@@ -59,6 +68,40 @@ public class CustomAdvancements {
 
         LOGGER.info("Loading completed in {} ms.", timer.getTime());
         timer.stop(true);
+    }
+
+    private void testSafetyMechanisms(final PlayerEvent.PlayerLoggedInEvent event) {
+        if(event.getEntity() instanceof ServerPlayer player) {
+            try {
+                PlayerAdvancements playerAdvancements = player.getAdvancements();
+                Class<PlayerAdvancements> playerAdvancementsClass = (Class<PlayerAdvancements>) playerAdvancements.getClass();
+
+                LOGGER.debug("Testing {}.award()", playerAdvancements.getClass().getName());
+                playerAdvancements.award(null, null);
+
+                LOGGER.debug("Testing {}.revoke()", playerAdvancements.getClass().getName());
+                playerAdvancements.revoke(null, null);
+
+                LOGGER.debug("Testing {}.getOrStartProgress()", playerAdvancements.getClass().getName());
+                playerAdvancements.getOrStartProgress(null);
+
+
+                LOGGER.debug("Testing {}.registerListeners()", playerAdvancements.getClass().getName());
+                Method registerListeners = playerAdvancementsClass.getDeclaredMethod("registerListeners", Advancement.class);
+                registerListeners.setAccessible(true);
+                registerListeners.invoke(playerAdvancements, (Advancement) null);
+
+                LOGGER.debug("Testing {}.unregisterListeners()", playerAdvancements.getClass().getName());
+                Method unregisterListeners = playerAdvancementsClass.getDeclaredMethod("unregisterListeners", Advancement.class);
+                unregisterListeners.setAccessible(true);
+                unregisterListeners.invoke(playerAdvancements, (Advancement) null);
+
+                LOGGER.info("No errors while testing safety mechanisms!");
+            }
+            catch(Throwable e) {
+                LOGGER.error("Testing failed!", e);
+            }
+        }
     }
 
     private void onPlayerDeath(final PlayerEvent.PlayerRespawnEvent event){

@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.mixin;
 
 import de.thedead2.customadvancements.util.core.ConfigManager;
+import de.thedead2.customadvancements.util.handler.MixinHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.client.gui.screens.advancements.AdvancementTab;
@@ -22,9 +23,7 @@ public class MixinAdvancementsScreen {
 
     @Inject(at = @At("HEAD"), method = "onUpdateAdvancementProgress", cancellable = true)
     public void onUpdateAdvancementProgress(Advancement advancementIn, AdvancementProgress progress, CallbackInfo ci){
-        if (advancementIn == null){
-            ci.cancel();
-        }
+        MixinHandler.ensureExistent(advancementIn, ci);
     }
 
     @Inject(at =  @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", shift = At.Shift.AFTER), method = "onAddAdvancementRoot(Lnet/minecraft/advancements/Advancement;)V", locals = LocalCapture.CAPTURE_FAILSOFT)
