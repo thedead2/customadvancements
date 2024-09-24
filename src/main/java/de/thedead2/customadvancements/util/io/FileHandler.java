@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -122,7 +123,7 @@ public class FileHandler {
 
 
     private static void readSubDirectories(File folderIn, Consumer<File> fileReader) {
-        for (File folder : folderIn.listFiles(File::isDirectory)) {
+        for (File folder : Objects.requireNonNull(folderIn.listFiles(File::isDirectory))) {
             fileReader.accept(folder);
 
             readSubDirectories(folder, fileReader);

@@ -37,11 +37,9 @@ public class GenerateResourceLocationsFileCommand extends ModCommand {
             LOGGER.info("Starting to write resource locations to file...");
             source.sendSuccess(() -> TranslationKeyProvider.chatMessage("generating_rl_file"), false);
 
-            OutputStream fileOut = null;
+            Path outputPath = Paths.get(DIR_PATH + "/advancements.txt");
 
-            try {
-                Path outputPath = Paths.get(DIR_PATH + "/advancements.txt");
-                fileOut = Files.newOutputStream(outputPath);
+            try (OutputStream fileOut = Files.newOutputStream(outputPath)) {
 
                 writeResourceLocations(fileOut);
 
@@ -54,14 +52,6 @@ public class GenerateResourceLocationsFileCommand extends ModCommand {
                 CrashHandler.getInstance().handleException("Unable to write resource locations to file!", e, Level.ERROR);
 
                 return COMMAND_FAILURE;
-            }
-            finally {
-                try {
-                    fileOut.close();
-                }
-                catch (IOException ⁄ e) {
-                    CrashHandler.getInstance().handleException("Unable to close OutputStream!", e, Level.WARN);
-                }
             }
         });
     }

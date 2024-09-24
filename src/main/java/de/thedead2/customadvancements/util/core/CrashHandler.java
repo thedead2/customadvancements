@@ -1,13 +1,10 @@
 package de.thedead2.customadvancements.util.core;
 
-import com.google.common.io.ByteStreams;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.util.ReflectionHelper;
-import de.thedead2.customadvancements.util.io.JsonHandler;
 import joptsimple.internal.Strings;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.Bootstrap;
 import net.minecraftforge.fml.ISystemReportExtender;
@@ -17,12 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 
@@ -40,14 +32,6 @@ public class CrashHandler implements ISystemReportExtender {
     private final Set<CrashReportException> crashReportExceptions = new HashSet<>();
 
     private final List<CrashReportSection> sections = new ArrayList<>();
-
-    private final Set<Runnable> listeners = new HashSet<>();
-
-    private CustomAdvancement activeAdvancement;
-
-    private Advancement activeGameAdvancement;
-
-    private File activeFile;
 
 
     public static CrashHandler getInstance() {
@@ -84,7 +68,6 @@ public class CrashHandler implements ISystemReportExtender {
     @Override
     public String getLabel() {
         gatherDetails();
-        onCrash();
 
         return "\n\n" + "-- " + MOD_NAME + " --" + "\n" + "Details";
     }
@@ -94,22 +77,9 @@ public class CrashHandler implements ISystemReportExtender {
         this.sections.clear();
         this.getModInformation();
 
-        if (this.activeAdvancement != null || this.activeGameAdvancement != null) {
-            this.getActiveAdvancement();
-        }
-
-        if (this.activeFile != null) {
-            this.getActiveFile();
-        }
-
         this.getExecutionErrors();
         this.getLoadedAdvancements();
         this.getRemovedAdvancements();
-    }
-
-
-    private void onCrash() {
-        this.listeners.forEach(Runnable::run);
     }
 
 
@@ -119,42 +89,6 @@ public class CrashHandler implements ISystemReportExtender {
         section.addDetail("Mod ID", MOD_ID);
         section.addDetail("Version", MOD_VERSION);
         section.addDetail("Main Path", DIR_PATH);
-
-        if (this.activeAdvancement == null && this.activeGameAdvancement == null) {
-            section.addDetail("Currently active advancement", "NONE");
-        }
-
-        if (this.activeFile == null) {
-            section.addDetail("Currently active file", "NONE");
-        }
-    }
-
-
-    private void getActiveAdvancement() {
-        if (this.activeAdvancement != null || this.activeGameAdvancement != null) {
-            CrashReportSection section = new CrashReportSection("Currently active advancement");
-
-            if (this.activeAdvancement != null) {
-                section.addDetail(this.activeAdvancement.getResourceLocation().toString(), "\n\n" + JsonHandler.formatJsonObject(this.activeAdvancement.getJsonObject()));
-            }
-            else {
-                section.addDetail(this.activeGameAdvancement.getId().toString(), "\n\n" + JsonHandler.formatJsonObject(this.activeGameAdvancement.deconstruct().serializeToJson()));
-            }
-        }
-    }
-
-
-    private void getActiveFile() {
-        if(this.activeFile == null) {
-            return;
-        }
-
-        CrashReportSection section = new CrashReportSection("Currently active file");
-
-        section.addDetail("Name", this.activeFile.getName());
-        section.addDetail("Path", this.activeFile.toPath());
-        section.addDetail("Is File", this.activeFile.isFile());
-        section.addDetail("Is Readable", this.activeFile.canRead());
     }
 
 
@@ -266,43 +200,13 @@ public class CrashHandler implements ISystemReportExtender {
     }
 
 
-    public void registerCrashListener(Runnable runnable) {
-        this.listeners.add(runnable);
-    }
-
-
     private void addSection(CrashReportSection section) {
         sections.add(section);
     }
 
 
-    public <T> void setActiveAdvancement(T advancement) {
-        if (advancement instanceof CustomAdvancement activeAdvancement1) {
-            this.activeAdvancement = activeAdvancement1;
-
-            if (!activeAdvancement1.getResourceLocation().toString().contains("recipes/")) {
-                this.advancements.add(activeAdvancement1);
-            }
-        }
-        else if (advancement instanceof Advancement advancement1) {
-            this.activeGameAdvancement = advancement1;
-        }
-        else if (advancement == null) {
-            this.activeAdvancement = null;
-            this.activeGameAdvancement = null;
-        }
-    }
-
-
-    public void setActiveFile(File file) {
-        this.activeFile = file;
-    }
-
-
-    public void addRemovedAdvancement(ResourceLocation advancement) {
-        if (!advancement.toString().contains("recipes/")) {
-            this.removedAdvancements.add(advancement);
-        }
+    public void addRemovedAdvancement(ResourceLocation advancementId) {
+        this.removedAdvancements.add(advancementId);
     }
 
 
@@ -401,8 +305,6 @@ public class CrashHandler implements ISystemReportExtender {
         this.crashReportExceptions.clear();
         this.advancements.clear();
         this.removedAdvancements.clear();
-        this.activeAdvancement = null;
-        this.activeFile = null;
     }
 
 
@@ -439,10 +341,6 @@ public class CrashHandler implements ISystemReportExtender {
             }
 
             this.addCrashDetails(description, level, e);
-
-            if (activeFile != null) {
-                printFileDataToConsole(activeFile);
-            }
         }
         catch (Exception e1) {
             LogManager.getLogger().fatal("Error while handling exception: {} \n-> original exception: {}", e1, description + ":\n" + e);
@@ -455,21 +353,8 @@ public class CrashHandler implements ISystemReportExtender {
     }
 
 
-    private void printFileDataToConsole(File file) {
-        try {
-            InputStream fileInput = Files.newInputStream(file.toPath());
-            String file_data = new String(ByteStreams.toByteArray(fileInput), StandardCharsets.UTF_8);
-
-            LOGGER.error("\n{}", file_data);
-
-            fileInput.close();
-        }
-        catch (IOException e) {
-            LOGGER.warn("Unable to read File by InputStream!");
-
-            this.addCrashDetails("Unable to read File by InputStream!", Level.WARN, e);
-            e.printStackTrace();
-        }
+    public void addRemovedAdvancements(Collection<ResourceLocation> advancementIds) {
+        this.removedAdvancements.addAll(advancementIds);
     }
 
 
@@ -541,16 +426,6 @@ public class CrashHandler implements ISystemReportExtender {
 
         private String getExceptionName(Throwable throwable) {
             return throwable.getClass().getName() + (throwable.getMessage() != null ? (": " + throwable.getMessage()) : "");
-        }
-
-
-        public Throwable getThrowable() {
-            return throwable;
-        }
-
-
-        public String getDescription() {
-            return description;
         }
 
 
@@ -655,11 +530,6 @@ public class CrashHandler implements ISystemReportExtender {
             });
 
             return stringBuilder1.append(stringBuilder2).toString();
-        }
-
-
-        public String getTitle() {
-            return title;
         }
     }
 

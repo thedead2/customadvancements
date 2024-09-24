@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.util.handler;
+package de.thedead2.customadvancements.util.io;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -11,25 +11,29 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static de.thedead2.customadvancements.util.core.FileHandler.createDirectory;
-import static de.thedead2.customadvancements.util.core.FileHandler.writeFile;
 import static de.thedead2.customadvancements.util.core.ModHelper.DIR_PATH;
 import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.io.FileHandler.createDirectoryIfNecessary;
+import static de.thedead2.customadvancements.util.io.FileHandler.writeFile;
 
-public abstract class AdvancementHandler {
 
-    private static final List<String> FOLDER_NAMES = new ArrayList<>();
-    public static boolean grantingAllAdvancements = false;
+public class AdvancementHandler {
+
+    public static boolean grantingAllAdvancements = false; //Move
+
 
     public static void writeAdvancementToFile(ResourceLocation advancementId, JsonElement advancementData) throws IOException {
-        LOGGER.debug("Generating file: " + advancementId);
+        LOGGER.debug("Generating file: {}", advancementId);
 
-        FOLDER_NAMES.clear();
+        List<String> folderNames = new ArrayList<>();
         Path basePath = Path.of(String.valueOf(DIR_PATH), advancementId.getNamespace());
 
-        createDirectory(basePath.toFile());
+        createDirectoryIfNecessary(basePath.toFile());
 
-        writeFile(new ByteArrayInputStream(JsonHandler.formatJsonObject(advancementData).getBytes()), resolvePath(basePath, advancementId.getPath()));
+        String formatedJsonObject = JsonHandler.formatJsonObject(advancementData);
+        Path filePath = resolvePath(basePath, advancementId.getPath(), folderNames);
+
+        writeFile(new ByteArrayInputStream(formatedJsonObject.getBytes()), filePath);
     }
 
 
@@ -37,37 +41,41 @@ public abstract class AdvancementHandler {
         writeAdvancementToFile(advancementIn.getId(), serializeToJson(advancementIn));
     }
 
-    public static JsonObject serializeToJson(Advancement advancementIn){
+
+    public static JsonObject serializeToJson(Advancement advancementIn) {
         JsonObject jsonObject = advancementIn.deconstruct().serializeToJson();
         JsonHandler.removeNullFields(jsonObject);
+
         return jsonObject;
     }
 
 
-    private static void getSubDirectories(String pathIn){
-        if (pathIn.contains("/")){
+    private static void getSubDirectories(String pathIn, List<String> folderNames) {
+        if (pathIn.contains("/")) {
             String temp1 = pathIn.substring(pathIn.indexOf("/"));
             String temp2 = pathIn.replace(temp1 + "/", "");
             String temp3 = temp2.replace(temp2.substring(temp2.indexOf("/")), "");
-            FOLDER_NAMES.add(temp3);
+
+            folderNames.add(temp3);
 
             String next = pathIn.replace((temp3 + "/"), "");
-            getSubDirectories(next);
+            getSubDirectories(next, folderNames);
         }
     }
 
 
-    private static Path resolvePath(Path basePath, String advancementPath){
-        if(advancementPath.contains("/")){
+    private static Path resolvePath(Path basePath, String advancementPath, List<String> folderNames) {
+        if (advancementPath.contains("/")) {
             String subStringDirectory = advancementPath.replaceAll(advancementPath.substring(advancementPath.indexOf("/")), "");
-            FOLDER_NAMES.add(subStringDirectory);
+            folderNames.add(subStringDirectory);
 
             String nextSubString = advancementPath.replace(subStringDirectory + "/", "");
-            getSubDirectories(nextSubString);
+            getSubDirectories(nextSubString, folderNames);
 
-            for(String folderName: FOLDER_NAMES){
+            for (String folderName : folderNames) {
                 basePath = Path.of(String.valueOf(basePath), folderName);
-                createDirectory(basePath.toFile());
+
+                createDirectoryIfNecessary(basePath.toFile());
             }
 
             return Path.of(String.valueOf(basePath), advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");
