@@ -17,10 +17,14 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Map;
 import java.util.Objects;
 
+
 @Mixin(SimpleJsonResourceReloadListener.class)
 public abstract class MixinJsonReloadListener {
 
-    @Shadow @Final private String directory;
+    @Shadow
+    @Final
+    private String directory;
+
 
     @Inject(at = @At(value = "RETURN"), method = "prepare(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)Ljava/util/Map;", locals = LocalCapture.CAPTURE_FAILSOFT)
     private void prepare(ResourceManager resourceManagerIn, ProfilerFiller pProfiler, CallbackInfoReturnable<Map<ResourceLocation, JsonElement>> cir, Map<ResourceLocation, JsonElement> map) {

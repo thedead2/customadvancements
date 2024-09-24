@@ -14,41 +14,54 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static de.thedead2.customadvancements.CustomAdvancements.MAIN_PACKAGE;
+import static de.thedead2.customadvancements.util.core.ModHelper.MAIN_PACKAGE;
+
 
 @Mixin(CrashReport.class)
 public abstract class MixinCrashReport {
 
-    @Shadow @Final private Throwable exception;
-    @Shadow @Final private List<CrashReportCategory> details;
+    @Shadow
+    @Final
+    private Throwable exception;
+
+    @Shadow
+    @Final
+    private List<CrashReportCategory> details;
+
 
     @Inject(at = @At("HEAD"), method = "getFriendlyReport")
-    public void onFriendlyReport(CallbackInfoReturnable<String> cir){
+    public void onFriendlyReport(CallbackInfoReturnable<String> cir) {
         CrashHandler crashHandler = CrashHandler.getInstance();
+
         try {
-            if(crashHandler.resolveCrash(exception)){
+            if (crashHandler.resolveCrash(exception)) {
                 return;
             }
+
             details.forEach(crashReportCategory -> {
                 AtomicReference<String> errorMessage = new AtomicReference<>();
+
                 for (CrashReportCategory.Entry entry : crashReportCategory.entries) {
                     String key = entry.getKey();
-                    if(key.contains("Exception")){
+
+                    if (key.contains("Exception")) {
                         errorMessage.set(entry.getValue());
-                        if(crashHandler.resolveCrash(crashReportCategory.getStacktrace(), errorMessage.get())){
+
+                        if (crashHandler.resolveCrash(crashReportCategory.getStacktrace(), errorMessage.get())) {
                             break;
                         }
                     }
-                    else if(key.contains("Screen")){
-                        if(entry.getValue().contains(MAIN_PACKAGE)){
+                    else if (key.contains("Screen")) {
+                        if (entry.getValue().contains(MAIN_PACKAGE)) {
                             crashHandler.addScreenCrash(entry, exception);
+
                             break;
                         }
                     }
                 }
             });
         }
-        catch (Throwable e){
+        catch (Throwable e) {
             crashHandler.handleException("Error while reading crash-report", e, Level.ERROR);
         }
     }

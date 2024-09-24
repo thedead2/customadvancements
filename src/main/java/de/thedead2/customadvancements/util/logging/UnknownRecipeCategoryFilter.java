@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.util.logger;
+package de.thedead2.customadvancements.util.logging;
 
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LogEvent;
@@ -9,15 +9,18 @@ import org.apache.logging.log4j.message.Message;
 
 import java.util.Objects;
 
+
 @Plugin(name = "UnknownRecipeCategoryFilter", category = Node.CATEGORY, elementType = Filter.ELEMENT_TYPE)
 public class UnknownRecipeCategoryFilter extends AbstractFilter {
 
     @Override
     public Result filter(LogEvent event) {
         Message message = event.getMessage();
+
         if (Objects.equals(message.getFormat(), "Unknown recipe category: {}/{}")) {
             return Result.DENY;
-        } else {
+        }
+        else {
             return Result.NEUTRAL;
         }
     }

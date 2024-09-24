@@ -3,16 +3,16 @@
     "icon": {
       "item": "minecraft:diamond_block"
     },
-    "title":{
-      "translate":"customadvancements.advancements.example_root.title"
+    "title": {
+      "translate": "customadvancements.advancements.example_root.title"
     },
-    "description":{
-      "translate":"customadvancements.advancements.example_root.description"
+    "description": {
+      "translate": "customadvancements.advancements.example_root.description"
     },
-    "background": "customadvancements:textures/screenshot.png",
-    "largeBackground": true,
-    "shouldBgClip": true,
-    "bgRatio": 1.7208029197,
+    "background": {
+      "location": "customadvancements:textures/screenshot.png",
+      "object_fit": "COVER"
+    },
     "show_toast": false,
     "announce_to_chat": false,
     "hidden": false
