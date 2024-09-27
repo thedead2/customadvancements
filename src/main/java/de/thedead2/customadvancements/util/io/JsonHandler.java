@@ -27,7 +27,7 @@ public class JsonHandler {
 
     public static void loadAdvancementFiles() {
         FileHandler.readDirectoryAndSubDirectories(DIR_PATH.toFile(), directory -> {
-            if (directory.getPath().contains(String.valueOf(DATA_PATH)) || !checkModLoaded(directory)) {
+            if (directory.getPath().equals(String.valueOf(DIR_PATH)) || directory.getPath().contains(String.valueOf(DATA_PATH)) || !isModLoaded(directory)) {
                 return;
             }
 
@@ -35,7 +35,7 @@ public class JsonHandler {
 
             LOGGER.debug("Starting to read files in {}", directory.getPath());
 
-            File[] fileList = directory.listFiles((file, fileName) -> file.isFile() && fileName.endsWith(".json"));
+            File[] fileList = directory.listFiles((fileDirectory, fileName) -> fileName.endsWith(".json"));
 
             for (File file : Objects.requireNonNull(fileList)) {
                 long startTime = System.currentTimeMillis();
@@ -69,21 +69,21 @@ public class JsonHandler {
                 if (elapsedTime >= 500) {
                     LOGGER.warn("Reading file {} took {} ms! Max. should be 500 ms!", fileName, elapsedTime);
                 }
-
-                LOGGER.debug("Found {} valid advancements in {}", counter, directory.getPath());
             }
+
+            LOGGER.debug("Found {} valid advancements in {}", counter, directory.getPath());
         });
     }
 
 
-    private static boolean checkModLoaded(File directory) {
+    private static boolean isModLoaded(File directory) {
         String modId = directory.getPath().replace(String.valueOf(DIR_PATH), "");
 
         modId = modId.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
         modId = modId.replaceFirst("/", "");
         modId = modId.contains("/") ? modId.substring(0, modId.indexOf('/')) : modId;
 
-        if (!modId.isEmpty() && !ModList.get().isLoaded(modId)) {
+        if (modId.isEmpty() || !ModList.get().isLoaded(modId)) {
             //TODO: Add path to list of unknown mod advancements and ask user if they should be deleted or kept
             LOGGER.warn("Found advancements of unknown mod {}! Skipping them...", directory.getName());
             WARNINGS.offer("Found advancements of unknown mod " + modId + "! Please delete the directory or transfer the advancements to:\n" + CUSTOM_ADVANCEMENTS_PATH);
