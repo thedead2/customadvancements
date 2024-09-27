@@ -10,6 +10,7 @@
       "translate": "customadvancements.advancements.example_root.description"
     },
     "background": {
+      "type": "IMAGE",
       "location": "customadvancements:textures/screenshot.png",
       "object_fit": "COVER"
     },
