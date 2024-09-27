@@ -24,6 +24,7 @@ public class ResourceManagerExtender {
         if (isValidResourceLocation(resourceLocation)) {
             return RESOURCES.containsKey(resourceLocation) ? Optional.of(new Resource(new FilePackResources(FAKE_PACK_ID, RESOURCES.get(resourceLocation), true), () -> Files.newInputStream(RESOURCES.get(resourceLocation).toPath()))) : Optional.empty();
         }
+
         return Optional.empty();
     }
 
@@ -37,6 +38,7 @@ public class ResourceManagerExtender {
         if (resourceLocation == null) {
             resourceLocation = ResourceLocationHelper.createIdFromPath(file.getPath());
         }
+
         RESOURCES.put(resourceLocation, file);
     }
 
