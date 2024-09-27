@@ -3,10 +3,13 @@ package de.thedead2.customadvancements.client;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.thedead2.customadvancements.util.core.ModHelper;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.util.Strings;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 
@@ -97,6 +100,32 @@ public enum BackgroundType {
 
     BackgroundType(BackgroundRendererFactory rendererFactory) {
         this.rendererFactory = rendererFactory;
+    }
+
+
+    public static @Nonnull BackgroundType fromJson(@Nullable JsonElement type, ResourceLocation advancementId) {
+        if(type == null || type.isJsonNull()) {
+            ModHelper.LOGGER.error("'background' field of advancement '{}' is missing the 'type' field for specifying the background type! Possible values are: {}", advancementId, values());
+
+            return NONE;
+        }
+        else if (!type.isJsonPrimitive()) {
+            ModHelper.LOGGER.error("Expected 'type' field of advancement '{}' to be a String got a {}", advancementId, type.getClass().getName());
+
+            return NONE;
+        }
+        else {
+            String typeName = type.getAsString();
+
+            try {
+                return valueOf(typeName);
+            }
+            catch (IllegalArgumentException ignored) {
+                ModHelper.LOGGER.error("Unknown background type '{}' for advancement '{}'!", typeName, advancementId);
+
+                return NONE;
+            }
+        }
     }
 
 

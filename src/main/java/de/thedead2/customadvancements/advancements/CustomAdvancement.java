@@ -32,7 +32,7 @@ public class CustomAdvancement {
         this.jsonObject = jsonObject;
         this.fileName = fileName;
         this.resourceLocation = ResourceLocationHelper.createIdFromPath(path);
-        this.parentAdvancement = this.jsonObject.has("parent") ? ResourceLocationHelper.createIdFromPath(this.jsonObject.get("parent").getAsString() + ".json", true) : null;
+        this.parentAdvancement = this.jsonObject.has("parent") ? new ResourceLocation(this.jsonObject.get("parent").getAsString() + ".json") : null;
 
         LegacyConverter.checkAndUpdate(this.resourceLocation, this.jsonObject);
 
@@ -54,8 +54,9 @@ public class CustomAdvancement {
             backgroundRenderer = BackgroundType.TEXTURE.createRenderer(jsonElement);
         }
         else {
-            JsonObject jsonObject1 = jsonElement.getAsJsonObject();
-            backgroundRenderer = BackgroundType.valueOf(jsonObject1.get("type").getAsString()).createRenderer(jsonObject1);
+            JsonObject background = jsonElement.getAsJsonObject();
+
+            backgroundRenderer = BackgroundType.fromJson(background.get("type"), this.resourceLocation).createRenderer(background);
 
             //display.remove("background");
             display.addProperty("background", new ResourceLocation(ModHelper.MOD_ID, "fake_texture_location").toString());
