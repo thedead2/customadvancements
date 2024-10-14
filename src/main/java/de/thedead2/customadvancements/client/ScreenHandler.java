@@ -1,6 +1,6 @@
 package de.thedead2.customadvancements.client;
 
-import betteradvancements.gui.BetterAdvancementsScreen;
+import betteradvancements.common.gui.BetterAdvancementsScreen;
 import de.thedead2.customadvancements.client.screens.InformationScreen;
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.CrashHandler;

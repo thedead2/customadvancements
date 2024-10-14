@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.mixin;
 
-import betteradvancements.gui.BetterAdvancementTab;
-import betteradvancements.gui.BetterAdvancementWidget;
+import betteradvancements.common.gui.BetterAdvancementTab;
+import betteradvancements.common.gui.BetterAdvancementWidget;
 import de.thedead2.customadvancements.client.RenderUtil;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.gui.GuiGraphics;

@@ -1,6 +1,6 @@
 package de.thedead2.customadvancements.advancements;
 
-import betteradvancements.gui.BetterAdvancementTab;
+import betteradvancements.common.gui.BetterAdvancementTab;
 import com.google.common.collect.ImmutableList;
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.CrashHandler;
