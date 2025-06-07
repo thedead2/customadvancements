@@ -59,7 +59,7 @@ public class CustomAdvancement {
             backgroundRenderer = BackgroundType.fromJson(background.get("type"), this.resourceLocation).createRenderer(background);
 
             //display.remove("background");
-            display.addProperty("background", new ResourceLocation(ModHelper.MOD_ID, "fake_texture_location").toString());
+            display.addProperty("background", new ResourceLocation(ModHelper.MOD_ID, "fake_texture_location").toString()); //FIXME: tried to render "fake_texture_location" --> why?????
         }
 
         return backgroundRenderer;

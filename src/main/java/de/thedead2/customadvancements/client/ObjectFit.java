@@ -1,5 +1,8 @@
 package de.thedead2.customadvancements.client;
 
+import de.thedead2.customadvancements.util.core.ModHelper;
+
+
 //TODO: Check if u and v are not 0, if other textures get drawn --> maybe fixable with also fixing texture repetition
 public enum ObjectFit {
     /**
@@ -158,10 +161,11 @@ public enum ObjectFit {
     /**
      * The object is not resized and keeps its original width and height
      */
+    //FIXME: Stop Texture repetition if ObjectPosition is greater than the bounding box
     NONE {
         @Override
         public float getUMin(TextureInfo textureInfo, Area area) {
-            float uStart = (area.getInnerWidth() - textureInfo.getTextureWidth()) / 2;
+            float uStart = (area.getInnerWidth() - textureInfo.getTextureWidth()) * textureInfo.getObjectPosition().xPercent();
 
             return (textureInfo.getUMin() - uStart) / textureInfo.getTextureWidth(); //start-percent of the width of the original image
         }
@@ -169,7 +173,7 @@ public enum ObjectFit {
 
         @Override
         public float getUMax(TextureInfo textureInfo, Area area) {
-            float uStart = (area.getInnerWidth() - textureInfo.getTextureWidth()) / 2;
+            float uStart = (area.getInnerWidth() - textureInfo.getTextureWidth()) * textureInfo.getObjectPosition().xPercent();
 
             return (textureInfo.getUMin() + (area.getInnerWidth() - uStart)) / textureInfo.getTextureWidth();
         }
@@ -177,7 +181,7 @@ public enum ObjectFit {
 
         @Override
         public float getVMin(TextureInfo textureInfo, Area area) {
-            float vStart = (area.getInnerHeight() - textureInfo.getTextureHeight()) / 2;
+            float vStart = (area.getInnerHeight() - textureInfo.getTextureHeight()) * textureInfo.getObjectPosition().yPercent();
 
             return (textureInfo.getVMin() - vStart) / textureInfo.getTextureHeight();
         }
@@ -185,7 +189,7 @@ public enum ObjectFit {
 
         @Override
         public float getVMax(TextureInfo textureInfo, Area area) {
-            float vStart = (area.getInnerHeight() - textureInfo.getTextureHeight()) / 2;
+            float vStart = (area.getInnerHeight() - textureInfo.getTextureHeight()) * textureInfo.getObjectPosition().yPercent();
 
             return (textureInfo.getVMin() + (area.getInnerHeight() - vStart)) / textureInfo.getTextureHeight();
         }
@@ -269,4 +273,16 @@ public enum ObjectFit {
 
 
     public abstract float getVMax(TextureInfo textureInfo, Area area);
+
+
+    public static ObjectFit fromJson(String s) {
+        try {
+            return valueOf(s.toUpperCase());
+        }
+        catch (IllegalArgumentException e) {
+            ModHelper.LOGGER.warn("Unknown object_fit property {} using default instead!", s);
+
+            return FILL;
+        }
+    }
 }

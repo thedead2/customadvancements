@@ -143,28 +143,39 @@ public class RenderUtil {
         RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
         RenderSystem.setShaderTexture(0, textureInfo.getTextureLocation());
 
+        //Start and stop percentages of the image to render
         final ObjectFit objectFit = textureInfo.getObjectFit();
+        final ObjectPosition objectPosition = textureInfo.getObjectPosition();
         float uMin = objectFit.getUMin(textureInfo, area); //start-percent of the width of the original image
         float vMin = objectFit.getVMin(textureInfo, area); //start-percent of the height of the original image
         float uMax = objectFit.getUMax(textureInfo, area); //end-percent of the width of the original image --> percent of how much of the specified width of the area to render in should be filled with the image
         float vMax = objectFit.getVMax(textureInfo, area); //end-percent of the height of the original image
 
+        //Dimensions of the bounding box in wich the image should be rendered
         float xMin = area.getInnerX();
         float yMin = area.getInnerY();
         float xMax = area.getInnerXMax();
         float yMax = area.getInnerYMax();
         float zPos = area.getZ();
 
-        if (objectFit == ObjectFit.CONTAIN) {
-            xMin = xMin - area.getInnerWidth() * uMin; //Mth.clamp(, 0, area.getInnerWidth() / 2);
-            yMin = yMin - area.getInnerHeight() * vMin; //Mth.clamp(, 0, area.getInnerHeight() / 2);
-            xMax = xMax - Mth.clamp(area.getInnerWidth() * (uMax - 1), 0, area.getInnerWidth() / 2);
-            yMax = yMax - Mth.clamp(area.getInnerHeight() * (vMax - 1), 0, area.getInnerHeight() / 2);
+        //Crop the repeating image so no texture repetition is visible
+        if (objectFit == ObjectFit.CONTAIN || (objectFit == ObjectFit.SCALE_DOWN && ObjectFit.CONTAIN.getUMin(textureInfo, area) == uMin)) {
+            float relativeWidth = textureInfo.getRelativeWidth(area.getInnerHeight());
+            float relativeHeight = textureInfo.getRelativeHeight(area.getInnerWidth());
+
+            if(area.getInnerWidth() > relativeWidth) {
+                xMin = xMin + (area.getInnerWidth() - relativeWidth) * objectPosition.xPercent();
+                xMax = xMin + relativeWidth;
+            }
+            else {
+                yMin = yMin + (area.getInnerHeight() - relativeHeight) * objectPosition.yPercent();
+                yMax = yMin + relativeHeight;
+            }
 
             uMin = textureInfo.getUMin();
-            uMax = 1;
+            uMax = textureInfo.getUMax();
             vMin = textureInfo.getVMin();
-            vMax = 1;
+            vMax = textureInfo.getVMax();
         }
 
         Tesselator tessellator = Tesselator.getInstance();
@@ -503,6 +514,11 @@ public class RenderUtil {
         horizontalLine(poseStack, xMin, xMax, yMax, zPos, 1, color);
         verticalLine(poseStack, xMin, yMin, yMax, zPos, 1, color);
         verticalLine(poseStack, xMax, yMin, yMax, zPos, 1, color);
+    }
+
+
+    public static float guiScaleFactor() {
+        return (float) Minecraft.getInstance().getWindow().getGuiScale();
     }
 
 

@@ -59,16 +59,17 @@ public class TextureInfo {
     private final float aspectRatio;
 
     private final ObjectFit objectFit;
+    private final ObjectPosition objectPosition;
 
     private final float[] colorShift = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
 
 
-    public TextureInfo(ResourceLocation textureLocation, Component altText, ObjectFit objectFit) {
-        this(textureLocation, altText, 0, 0, 1, 1, objectFit);
+    public TextureInfo(ResourceLocation textureLocation, Component altText, ObjectFit objectFit, ObjectPosition objectPosition) {
+        this(textureLocation, altText, 0, 0, 1, 1, objectFit, objectPosition);
     }
 
 
-    public TextureInfo(ResourceLocation textureLocation, Component altText, float uMin, float vMin, float uMax, float vMax, ObjectFit objectFit) {
+    public TextureInfo(ResourceLocation textureLocation, Component altText, float uMin, float vMin, float uMax, float vMax, ObjectFit objectFit, ObjectPosition objectPosition) {
         this.textureLocation = textureLocation;
         this.altText = altText;
         this.uMin = uMin;
@@ -76,6 +77,7 @@ public class TextureInfo {
         this.uMax = uMax;
         this.vMax = vMax;
         this.objectFit = objectFit;
+        this.objectPosition = objectPosition;
 
         try {
             Resource resource = Minecraft.getInstance().getResourceManager().getResourceOrThrow(this.textureLocation);
@@ -103,9 +105,10 @@ public class TextureInfo {
         float vMin = jsonObject.has("v_min") ? jsonObject.get("v_min").getAsFloat() : 0;
         float uMax = jsonObject.has("u_max") ? jsonObject.get("u_max").getAsFloat() : 1;
         float vMax = jsonObject.has("v_max") ? jsonObject.get("v_max").getAsFloat() : 1;
-        ObjectFit objectFit = jsonObject.has("object_fit") ? ObjectFit.valueOf(jsonObject.get("object_fit").getAsString()) : ObjectFit.FILL;
+        ObjectFit objectFit = jsonObject.has("object_fit") ? ObjectFit.fromJson(jsonObject.get("object_fit").getAsString()) : ObjectFit.FILL;
+        ObjectPosition objectPosition = jsonObject.has("object_position") ? ObjectPosition.fromString(jsonObject.get("object_position").getAsString()) : ObjectPosition.CENTERED;
 
-        return new TextureInfo(textureLocation, altText, uMin, vMin, uMax, vMax, objectFit);
+        return new TextureInfo(textureLocation, altText, uMin, vMin, uMax, vMax, objectFit, objectPosition);
     }
 
 
@@ -151,6 +154,11 @@ public class TextureInfo {
 
     public ObjectFit getObjectFit() {
         return objectFit;
+    }
+
+
+    public ObjectPosition getObjectPosition() {
+        return objectPosition;
     }
 
 

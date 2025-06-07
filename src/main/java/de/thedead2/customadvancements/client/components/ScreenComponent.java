@@ -75,7 +75,7 @@ public abstract class ScreenComponent implements Renderable, GuiEventListener, N
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
-        return this.area.contains((float) mouseX, (float) mouseY);
+        return this.area.contains2D((float) mouseX, (float) mouseY);
     }
 
 

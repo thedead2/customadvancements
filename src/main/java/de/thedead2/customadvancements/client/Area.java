@@ -1,21 +1,16 @@
 package de.thedead2.customadvancements.client;
 
-import net.minecraft.util.Mth;
+import it.unimi.dsi.fastutil.floats.Float2FloatFunction;
 import org.joml.Vector3f;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import static de.thedead2.customadvancements.client.ImmutableArea.SCREEN;
 
 
 public class Area {
 
-    public static final Area EMPTY = new Area(0, 0, 0, 0, 0);
+    public static final Area EMPTY = new Area(0, 0, 0, 0, 0, 0);
 
-    protected Area parent;
-
-    protected Alignment alignment;
+    public static Area SCREEN() {
+        return new Area(() -> 0, () -> 0, () -> 0, RenderUtil::getScreenWidth, RenderUtil::getScreenHeight, () -> 0);
+    }
 
     protected Padding padding;
 
@@ -29,162 +24,75 @@ public class Area {
 
     protected FloatSupplier height;
 
+    protected FloatSupplier depth;
 
-    public Area(float xPos, float yPos, float zPos, float width, float height) {
-        this(SCREEN, null, xPos, yPos, zPos, width, height, Padding.NONE);
+
+    public Area(float xPos, float yPos, float zPos, float width, float height, float depth) {
+        this(xPos, yPos, zPos, width, height, depth, Padding.NONE);
     }
 
 
-    public Area(@Nonnull Area parent, @Nullable Alignment alignment, float xPos, float yPos, float zPos, float width, float height, Padding padding) {
-        this.parent = parent;
-        this.alignment = alignment != null ? alignment : Alignment.TOP_LEFT;
-        this.width = () -> Mth.clamp(width, 0, 1) * this.parent.getInnerWidth();
-        this.height = () -> Mth.clamp(height, 0, 1) * this.parent.getInnerHeight();
-        this.xPos = () -> this.alignment.getXPos(this.parent, this.width.getAsFloat(), xPos); //this.parent.getInnerX() + xPos
-        this.yPos = () -> this.alignment.getYPos(this.parent, this.height.getAsFloat(), yPos); //this.parent.getInnerY() + yPos
+    public Area(Float2FloatFunction xPos, Float2FloatFunction yPos, float zPos, float width, float height, float depth, Padding padding) {
+        this.xPos = () -> xPos.get(width);
+        this.yPos = () -> yPos.get(height);
         this.zPos = () -> zPos;
-        this.padding = padding;
-    }
-
-
-    public float getInnerWidth() {
-        return this.width.getAsFloat() - this.padding.getLeft() - this.padding.getRight();
-    }
-
-
-    public void setInnerWidth(float width) {
-        this.setWidth((int) (width + this.padding.getLeft() + this.padding.getRight()));
-    }
-
-
-    public float getInnerHeight() {
-        return this.height.getAsFloat() - this.padding.getTop() - this.padding.getBottom();
-    }
-
-
-    public Area setInnerHeight(float height) {
-        return this.setHeight((int) (height + this.padding.getTop() + this.padding.getBottom()));
-    }
-
-
-    public Area(@Nullable Alignment alignment, float xPos, float yPos, float zPos, float width, float height) {
-        this(SCREEN, alignment, xPos, yPos, zPos, width, height, Padding.NONE);
-    }
-
-
-    public Area(float xPos, float yPos, float zPos, float width, float height, Padding padding) {
-        this(SCREEN, null, xPos, yPos, zPos, width, height, padding);
-    }
-
-
-    public Area(@Nullable Alignment alignment, float xPos, float yPos, float zPos, float width, float height, Padding padding) {
-        this(SCREEN, alignment, xPos, yPos, zPos, width, height, padding);
-    }
-
-
-    public Area(@Nonnull Area parent, float xPos, float yPos, float zPos, float width, float height) {
-        this(parent, null, xPos, yPos, zPos, width, height, Padding.NONE);
-    }
-
-
-    public Area(@Nonnull Area parent, @Nullable Alignment alignment, float xPos, float yPos, float zPos, float width, float height) {
-        this(parent, alignment, xPos, yPos, zPos, width, height, Padding.NONE);
-    }
-
-
-    public Area(int xPos, int yPos, int zPos, int width, int height) {
-        this(SCREEN, null, xPos, yPos, zPos, width, height, Padding.NONE);
-    }
-
-
-    public Area(@Nonnull Area parent, @Nullable Alignment alignment, int xPos, int yPos, int zPos, int width, int height, Padding padding) {
-        this.parent = parent;
-        this.alignment = alignment != null ? alignment : Alignment.TOP_LEFT;
         this.width = () -> width;
         this.height = () -> height;
-        this.xPos = () -> this.alignment.getXPos(this.parent, this.width.getAsFloat(), xPos);
-        this.yPos = () -> this.alignment.getYPos(this.parent, this.height.getAsFloat(), yPos);
-        this.zPos = () -> zPos;
+        this.depth = () -> depth;
         this.padding = padding;
     }
 
 
-    public Area(@Nullable Alignment alignment, int xPos, int yPos, int zPos, int width, int height) {
-        this(SCREEN, alignment, xPos, yPos, zPos, width, height, Padding.NONE);
+    public Area(float xPos, float yPos, float zPos, float width, float height, float depth, Padding padding) {
+        this(() -> xPos, () -> yPos, () -> zPos, () -> width, () -> height, () -> depth,  padding);
     }
 
 
-    public Area(int xPos, int yPos, int zPos, int width, int height, Padding padding) {
-        this(SCREEN, null, xPos, yPos, zPos, width, height, padding);
-    }
-
-
-    public Area(@Nullable Alignment alignment, int xPos, int yPos, int zPos, int width, int height, Padding padding) {
-        this(SCREEN, alignment, xPos, yPos, zPos, width, height, padding);
-    }
-
-
-    public Area(@Nonnull Area parent, int xPos, int yPos, int zPos, int width, int height) {
-        this(parent, null, xPos, yPos, zPos, width, height, Padding.NONE);
-    }
-
-
-    public Area(@Nonnull Area parent, @Nullable Alignment alignment, int xPos, int yPos, int zPos, int width, int height) {
-        this(parent, alignment, xPos, yPos, zPos, width, height, Padding.NONE);
-    }
-
-
-    public Area(@Nonnull Area parent, int xPos, int yPos, int zPos, int width, int height, Padding padding) {
-        this(parent, null, xPos, yPos, zPos, width, height, padding);
-    }
-
-
-    protected Area(Area parent, Alignment alignment, FloatSupplier xPos, FloatSupplier yPos, FloatSupplier zPos, FloatSupplier width, FloatSupplier height, Padding padding) {
-        this.parent = parent;
-        this.alignment = alignment;
+    public Area(FloatSupplier xPos, FloatSupplier yPos, FloatSupplier zPos, FloatSupplier width, FloatSupplier height, FloatSupplier depth, Padding padding) {
         this.xPos = xPos;
         this.yPos = yPos;
         this.zPos = zPos;
         this.width = width;
         this.height = height;
+        this.depth = depth;
         this.padding = padding;
     }
 
 
-    public static Area withCorners(float xMin, float xMax, float yMin, float yMax, float zPos, Padding padding) {
-        return new Area(xMin, yMin, zPos, xMax - xMin, yMax - yMin, padding);
+    public Area(FloatSupplier xPos, FloatSupplier yPos, FloatSupplier zPos, FloatSupplier width, FloatSupplier height, FloatSupplier depth) {
+        this(xPos, yPos, zPos, width, height, depth, Padding.NONE);
     }
 
 
-    public static Area withCorners(float xMin, float xMax, float yMin, float yMax, float zPos) {
-        return new Area(xMin, yMin, zPos, xMax - xMin, yMax - yMin);
+    public static Area withCorners(int xMin, int xMax, int yMin, int yMax, int zPos) {
+        return new Area(xMin, yMin, zPos, xMax - xMin, yMax - yMin, 0);
+    }
+
+
+    public boolean doAreasIntersect2D(Area other) {
+        return  this.getX() < other.getXMax() && this.getXMax() > other.getX() &&
+                this.getY() < other.getYMax() && this.getYMax() > other.getY();
+    }
+
+    public boolean doAreasIntersect3D(Area other) {
+        return  this.getX() < other.getXMax() && this.getXMax() > other.getX() &&
+                this.getY() < other.getYMax() && this.getYMax() > other.getY() &&
+                this.getZ() < other.getZMax() && this.getZMax() > other.getZ();
+    }
+
+
+    public float getX() {
+        return this.xPos.getAsFloat();
+    }
+
+
+    public float getY() {
+        return this.yPos.getAsFloat();
     }
 
 
     public Vector3f getCenter() {
-        return new Vector3f(this.getCenterX(), this.getCenterY(), this.getZ());
-    }
-
-
-    public float getCenterX() {
-        return this.xPos.getAsFloat() + this.width.getAsFloat() / 2;
-    }
-
-
-    public float getCenterY() {
-        return this.yPos.getAsFloat() + this.height.getAsFloat() / 2;
-    }
-
-
-    public float getZ() {
-        return zPos.getAsFloat();
-    }
-
-
-    public Area setZ(float zPos) {
-        this.zPos = () -> zPos;
-
-        return this;
+        return new Vector3f(this.getCenterX(), this.getCenterY(), this.getCenterZ());
     }
 
 
@@ -197,12 +105,39 @@ public class Area {
         return this.yPos.getAsFloat() + this.height.getAsFloat();
     }
 
+    public float getZMax() {
+        return this.zPos.getAsFloat() + this.depth.getAsFloat();
+    }
+
+
+    public Area setY(float yPos) {
+        this.yPos = () -> yPos;
+        return this;
+    }
+
+
+    public Area setY(FloatSupplier yPos) {
+        this.yPos = yPos;
+        return this;
+    }
+
+
+    public Area setX(float xPos) {
+        this.xPos = () -> xPos;
+        return this;
+    }
+
+
+    public Area setX(FloatSupplier xPos) {
+        this.xPos = xPos;
+        return this;
+    }
+
 
     public Area setPosition(float xPos, float yPos, float zPos) {
-        this.setX(xPos);
-        this.setY(yPos);
-        this.setZ(zPos);
-
+        this.xPos = () -> xPos;
+        this.yPos = () -> yPos;
+        this.zPos = () -> zPos;
         return this;
     }
 
@@ -212,23 +147,25 @@ public class Area {
     }
 
 
-    public float getInnerX() {
-        return this.xPos.getAsFloat() + this.padding.getLeft();
+    public Area setPostion(FloatSupplier xPos, FloatSupplier yPos, FloatSupplier zPos) {
+        this.xPos = xPos;
+        this.yPos = yPos;
+        this.zPos = zPos;
+
+        return this;
     }
 
 
-    public float getInnerXMax() {
-        return this.getInnerX() + this.getInnerWidth();
+    public Area align(Alignment alignment, Area other) {
+        return this.alignWithOffset(alignment, other, 0, 0);
     }
 
 
-    public float getInnerY() {
-        return this.yPos.getAsFloat() + this.padding.getTop();
-    }
+    public Area alignWithOffset(Alignment alignment, Area other, float xOffset, float yOffset) {
+        this.setX(() -> alignment.getXPos(other, this.getWidth(), xOffset));
+        this.setY(() -> alignment.getYPos(other, this.getHeight(), yOffset));
 
-
-    public float getInnerYMax() {
-        return this.getInnerY() + this.getInnerHeight();
+        return this;
     }
 
 
@@ -237,76 +174,91 @@ public class Area {
     }
 
 
-    public Area setWidth(float width) {
-        this.width = () -> Mth.clamp(width, 0, 1) * this.parent.getInnerWidth();
-
-        return this;
-    }
-
-
-    public Area setWidth(int width) {
-        this.width = () -> width;
-
-        return this;
-    }
-
-
     public float getHeight() {
         return this.height.getAsFloat();
     }
 
+    public float getDepth() {
+        return this.depth.getAsFloat();
+    }
+
 
     public Area setHeight(float height) {
-        this.height = () -> Mth.clamp(height, 0, 1) * this.parent.getInnerHeight();
-
+        this.height = () -> height;
         return this;
     }
 
 
-    public Area setHeight(int height) {
-        this.height = () -> height;
-
+    public Area setHeight(FloatSupplier height) {
+        this.height = height;
         return this;
+    }
+
+
+    public Area setWidth(float width) {
+        this.width = () -> width;
+        return this;
+    }
+
+
+    public Area setWidth(FloatSupplier width) {
+        this.width = width;
+        return this;
+    }
+
+
+    public float getZ() {
+        return zPos.getAsFloat();
+    }
+
+
+    public Area setZ(float zPos) {
+        this.zPos = () -> zPos;
+        return this;
+    }
+
+
+    public Area setZ(FloatSupplier zPos) {
+        this.zPos = zPos;
+        return this;
+    }
+
+
+    public float getCenterX() {
+        return this.xPos.getAsFloat() + this.width.getAsFloat() / 2;
+    }
+
+
+    public float getCenterY() {
+        return this.yPos.getAsFloat() + this.height.getAsFloat() / 2;
+    }
+
+    public float getCenterZ() {
+        return this.zPos.getAsFloat() + this.depth.getAsFloat() / 2;
     }
 
 
     public Area moveX(float amount) {
-        return this.setX(this.getX() - this.parent.getInnerX() + amount);
-    }
-
-
-    public float getX() {
-        return this.xPos.getAsFloat();
-    }
-
-
-    public Area setX(float xPos) {
-        this.xPos = () -> this.alignment.getXPos(this.parent, this.width.getAsFloat(), xPos);
-
-        return this;
+        return this.setX(this.xPos.getAsFloat() + amount);
     }
 
 
     public Area moveY(float amount) {
-        return this.setY(this.getY() - this.parent.getInnerY() + amount);
+        return this.setY(this.yPos.getAsFloat() + amount);
     }
 
 
-    public float getY() {
-        return this.yPos.getAsFloat();
+    public boolean contains3D(float pX, float pY, float pZ) {
+        return pX >= this.xPos.getAsFloat() && pX <= this.xPos.getAsFloat() + this.width.getAsFloat()
+                && pY >= this.yPos.getAsFloat() && pY <= this.yPos.getAsFloat() + this.height.getAsFloat()
+                && pZ >= this.zPos.getAsFloat() && pZ <= this.zPos.getAsFloat() + this.depth.getAsFloat();
     }
 
-
-    public Area setY(float yPos) {
-        this.yPos = () -> this.alignment.getYPos(this.parent, this.height.getAsFloat(), yPos);
-
-        return this;
+    public boolean contains2D(float pX, float pY) {
+        return pX >= this.xPos.getAsFloat() && pX <= this.xPos.getAsFloat() + this.width.getAsFloat()
+                && pY >= this.yPos.getAsFloat() && pY <= this.yPos.getAsFloat() + this.height.getAsFloat();
     }
 
-
-    public boolean contains(float pX, float pY) {
-        return pX >= this.xPos.getAsFloat() && pX <= this.xPos.getAsFloat() + this.width.getAsFloat() && pY >= this.yPos.getAsFloat() && pY <= this.yPos.getAsFloat() + this.height.getAsFloat();
-    }
 
 
     public Area moveZ(float amount) {
@@ -314,58 +266,96 @@ public class Area {
     }
 
 
-    public Area growX(int amount) {
-        return this.setWidth((int) this.width.getAsFloat() + amount);
+    public Area growX(float amount) {
+        return this.setWidth(this.width.getAsFloat() + amount);
     }
 
 
-    public Area growY(int amount) {
-        return this.setHeight((int) this.height.getAsFloat() + amount);
+    public Area growY(float amount) {
+        return this.setHeight(this.height.getAsFloat() + amount);
+    }
+
+    public Area growZ(float amount) {
+        return this.setDepth(this.depth.getAsFloat() + amount);
+    }
+
+
+    private Area setDepth(float depth) {
+        this.depth = () -> depth;
+
+        return this;
     }
 
 
     public Area scaleX(float amount) {
-        return this.setWidth((int) this.width.getAsFloat() * (int) amount);
+        return this.setWidth(this.width.getAsFloat() * amount);
     }
 
 
     public Area scaleY(float amount) {
-        return this.setHeight((int) this.height.getAsFloat() * (int) amount);
+        return this.setHeight(this.height.getAsFloat() * amount);
+    }
+
+
+    public float getInnerXMax() {
+        return this.getInnerX() + this.getInnerWidth();
+    }
+
+
+    public float getInnerX() {
+        return this.xPos.getAsFloat() + this.padding.getLeft();
+    }
+
+
+    public float getInnerWidth() {
+        return this.width.getAsFloat() - this.padding.getLeft() - this.padding.getRight();
+    }
+
+
+    public Area setInnerWidth(float width) {
+        return this.setWidth(width + this.padding.getLeft() + this.padding.getRight());
+    }
+
+
+    public float getInnerYMax() {
+        return this.getInnerY() + this.getInnerHeight();
+    }
+
+
+    public float getInnerY() {
+        return this.yPos.getAsFloat() + this.padding.getTop();
+    }
+
+
+    public float getInnerHeight() {
+        return this.height.getAsFloat() - this.padding.getTop() - this.padding.getBottom();
+    }
+
+
+    public Area setInnerHeight(float height) {
+        return this.setHeight(height + this.padding.getTop() + this.padding.getBottom());
     }
 
 
     public Area copy() {
-        return new Area(this.parent, this.alignment, this.xPos, this.yPos, this.zPos, this.width, this.height, this.padding);
+        return new Area(this.xPos, this.yPos, this.zPos, this.width, this.height, this.depth, this.padding);
     }
 
 
     public Area setPadding(float padding) {
         this.padding = new Padding(padding);
-
         return this;
     }
 
 
     public Area setPadding(float leftRight, float topBottom) {
         this.padding = new Padding(leftRight, topBottom);
-
         return this;
     }
 
 
     public Area setPadding(float left, float right, float top, float bottom) {
         this.padding = new Padding(left, right, top, bottom);
-
-        return this;
-    }
-
-
-    public ImmutableArea toImmutable() {
-        return new ImmutableArea(this.parent, this.alignment, this.xPos, this.yPos, this.zPos, this.width, this.height, this.padding);
-    }
-
-
-    public Area toMutable() {
         return this;
     }
 

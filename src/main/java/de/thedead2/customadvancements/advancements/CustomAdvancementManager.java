@@ -88,15 +88,15 @@ public class CustomAdvancementManager {
         for (Map.Entry<ResourceLocation, CustomAdvancement> entry : CUSTOM_ADVANCEMENTS.entrySet()) {
             ResourceLocation id = entry.getKey();
 
-            if (ResourceLocationHelper.containsPath(id, "recipes/") && ConfigManager.NO_RECIPE_ADVANCEMENTS.get()) {
+            if (ResourceLocationHelper.containsInPath(id, "recipes/") && ConfigManager.NO_RECIPE_ADVANCEMENTS.get()) {
                 LOGGER.debug("Skipped recipe advancement: {}", id);
                 numAdvancementsRemoved.getAndIncrement();
+
                 continue;
             }
 
-            if (ADVANCEMENT_IDS.contains(id)) { //TODO: Still useful?
-                LOGGER.error("Duplicate id '{}' for advancement: {}", id, entry.getValue().getFileName());
-                continue;
+            if (ADVANCEMENT_IDS.contains(id)) { //TODO: Test if it works properly!
+                LOGGER.warn("Duplicate id '{}' for advancement: {}", id, entry.getValue().getFileName());
             }
 
             CustomAdvancement advancement = entry.getValue();
@@ -117,7 +117,7 @@ public class CustomAdvancementManager {
 
         LOGGER.info("Starting to remove recipe advancements...");
 
-        ADVANCEMENT_IDS.stream().filter(id -> ResourceLocationHelper.containsPath(id, "recipes/")).forEach(id -> removeAdvancement(ADVANCEMENTS, id, counter));
+        ADVANCEMENT_IDS.stream().filter(id -> ResourceLocationHelper.containsInPath(id, "recipes/")).forEach(id -> removeAdvancement(ADVANCEMENTS, id, counter));
     }
 
 

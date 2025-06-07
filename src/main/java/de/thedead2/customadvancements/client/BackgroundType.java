@@ -42,8 +42,8 @@ public enum BackgroundType {
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate((float) xMin, (float) yMin, 0.0F);
 
-            for (int columns = -1; columns < (xMax - xMin) / textureSize; ++columns) {
-                for (int rows = 0; rows <= (yMax - yMin) / textureSize; ++rows) {
+            for (int columns = -1; columns <= (xMax - xMin) / textureSize + 1; columns++) {
+                for (int rows = -1; rows <= (yMax - yMin) / textureSize + 1; rows++) {
                     guiGraphics.blit(resourcelocation, k + textureSize * columns, l + textureSize * rows, 0.0F, 0.0F, textureSize, textureSize, textureSize, textureSize);
                 }
             }
@@ -115,13 +115,13 @@ public enum BackgroundType {
             return NONE;
         }
         else {
-            String typeName = type.getAsString();
+            String typeName = type.getAsString().toUpperCase();
 
             try {
                 return valueOf(typeName);
             }
             catch (IllegalArgumentException ignored) {
-                ModHelper.LOGGER.error("Unknown background type '{}' for advancement '{}'!", typeName, advancementId);
+                ModHelper.LOGGER.error("Unknown background type '{}' for advancement '{}'! Possible values are: {}", typeName, advancementId, values());
 
                 return NONE;
             }

@@ -104,7 +104,7 @@ public class TextBox extends AbstractTextField {
             width += font.width(String.valueOf(c));
 
             if (width >= maxWidth || c == '\n') {
-                int splitPos = ((lastSpacePos != -1) ? lastSpacePos : i - 1);
+                int splitPos = ((lastSpacePos != -1) ? lastSpacePos : Math.max(0, i - 1));
 
                 consumer.accept(j, splitPos);
 

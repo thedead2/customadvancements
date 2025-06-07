@@ -80,9 +80,9 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    implementation group: 'com.google.guava', name: 'guava', version: '32.1.2-jre'
+    implementation group: 'com.google.guava', name: 'guava', version: '33.3.1-jre'
 
-    implementation fg.deobf("curse.maven:better-advancements-272515:5454907")
+    compileOnly fg.deobf("curse.maven:better-advancements-272515:5454907")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
@@ -162,4 +162,10 @@ tasks.register('handleModProperties'){
 
     properties.store(propertiesFile.newWriter(), null)
     properties.load(propertiesFile.newDataInputStream())
+}
+
+task printBetterUIDependencies {
+    doLast {
+        configurations.compileClasspath.each { println it }
+    }
 }
