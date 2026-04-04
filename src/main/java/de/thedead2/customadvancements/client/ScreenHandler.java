@@ -1,7 +1,6 @@
 package de.thedead2.customadvancements.client;
 
 import betteradvancements.common.gui.BetterAdvancementsScreen;
-import de.thedead2.customadvancements.client.screens.InformationScreen;
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.CrashHandler;
 import de.thedead2.customadvancements.util.core.ModHelper;
@@ -11,7 +10,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -27,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.BA_COMPATIBILITY;
-import static de.thedead2.customadvancements.util.core.ModHelper.WARNINGS;
 
 
 @Mod.EventBusSubscriber(modid = ModHelper.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -89,17 +86,6 @@ public class ScreenHandler {
 
         if ((screen instanceof AdvancementsScreen || (BA_COMPATIBILITY.get() && screen instanceof BetterAdvancementsScreen)) && ConfigManager.NO_ADVANCEMENTS.get()) {
             Minecraft.getInstance().setScreen(null);
-        }
-        else if (screen instanceof TitleScreen && !WARNINGS.isEmpty()) {
-            StringBuilder warnMessageBuilder = new StringBuilder("Custom Advancements\n");
-
-            warnMessageBuilder.append("==============================================\n\n\n\n");
-
-            while (!WARNINGS.isEmpty()) {
-                warnMessageBuilder.append(WARNINGS.poll()).append("\n\n\n");
-            }
-
-            Minecraft.getInstance().setScreen(new InformationScreen(screen, warnMessageBuilder.toString()));
         }
     }
 }
