@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.util.io;
 
 import de.thedead2.customadvancements.util.ResourceManagerExtender;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.File;
@@ -31,8 +32,7 @@ public class TextureHandler {
                     ResourceManagerExtender.addResource(ResourceLocation.tryParse(MOD_ID + ":" + "textures" + "/" + fileName), texture);
                 }
                 else {
-                    LOGGER.warn("File '{}' is not a valid texture file, ignoring it! --> supported file types: {}", fileName, Arrays.toString(valid_file_extensions));
-                    WARNINGS.offer("File '" + fileName + "' is not a valid texture file and couldn't be loaded!\nSupported file types are: " + Arrays.toString(valid_file_extensions));
+                    ExceptionHandler.getInstance().logWarning("File '{}' is not a valid texture file, ignoring it! --> supported file types: {}", fileName, Arrays.toString(valid_file_extensions));
                 }
             }
         });

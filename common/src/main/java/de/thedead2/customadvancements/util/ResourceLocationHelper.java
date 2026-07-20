@@ -28,6 +28,7 @@ public class ResourceLocationHelper {
         return id.getPath().contains(path);
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isValidResourceLocation(String id) {
         return ResourceLocation.tryParse(id) != null;
     }

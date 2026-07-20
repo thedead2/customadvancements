@@ -5,54 +5,58 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import de.thedead2.customadvancements.advancements.AdvancementProgressionMode;
 import de.thedead2.customadvancements.advancements.AdvancementTabsSorter;
-import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.*;
 import java.util.function.Predicate;
 
+import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
 
 public class ConfigManager {
 
-    public static final ForgeConfigSpec CONFIG_SPEC;
+    public static final ModConfigSpec CONFIG_SPEC;
 
-    private static final ForgeConfigSpec.Builder CONFIG_BUILDER = new ForgeConfigSpec.Builder();
+    private static final ModConfigSpec.Builder CONFIG_BUILDER = new ModConfigSpec.Builder();
 
     // ################################################################ All Config fields for Custom Advancements ################################################################
 
-    public static final ForgeConfigSpec.BooleanValue OUT_DATED_MESSAGE;
+    public static final ModConfigSpec.BooleanValue DEBUG_MODE;
 
-    public static final ForgeConfigSpec.BooleanValue NO_RECIPE_ADVANCEMENTS;
+    public static final ModConfigSpec.BooleanValue OUT_DATED_MESSAGE;
 
-    public static final ForgeConfigSpec.BooleanValue NO_ADVANCEMENTS;
+    public static final ModConfigSpec.BooleanValue NO_RECIPE_ADVANCEMENTS;
 
-    public static final ForgeConfigSpec.BooleanValue BLACKLIST_IS_WHITELIST;
+    public static final ModConfigSpec.BooleanValue NO_ADVANCEMENTS;
 
-    public static final ForgeConfigSpec.BooleanValue DISABLE_STANDARD_ADVANCEMENT_LOAD;
+    public static final ModConfigSpec.BooleanValue BLACKLIST_IS_WHITELIST;
 
-    public static final ForgeConfigSpec.BooleanValue ADVANCEMENT_PROGRESSION;
+    public static final ModConfigSpec.BooleanValue DISABLE_STANDARD_ADVANCEMENT_LOAD;
 
-    public static final ForgeConfigSpec.BooleanValue RESET_ADVANCEMENTS_ON_DEATH;
+    public static final ModConfigSpec.BooleanValue ADVANCEMENT_PROGRESSION;
 
-    public static final ForgeConfigSpec.BooleanValue ADVANCEMENT_PROGRESSION_MODE_MOD_BLACKLIST_IS_WHITELIST;
+    public static final ModConfigSpec.BooleanValue RESET_ADVANCEMENTS_ON_DEATH;
 
-    public static final ForgeConfigSpec.EnumValue<AdvancementTabsSorter> ADVANCEMENT_TAB_SORTING_MODE;
+    public static final ModConfigSpec.BooleanValue ADVANCEMENT_PROGRESSION_MODE_MOD_BLACKLIST_IS_WHITELIST;
 
-    public static final ForgeConfigSpec.EnumValue<AdvancementProgressionMode> ADVANCEMENT_PROGRESSION_MODE;
+    public static final ModConfigSpec.EnumValue<AdvancementTabsSorter> ADVANCEMENT_TAB_SORTING_MODE;
 
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_PROGRESSION_MODE_MOD_BLACKLIST;
+    public static final ModConfigSpec.EnumValue<AdvancementProgressionMode> ADVANCEMENT_PROGRESSION_MODE;
 
-    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_PROGRESSION_MODE_MOD_BLACKLIST;
 
-    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> CONNECTED_ADVANCEMENTS;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
 
-    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_SORTING_LIST;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> CONNECTED_ADVANCEMENTS;
+
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_SORTING_LIST;
 
 
     static {
         CONFIG_BUILDER.push("Config for " + ModHelper.MOD_NAME);
 
+        DEBUG_MODE = newBoolVal("Enables the mods debug mode. Only use if you're having problems! Will be reset after each restart of the game.", "debugMode", false);
 
         OUT_DATED_MESSAGE = newBoolVal("Whether the mod should send a chat message if an update is available", "warnMessage", true);
 
@@ -87,18 +91,18 @@ public class ConfigManager {
     }
 
 
-    public static ForgeConfigSpec.BooleanValue newBoolVal(String comment, String name, boolean defaultValue) {
+    public static ModConfigSpec.BooleanValue newBoolVal(String comment, String name, boolean defaultValue) {
         return CONFIG_BUILDER.comment(comment).define(name, defaultValue);
     }
 
 
-    public static <T> ForgeConfigSpec.ConfigValue<List<? extends T>> newListVal(String comment, String name, Collection<T> list, Predicate<Object> validator) {
+    public static <T> ModConfigSpec.ConfigValue<List<? extends T>> newListVal(String comment, String name, Collection<T> list, Predicate<Object> validator) {
         return CONFIG_BUILDER.comment(comment).defineList(name, List.copyOf(list), validator);
     }
 
 
     @SafeVarargs
-    public static <T extends Enum<T>> ForgeConfigSpec.EnumValue<T> newEnumVal(String comment, String name, T defaultValue, T... acceptableValues) {
+    public static <T extends Enum<T>> ModConfigSpec.EnumValue<T> newEnumVal(String comment, String name, T defaultValue, T... acceptableValues) {
         return CONFIG_BUILDER.comment(comment).defineEnum(name, defaultValue, acceptableValues.length == 0 ? defaultValue.getDeclaringClass().getEnumConstants() : acceptableValues);
     }
 
@@ -148,7 +152,7 @@ public class ConfigManager {
                 return true;
             }
             else {
-                return ModHelper.getServer().get().getAdvancements().getAllAdvancements().stream().map(Advancement::getId).toList().contains(resourceLocation);
+                return getAllAdvancements().stream().map(AdvancementHolder::id).toList().contains(resourceLocation);
             }
         }
 
@@ -168,7 +172,7 @@ public class ConfigManager {
                 return true;
             }
             else {
-                return ModHelper.getServer().get().getAdvancements().getAllAdvancements().stream().filter(advancement -> advancement.getParent() == null).map(Advancement::getId).toList().contains(resourceLocation);
+                return getAllAdvancements().stream().filter(advancement -> advancement.value().isRoot()).map(AdvancementHolder::id).toList().contains(resourceLocation);
             }
         }
 
@@ -185,7 +189,18 @@ public class ConfigManager {
             return true;
         }
         else {
-            return ModHelper.getServer().get().getAdvancements().getAllAdvancements().stream().map(advancement -> advancement.getId().getNamespace()).toList().contains(s);
+            return getAllAdvancements().stream().map(advancement -> advancement.id().getNamespace()).toList().contains(s);
         }
+    }
+
+    private static Collection<AdvancementHolder> getAllAdvancements() {
+        return ModHelper.getServer().get().getAdvancements().getAllAdvancements();
+    }
+
+    public static void resetDebugMode() {
+        DEBUG_MODE.set(DEBUG_MODE.getDefault());
+        DEBUG_MODE.save();
+
+        LOGGER.debug("Debug mode has been reset!");
     }
 }

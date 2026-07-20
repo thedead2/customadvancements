@@ -1,8 +1,7 @@
 package de.thedead2.customadvancements.util;
 
-import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import org.apache.logging.log4j.Level;
 
 import java.io.InputStream;
 
@@ -18,7 +17,7 @@ public class ReflectionHelper {
         for (int i = 1; i < stElements.length; i++) {
             StackTraceElement ste = stElements[i];
 
-            if (!ste.getClassName().equals(CrashHandler.class.getName()) && ste.getClassName().indexOf("java.lang.Thread") != 0) {
+            if (!ste.getClassName().equals(ExceptionHandler.class.getName()) && ste.getClassName().indexOf("java.lang.Thread") != 0) {
                 if (callerClassName == null) {
                     callerClassName = ste.getClassName();
                 }
@@ -36,10 +35,20 @@ public class ReflectionHelper {
         InputStream stream = ReflectionHelper.class.getClassLoader().getResourceAsStream(path);
 
         if (stream == null) {
-            CrashHandler.getInstance().handleException("Couldn't find resource with path: " + path, new NullPointerException("The return result of 'classloader.getResourceAsStream(" + path + ")' is null!"), Level.ERROR);
+            ExceptionHandler.getInstance().log("Couldn't find resource with path: " + path, new NullPointerException("The return result of 'classloader.getResourceAsStream(" + path + ")' is null!"));
             stream = InputStream.nullInputStream();
         }
 
         return stream;
+    }
+
+    public static Class<?> findClassWithName(String className) {
+        try {
+            return ReflectionHelper.class.getClassLoader().loadClass(className);
+        }
+        catch(ClassNotFoundException e) {
+            ExceptionHandler.getInstance().log("Couldn't load class with name: " + className, e);
+            throw new RuntimeException(e);
+        }
     }
 }

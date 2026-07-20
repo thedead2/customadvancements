@@ -8,6 +8,7 @@ import java.io.IOException;
 
 
 //TODO: Unite @LegacyConverter with @SecureAdvancementHandler
+//TODO: Convert VersionChecker to Enum with Version stated in file
 public class LegacyConverter {
 
     private static final VersionChecker[] VERSION_CHECKERS = new VersionChecker[] {LegacyConverter::checkForV1};

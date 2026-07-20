@@ -6,13 +6,15 @@ import com.mojang.math.Axis;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.util.core.ModHelper;
 import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.AdvancementNode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector2d;
@@ -102,11 +104,14 @@ public class RenderUtil {
     }
 
 
-    public static void drawAdvancementTabBg(Advancement advancement, GuiGraphics guiGraphics, CallbackInfo ci, int xMin, int xMax, int yMin, int yMax, double scrollX, double scrollY, RootRenderer rootRenderer) {
-        ResourceLocation advancementId = advancement.getId();
-        ResourceLocation root = new ResourceLocation(advancementId.getNamespace(), advancementId.getPath() + ".json");
+    public static void drawAdvancementTabBg(AdvancementNode rootNode, GuiGraphics guiGraphics, CallbackInfo ci, int xMin, int xMax, int yMin, int yMax, double scrollX, double scrollY, RootRenderer rootRenderer) {
+        AdvancementHolder advancementHolder = rootNode.holder();
+        Advancement advancement = rootNode.advancement();
 
-        if (advancement.getDisplay() == null) {
+        ResourceLocation advancementId = advancementHolder.id();
+        ResourceLocation root = ResourceLocation.tryBuild(advancementId.getNamespace(), advancementId.getPath() + ".json");
+
+        if (advancement.display().isEmpty()) {
             return;
         }
 
@@ -140,7 +145,7 @@ public class RenderUtil {
 
     public static void renderImage(GuiGraphics guiGraphics, TextureInfo textureInfo, Area area, float[] colorShift) {
         RenderSystem.enableBlend();
-        RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, textureInfo.getTextureLocation());
 
         final ObjectFit objectFit = textureInfo.getObjectFit();
@@ -167,16 +172,15 @@ public class RenderUtil {
             vMax = 1;
         }
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuilder();
         Matrix4f matrix = guiGraphics.pose().last().pose();
+        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
-        bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-        bufferbuilder.vertex(matrix, xMin, yMax, zPos).color(colorShift[0], colorShift[1], colorShift[2], colorShift[3]).uv(uMin, vMax).endVertex();
-        bufferbuilder.vertex(matrix, xMax, yMax, zPos).color(colorShift[0], colorShift[1], colorShift[2], colorShift[3]).uv(uMax, vMax).endVertex();
-        bufferbuilder.vertex(matrix, xMax, yMin, zPos).color(colorShift[0], colorShift[1], colorShift[2], colorShift[3]).uv(uMax, vMin).endVertex();
-        bufferbuilder.vertex(matrix, xMin, yMin, zPos).color(colorShift[0], colorShift[1], colorShift[2], colorShift[3]).uv(uMin, vMin).endVertex();
-        tessellator.end();
+        bufferbuilder.addVertex(matrix, xMin, yMax, zPos).setColor(colorShift[0], colorShift[1], colorShift[2], colorShift[3]).setUv(uMin, vMax);
+        bufferbuilder.addVertex(matrix, xMax, yMax, zPos).setColor(colorShift[0], colorShift[1], colorShift[2], colorShift[3]).setUv(uMax, vMax);
+        bufferbuilder.addVertex(matrix, xMax, yMin, zPos).setColor(colorShift[0], colorShift[1], colorShift[2], colorShift[3]).setUv(uMax, vMin);
+        bufferbuilder.addVertex(matrix, xMin, yMin, zPos).setColor(colorShift[0], colorShift[1], colorShift[2], colorShift[3]).setUv(uMin, vMin);
+
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
 
         RenderSystem.disableBlend();
     }
@@ -198,12 +202,12 @@ public class RenderUtil {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tesselator.getBuilder();
 
-        bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+
         fillLinearGradient(guiGraphics.pose().last().pose(), bufferbuilder, xMin, xMin + width, yMin, yMin + height, zPos, height, colors);
-        tesselator.end();
+
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
 
         RenderSystem.disableBlend();
         //RenderSystem.disableScissor();
@@ -293,7 +297,7 @@ public class RenderUtil {
         Matrix4f matrix4f = new Matrix4f();
 
         matrix4f.rotateAround(rotation, pX, pY, pZ);
-        poseStack.mulPoseMatrix(matrix4f);
+        poseStack.mulPose(matrix4f);
     }
 
 
@@ -312,7 +316,7 @@ public class RenderUtil {
         Matrix4f matrix4f = new Matrix4f();
 
         matrix4f.scaleAround(scaleX, scaleY, scaleZ, pX, pY, pZ);
-        poseStack.mulPoseMatrix(matrix4f);
+        poseStack.mulPose(matrix4f);
     }
 
 
@@ -322,10 +326,10 @@ public class RenderUtil {
 
 
     private static void _fillGradient(Matrix4f matrix, VertexConsumer builder, float xMin, float xMax, float yMin, float yMax, float zPos, int redA, int greenA, int blueA, int alphaA, int redB, int greenB, int blueB, int alphaB) {
-        builder.vertex(matrix, xMax, yMin, zPos).color(redA, greenA, blueA, alphaA).endVertex();
-        builder.vertex(matrix, xMin, yMin, zPos).color(redA, greenA, blueA, alphaA).endVertex();
-        builder.vertex(matrix, xMin, yMax, zPos).color(redB, greenB, blueB, alphaB).endVertex();
-        builder.vertex(matrix, xMax, yMax, zPos).color(redB, greenB, blueB, alphaB).endVertex();
+        builder.addVertex(matrix, xMax, yMin, zPos).setColor(redA, greenA, blueA, alphaA);
+        builder.addVertex(matrix, xMin, yMin, zPos).setColor(redA, greenA, blueA, alphaA);
+        builder.addVertex(matrix, xMin, yMax, zPos).setColor(redB, greenB, blueB, alphaB);
+        builder.addVertex(matrix, xMax, yMax, zPos).setColor(redB, greenB, blueB, alphaB);
     }
 
 
@@ -344,12 +348,11 @@ public class RenderUtil {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tesselator.getBuilder();
+        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
-        bufferbuilder.begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         fillRadialGradient(guiGraphics.pose().last().pose(), bufferbuilder, center.x, center.y, zPos, diagonal / 2, colors);
-        tesselator.end();
+
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
 
         RenderSystem.disableBlend();
         //RenderSystem.disableScissor();
@@ -398,8 +401,8 @@ public class RenderUtil {
             float innerXOffset = sin * innerXRadius;
             float innerYOffset = cos * innerYRadius;
 
-            bufferBuilder.vertex(matrix, xPos + innerXOffset, yPos - innerYOffset, zPos).color(redA, greenA, blueA, alphaA).endVertex();
-            bufferBuilder.vertex(matrix, xPos + outerXOffset, yPos - outerYOffset, zPos).color(redB, greenB, blueB, alphaB).endVertex();
+            bufferBuilder.addVertex(matrix, xPos + innerXOffset, yPos - innerYOffset, zPos).setColor(redA, greenA, blueA, alphaA);
+            bufferBuilder.addVertex(matrix, xPos + outerXOffset, yPos - outerYOffset, zPos).setColor(redB, greenB, blueB, alphaB);
         }
     }
 
@@ -412,12 +415,11 @@ public class RenderUtil {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tesselator.getBuilder();
+        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
-        bufferbuilder.begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         fillRadialGradient(guiGraphics.pose().last().pose(), bufferbuilder, xPos, yPos, zPos, radius, colors);
-        tesselator.end();
+
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
 
         RenderSystem.disableBlend();
 
@@ -478,15 +480,14 @@ public class RenderUtil {
         int red = (color >> 16 & 255);
         int green = (color >> 8 & 255);
         int blue = (color & 255);
-        BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
-        bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         _fillColor(poseStack.last().pose(), bufferbuilder, xMin, xMax, yMin, yMax, z, red, green, blue, alpha);
-        BufferUploader.drawWithShader(bufferbuilder.end());
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
 
         RenderSystem.disableBlend();
     }

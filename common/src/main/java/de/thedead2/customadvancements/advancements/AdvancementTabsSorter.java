@@ -1,18 +1,12 @@
 package de.thedead2.customadvancements.advancements;
 
-import betteradvancements.common.gui.BetterAdvancementTab;
 import com.google.common.collect.ImmutableList;
 import de.thedead2.customadvancements.util.core.ConfigManager;
-import de.thedead2.customadvancements.util.core.CrashHandler;
-import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.client.gui.screens.advancements.AdvancementTab;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.Level;
 
-import java.lang.reflect.Field;
 import java.util.*;
-
-import static de.thedead2.customadvancements.util.core.ModHelper.BA_COMPATIBILITY;
 
 
 public enum AdvancementTabsSorter {
@@ -24,9 +18,9 @@ public enum AdvancementTabsSorter {
                 if (t instanceof AdvancementTab advancementTab) {
                     return advancementTab.getTitle().getString();
                 }
-                else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) {
+                /*else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) {
                     return advancementTab.getTitle().getString();
-                }
+                }*/
                 else {
                     throw new IllegalArgumentException("Unknown Advancement Tab Type: " + t.getClass());
                 }
@@ -60,11 +54,11 @@ public enum AdvancementTabsSorter {
                 ResourceLocation advancementId;
 
                 if (t instanceof AdvancementTab advancementTab) {
-                    advancementId = advancementTab.getAdvancement().getId();
+                    advancementId = advancementTab.getRootNode().holder().id();
                 }
-                else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) {
+                /*else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) {
                     advancementId = advancementTab.getAdvancement().getId();
-                }
+                }*/
                 else {
                     throw new IllegalArgumentException("Unknown Advancement Tab Type: " + t.getClass());
                 }
@@ -84,7 +78,7 @@ public enum AdvancementTabsSorter {
     };
 
 
-    public <T> void sortAdvancementTabs(Map<Advancement, T> tabs) {
+    public <T> void sortAdvancementTabs(Map<AdvancementHolder, T> tabs) {
         List<T> tabList = new ArrayList<>(tabs.values());
 
         this.sort(tabList);
@@ -94,9 +88,9 @@ public enum AdvancementTabsSorter {
             if (t instanceof AdvancementTab advancementTab) {
                 advancementTab.index = tabList.indexOf(t);
 
-                tabs.put(advancementTab.getAdvancement(), t);
+                tabs.put(advancementTab.getRootNode().holder(), t);
             }
-            else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) {
+            /*else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) {
                 try {
                     var clazz = advancementTab.getClass();
                     Field indexField = clazz.getDeclaredField("index");
@@ -109,7 +103,7 @@ public enum AdvancementTabsSorter {
                 }
 
                 tabs.put(advancementTab.getAdvancement(), t);
-            }
+            }*/
             else {
                 throw new IllegalArgumentException("Unknown Advancement Tab Type: " + t.getClass());
             }

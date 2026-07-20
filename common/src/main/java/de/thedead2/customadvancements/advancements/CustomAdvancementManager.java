@@ -6,7 +6,7 @@ import com.google.common.collect.Multimap;
 import com.google.gson.JsonElement;
 import de.thedead2.customadvancements.util.ResourceLocationHelper;
 import de.thedead2.customadvancements.util.core.ConfigManager;
-import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.resources.ResourceLocation;
@@ -67,7 +67,7 @@ public class CustomAdvancementManager {
         }
         catch (Throwable e) {
             CrashReport crashReport = new CrashReport("Error while modifying advancement data!", e);
-            CrashHandler.getInstance().printCrashReport(crashReport);
+            ExceptionHandler.getInstance().printCrashReport(crashReport);
 
             throw new ReportedException(crashReport);
         }
@@ -150,7 +150,7 @@ public class CustomAdvancementManager {
 
     private static void removeAdvancement(Map<ResourceLocation, ?> mapIn, ResourceLocation advancement, AtomicInteger counter) {
         mapIn.remove(advancement);
-        CrashHandler.getInstance().addRemovedAdvancement(advancement);
+        ExceptionHandler.getInstance().addRemovedAdvancement(advancement);
         counter.getAndIncrement();
 
         LOGGER.debug("Removed advancement: {}", advancement);
@@ -179,7 +179,7 @@ public class CustomAdvancementManager {
             LOGGER.info("Starting to remove all advancements...");
 
             counter.set(ADVANCEMENTS.size());
-            CrashHandler.getInstance().addRemovedAdvancements(ADVANCEMENTS.keySet());
+            ExceptionHandler.getInstance().addRemovedAdvancements(ADVANCEMENTS.keySet());
 
             ADVANCEMENTS.clear();
 

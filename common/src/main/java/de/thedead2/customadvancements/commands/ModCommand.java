@@ -7,12 +7,12 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.thedead2.customadvancements.util.CommandWrapperFunction;
-import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import de.thedead2.customadvancements.util.localisation.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import org.apache.logging.log4j.Level;
+import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,6 +48,7 @@ public class ModCommand {
         GenerateResourceLocationsFileCommand.register();
         ReloadCommand.register();
         GenerateAdvancementCommand.register();
+        ToggleDebugModeCommand.register();
 
         commands.forEach(modCommand -> {
             dispatcher.register(modCommand.getShortLA());
@@ -87,7 +88,7 @@ public class ModCommand {
                     return executable.runCommand(context);
                 }
                 catch (Throwable throwable) {
-                    CrashHandler.getInstance().handleException("Something went wrong executing this command!", throwable, Level.ERROR);
+                    ExceptionHandler.getInstance().log("Something went wrong executing this command!", throwable, Level.ERROR);
                     context.getSource().sendFailure(TranslationKeyProvider.chatMessage("command_failed", ChatFormatting.RED));
 
                     return COMMAND_FAILURE;

@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "de.thedead2.customadvancements.mixin",
+  "refmap": "${mod_id}.refmap.json",
+  "compatibilityLevel": "JAVA_18",
+  "mixins": [
+    "MixinAdvancementCommand",
+    "MixinJsonReloadListener",
+    "MixinPlayerAdvancements",
+    "MixinResourceManager"
+  ],
+  "client": [
+    "MixinAdvancementsScreen",
+    "MixinAdvancementTab",
+    "MixinClientLanguage",
+    "MixinWorldOpenFlows"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

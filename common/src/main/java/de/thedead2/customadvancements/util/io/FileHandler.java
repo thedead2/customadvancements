@@ -1,16 +1,18 @@
 package de.thedead2.customadvancements.util.io;
 
-import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
-import org.apache.logging.log4j.Level;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -45,7 +47,7 @@ public class FileHandler {
             return true;
         }
         else {
-            LOGGER.fatal("Failed to create directory at: {}", directoryIn.toPath());
+            LOGGER.error("Failed to create directory at: {}", directoryIn.toPath());
 
             throw new RuntimeException("Unable to create directory! Maybe something is blocking file access?!");
         }
@@ -58,29 +60,35 @@ public class FileHandler {
                 copyModFiles(examplePath, path, fileFilter);
             }
             catch (FileCopyException e) {
-                CrashHandler.getInstance().handleException("Unable to copy example files to " + path, e, Level.WARN);
+                ExceptionHandler.getInstance().log("Unable to copy example files to " + path, e, Level.WARN);
             }
         }
     }
 
 
     public static void copyModFiles(String pathIn, Path pathOut, String filter) throws FileCopyException {
-        Path filespath = getModFileFor(MOD_ID).findResource(pathIn);
+        try {
+            URI uri = FileHandler.class.getResource(pathIn).toURI();
 
-        try (Stream<Path> paths = Files.list(filespath)) {
-            paths.filter(path -> path.toString().endsWith(filter)).forEach(path -> {
-                try {
-                    writeFile(Files.newInputStream(path), pathOut.resolve(path.getFileName().toString()));
-                }
-                catch (IOException e) {
-                    throw new FileCopyException("Failed to copy mod files!", e);
-                }
-            });
+            try (FileSystem ignored = (uri.getScheme().equals("jar") ? FileSystems.newFileSystem(uri, Collections.emptyMap()) : null)) {
+                Path filespath = Paths.get(uri);
 
-            LOGGER.debug("Copied files from directory " + MOD_ID + ":{} to directory {}", pathIn, pathOut);
+                try (Stream<Path> paths = Files.list(filespath)) {
+                    paths.filter(path -> path.toString().endsWith(filter)).forEach(path -> {
+                        try {
+                            writeFile(Files.newInputStream(path), pathOut.resolve(path.getFileName().toString()));
+                        }
+                        catch (IOException e) {
+                            throw new FileCopyException("Failed to copy mod file: " + path, e);
+                        }
+                    });
+
+                    LOGGER.debug("Copied files from directory " + MOD_ID + ":{} to directory {}", pathIn, pathOut);
+                }
+            }
         }
-        catch (IOException e) {
-            throw new FileCopyException("Unable to locate directory: " + MOD_ID + ":" + pathIn, e);
+        catch (NullPointerException | URISyntaxException | IOException e) {
+            throw new FileCopyException("Unable to copy example files to " + pathIn, e);
         }
     }
 

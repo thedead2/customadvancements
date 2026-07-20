@@ -1,13 +1,13 @@
 package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import de.thedead2.customadvancements.util.io.AdvancementHandler;
 import de.thedead2.customadvancements.util.io.FileHandler;
 import de.thedead2.customadvancements.util.localisation.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
-import org.apache.logging.log4j.Level;
+import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,7 +42,7 @@ public class GenerateGameAdvancementsCommand extends ModCommand {
                     }
                     catch (IOException e) {
                         source.sendFailure(TranslationKeyProvider.chatMessage("generating_game_advancements_failed", ChatFormatting.RED, advancement.id()));
-                        CrashHandler.getInstance().handleException("Unable to write " + advancement.id() + " to file!", e, Level.WARN);
+                        ExceptionHandler.getInstance().log("Unable to write " + advancement.id() + " to file!", e, Level.WARN);
                     }
                 });
 

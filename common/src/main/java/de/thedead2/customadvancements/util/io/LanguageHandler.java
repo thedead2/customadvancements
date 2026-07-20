@@ -1,8 +1,7 @@
 package de.thedead2.customadvancements.util.io;
 
-import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import net.minecraft.locale.Language;
-import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,8 +37,7 @@ public class LanguageHandler {
                      });
             }
             catch (IOException e) {
-                CrashHandler.getInstance().handleException("Can't list files of directory: " + directory, e, Level.WARN);
-                WARNINGS.offer("Couldn't load localisation files from directory: " + directory);
+                ExceptionHandler.getInstance().logWarning("Can't list files of directory: " + directory, e);
             }
         });
     }
@@ -61,7 +59,7 @@ public class LanguageHandler {
             Language.loadFromJson(new FileInputStream(langFile), map::put);
         }
         catch (FileNotFoundException e) {
-            CrashHandler.getInstance().handleException("Didn't find file " + langFile + "! That shouldn't be possible?!", e, Level.FATAL);
+            ExceptionHandler.getInstance().log("Didn't find file " + langFile + "! That shouldn't be possible?!", e);
         }
     }
 }

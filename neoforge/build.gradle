@@ -1,39 +1,53 @@
 plugins {
-    id 'multiloader-loader'
     id 'net.neoforged.moddev'
 }
 
+base {
+    archivesName = "${mod_id}"
+}
+
+// Automatically enable neoforge AccessTransformers if the file exists
+if (file('src/main/resources/META-INF/accesstransformer.cfg').exists()) {
+    minecraft.accessTransformers.file file('src/main/resources/META-INF/accesstransformer.cfg')
+}
+
 neoForge {
-    version = neoforge_version
-    // Automatically enable neoforge AccessTransformers if the file exists
-    def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
-    if (at.exists()) {
-        accessTransformers.add(at.absolutePath)
-    }
+    version = "${neoforge_version}"
+
     parchment {
-        minecraftVersion = parchment_minecraft
-        mappingsVersion = parchment_version
+        minecraftVersion = "${parchment_mc_version}"
+        mappingsVersion = "${parchment_version}"
     }
+
+
     runs {
-        configureEach {
-            systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
-            ideName = "NeoForge ${it.name.capitalize()} (${project.path})" // Unify the run config names with fabric
-        }
         client {
             client()
-        }
-        data {
-            data()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            gameDirectory = project.file("run/client")
         }
         server {
             server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            gameDirectory = project.file("run/server")
         }
     }
+
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
+            sourceSet project(":common").sourceSets.main
         }
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+dependencies {
+    compileOnly project(":common")
+}
+
+// Exclude Fabric Loader from NeoForge
+configurations {
+    compileClasspath { exclude group: 'net.fabricmc', module: 'fabric-loader' }
+    runtimeClasspath { exclude group: 'net.fabricmc', module: 'fabric-loader' }
+}

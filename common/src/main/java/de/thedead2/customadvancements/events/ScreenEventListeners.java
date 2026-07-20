@@ -1,10 +1,6 @@
-package de.thedead2.customadvancements.client;
+package de.thedead2.customadvancements.events;
 
-import betteradvancements.common.gui.BetterAdvancementsScreen;
 import de.thedead2.customadvancements.util.core.ConfigManager;
-import de.thedead2.customadvancements.util.core.CrashHandler;
-import de.thedead2.customadvancements.util.core.ModHelper;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -13,45 +9,34 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import org.apache.logging.log4j.Level;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
-import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.BA_COMPATIBILITY;
+@OnlyIn(Dist.CLIENT)
+public class ScreenEventListeners {
 
-
-@Mod.EventBusSubscriber(modid = ModHelper.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class ScreenHandler {
-
-    @SubscribeEvent
-    @SuppressWarnings("unchecked")
-    public static void afterScreenInit(ScreenEvent.Init.Post event) {
-        Screen screen = event.getScreen();
-
+    public static void afterScreenInit(Screen screen, List<? extends GuiEventListener> listeners, Consumer<Button> buttonRemover) {
         if (screen instanceof PauseScreen pauseScreen) {
-            if (!pauseScreen.showPauseMenu) {
+            if (!pauseScreen.showsPauseMenu()) {
                 return;
             }
 
             if (ConfigManager.NO_ADVANCEMENTS.get()) {
-                findButton(event.getListenersList(), "gui.advancements").ifPresent((button) -> {
-                    event.removeListener(button);
+                findButton(listeners, "gui.advancements").ifPresent((button) -> {
+                    buttonRemover.accept(button);
 
-                    findButton(event.getListenersList(), "gui.stats").ifPresent(button1 -> {
+                    findButton(listeners, "gui.stats").ifPresent(button1 -> {
                         button1.setWidth(204);
                         button1.setX(button1.getX() - (204 / 2 + 4));
                     });
                 });
             }
         }
-        else if (BA_COMPATIBILITY.get() && screen instanceof BetterAdvancementsScreen betterAdvancementsScreen) {
+        /*else if (BA_COMPATIBILITY.get() && screen instanceof BetterAdvancementsScreen betterAdvancementsScreen) {
             try {
                 var clazz = betterAdvancementsScreen.getClass();
                 Field tabs = clazz.getDeclaredField("tabs");
@@ -60,14 +45,13 @@ public class ScreenHandler {
 
                 Object obj = tabs.get(betterAdvancementsScreen);
 
-                ConfigManager.ADVANCEMENT_TAB_SORTING_MODE.get().sortAdvancementTabs((Map<Advancement, Object>) obj);
+                ConfigManager.ADVANCEMENT_TAB_SORTING_MODE.get().sortAdvancementTabs((Map<AdvancementHolder, Object>) obj);
             }
             catch (NoSuchFieldException | IllegalAccessException e) {
                 CrashHandler.getInstance().handleException("Failed to sort advancement tabs of BetterAdvancementsScreen!", "AdvancementTabsSorter", e, Level.ERROR);
             }
-        }
+        }*/
     }
-
 
     private static Optional<Button> findButton(List<? extends GuiEventListener> listeners, String name) {
         for (GuiEventListener listener : listeners) {
@@ -79,14 +63,9 @@ public class ScreenHandler {
         return Optional.empty();
     }
 
-
-    @SubscribeEvent
-    public static void beforeScreenInit(ScreenEvent.Init.Pre event) {
-        Screen screen = event.getScreen();
-
-        if ((screen instanceof AdvancementsScreen || (BA_COMPATIBILITY.get() && screen instanceof BetterAdvancementsScreen)) && ConfigManager.NO_ADVANCEMENTS.get()) {
+    public static void beforeScreenInit(Screen screen) {
+        if ((screen instanceof AdvancementsScreen /*|| (BA_COMPATIBILITY.get() && screen instanceof BetterAdvancementsScreen)*/) && ConfigManager.NO_ADVANCEMENTS.get()) {
             Minecraft.getInstance().setScreen(null);
         }
     }
 }
-

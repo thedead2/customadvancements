@@ -1,3 +1,4 @@
+/*
 package de.thedead2.customadvancements.mixin;
 
 import betteradvancements.common.gui.BetterAdvancementTab;
@@ -42,3 +43,4 @@ public class MixinBetterAdvancementTab {
         });
     }
 }
+*/

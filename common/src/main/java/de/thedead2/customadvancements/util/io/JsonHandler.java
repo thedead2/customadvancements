@@ -6,10 +6,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
-import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import joptsimple.internal.Strings;
 import net.minecraft.util.GsonHelper;
-import org.apache.logging.log4j.Level;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.io.FileReader;
@@ -51,16 +51,13 @@ public class JsonHandler {
                     }
                     else {
                         LOGGER.error("{} does not match the required '.json' format!", fileName);
-                        WARNINGS.offer(fileName + " wasn't loaded due to invalid json format!");
                     }
                 }
                 catch (JsonParseException e) {
-                    CrashHandler.getInstance().handleException("Error parsing advancement " + fileName + "! Make sure you have the right syntax for '.json' files!", e, Level.ERROR);
-                    WARNINGS.offer("Error parsing advancement " + fileName + "! Make sure you have the right syntax for '.json' files!\nPlease check the log for detailed information.");
+                    ExceptionHandler.getInstance().log("Error parsing advancement " + fileName + "! Make sure you have the right syntax for '.json' files!", e, Level.ERROR);
                 }
                 catch (IOException e) {
-                    CrashHandler.getInstance().handleException("Failed to check and update advancement with name " + fileName, e, Level.WARN);
-                    WARNINGS.offer(fileName + " couldn't be updated to new json format for advancements!\nPlease check the log for detailed information.");
+                    ExceptionHandler.getInstance().log("Failed to check and update advancement with name " + fileName, e, Level.WARN);
                 }
 
                 long elapsedTime = System.currentTimeMillis() - startTime;
@@ -85,7 +82,7 @@ public class JsonHandler {
         if (modId.isEmpty() || !PLATFORM.isModLoaded(modId)) {
             //TODO: Add path to list of unknown mod advancements and ask user if they should be deleted or kept
             LOGGER.warn("Found advancements of unknown mod {}! Skipping them...", directory.getName());
-            WARNINGS.offer("Found advancements of unknown mod " + modId + "! Please delete the directory or transfer the advancements to:\n" + CUSTOM_ADVANCEMENTS_PATH);
+            ExceptionHandler.WARNINGS.offer("Found advancements of unknown mod " + modId + "! Please delete the directory or transfer the advancements to:\n" + CUSTOM_ADVANCEMENTS_PATH);
 
             return false;
         }

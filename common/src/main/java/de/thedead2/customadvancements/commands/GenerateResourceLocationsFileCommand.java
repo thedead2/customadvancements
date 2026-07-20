@@ -2,13 +2,13 @@ package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.thedead2.customadvancements.advancements.CustomAdvancementManager;
-import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import de.thedead2.customadvancements.util.io.FileHandler;
 import de.thedead2.customadvancements.util.localisation.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import org.slf4j.event.Level;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class GenerateResourceLocationsFileCommand extends ModCommand {
             }
             catch (IOException e) {
                 source.sendFailure(TranslationKeyProvider.chatMessage("generating_rl_file_failed", ChatFormatting.RED));
-                CrashHandler.getInstance().handleException("Unable to write resource locations to file!", e, Level.ERROR);
+                ExceptionHandler.getInstance().log("Unable to write resource locations to file!", e, Level.ERROR);
 
                 return COMMAND_FAILURE;
             }

@@ -1,12 +1,12 @@
 package de.thedead2.customadvancements.util.core;
 
 import com.google.common.collect.Lists;
-import de.thedead2.customadvancements.CustomAdvancements;
 import de.thedead2.customadvancements.advancements.CustomAdvancement;
 import de.thedead2.customadvancements.advancements.CustomAdvancementManager;
 import de.thedead2.customadvancements.platform.IPlatformHelper;
 import de.thedead2.customadvancements.util.ReflectionHelper;
 import de.thedead2.customadvancements.util.ResourceManagerExtender;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import de.thedead2.customadvancements.util.io.FileHandler;
 import de.thedead2.customadvancements.util.io.JsonHandler;
 import de.thedead2.customadvancements.util.io.LanguageHandler;
@@ -19,6 +19,7 @@ import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.level.storage.WorldData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -58,12 +59,8 @@ public class ModHelper {
 
     public static final Map<ResourceLocation, CustomAdvancement> CUSTOM_ADVANCEMENTS = new HashMap<>();
 
-    public static final Deque<String> WARNINGS = new ArrayDeque<>();
-
 
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
-
-    public static final String MAIN_PACKAGE = CustomAdvancements.class.getPackageName();
 
     public static final Supplier<Boolean> BA_COMPATIBILITY = () -> PLATFORM.isModLoaded("betteradvancements");
 
@@ -97,7 +94,7 @@ public class ModHelper {
             LOGGER.info("Reload completed in {} ms!", System.currentTimeMillis() - startTime);
         }
         catch (Exception e) {
-            CrashHandler.getInstance().handleException("Reload failed", e, Level.ERROR);
+            ExceptionHandler.getInstance().log("Reload failed", e, Level.ERROR);
         }
     }
 
@@ -133,7 +130,7 @@ public class ModHelper {
 
         server.reloadResources(selectedIds).exceptionally((e) -> {
             server.sendSystemMessage(TranslationKeyProvider.chatMessage("reload_failed_message", ChatFormatting.RED));
-            CrashHandler.getInstance().handleException("Failed to execute reload!", e, Level.ERROR);
+            ExceptionHandler.getInstance().log("Failed to execute reload!", e, Level.ERROR);
 
             return null;
         });
@@ -144,7 +141,7 @@ public class ModHelper {
         CUSTOM_ADVANCEMENTS.clear();
         CustomAdvancementManager.clearAll();
         ResourceManagerExtender.clear();
-        CrashHandler.getInstance().reset();
+        ExceptionHandler.getInstance().reset();
     }
 
 

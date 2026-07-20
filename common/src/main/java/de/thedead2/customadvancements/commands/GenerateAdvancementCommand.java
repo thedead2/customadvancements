@@ -2,17 +2,16 @@ package de.thedead2.customadvancements.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import de.thedead2.customadvancements.util.core.CrashHandler;
+import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import de.thedead2.customadvancements.util.io.AdvancementHandler;
 import de.thedead2.customadvancements.util.localisation.TranslationKeyProvider;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -52,7 +51,7 @@ public class GenerateAdvancementCommand extends ModCommand {
             }
             catch (IOException e) {
                 source.sendFailure(TranslationKeyProvider.chatMessage("generating_game_advancement_failed", advancementId));
-                CrashHandler.getInstance().handleException("Unable to generate file for: " + advancementId, e, Level.WARN);
+                ExceptionHandler.getInstance().log("Unable to generate file for: " + advancementId, e, Level.WARN);
 
                 return COMMAND_FAILURE;
             }
