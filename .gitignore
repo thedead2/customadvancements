@@ -10,3 +10,4 @@
 /build/
 /.idea/
 /.gradle/
+/common/src/generated/resources/.cache/
