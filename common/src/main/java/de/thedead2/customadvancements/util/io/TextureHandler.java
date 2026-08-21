@@ -2,6 +2,7 @@ package de.thedead2.customadvancements.util.io;
 
 import de.thedead2.customadvancements.network.SyncTextureDataPayload;
 import de.thedead2.mc_libs.concurrent.PartialCompletableFuture;
+import de.thedead2.mc_libs.io.FileHandler;
 import de.thedead2.mc_libs.util.ImageUtils;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;

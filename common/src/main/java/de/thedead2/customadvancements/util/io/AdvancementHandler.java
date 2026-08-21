@@ -18,8 +18,8 @@ import java.util.List;
 
 import static de.thedead2.customadvancements.util.core.ModHelper.DIR_PATH;
 import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
-import static de.thedead2.customadvancements.util.io.FileHandler.createDirectoryIfNecessary;
-import static de.thedead2.customadvancements.util.io.FileHandler.writeFile;
+import static de.thedead2.mc_libs.io.FileHandler.createDirectoryIfNecessary;
+import static de.thedead2.mc_libs.io.FileHandler.writeFile;
 
 
 public class AdvancementHandler {

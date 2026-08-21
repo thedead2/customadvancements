@@ -8,7 +8,7 @@ import com.google.gson.JsonParseException;
 import de.thedead2.customadvancements.network.SyncBackgroundDataPayload;
 import de.thedead2.customadvancements.util.helper.ResourceLocationHelper;
 import de.thedead2.customadvancements.util.core.ConfigManager;
-import de.thedead2.customadvancements.util.io.FileHandler;
+import de.thedead2.mc_libs.io.FileHandler;
 import de.thedead2.customadvancements.util.helper.JsonHelper;
 import de.thedead2.customadvancements.util.io.LegacyConverter;
 import de.thedead2.customadvancements.util.io.TextureHandler;

@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.thedead2.customadvancements.network.SyncLangDataPayload;
 import de.thedead2.mc_libs.concurrent.PartialCompletableFuture;
+import de.thedead2.mc_libs.io.FileHandler;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.GsonHelper;
 

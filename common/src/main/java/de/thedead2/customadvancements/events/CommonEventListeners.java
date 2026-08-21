@@ -3,18 +3,26 @@ package de.thedead2.customadvancements.events;
 import de.thedead2.customadvancements.CAMain;
 import de.thedead2.customadvancements.advancements.AdvancementProgressionMode;
 import de.thedead2.customadvancements.util.core.ConfigManager;
-import de.thedead2.customadvancements.util.io.FileHandler;
+import de.thedead2.mc_libs.io.FileHandler;
 import net.minecraft.server.level.ServerPlayer;
 
+import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.CUSTOM_ADVANCEMENTS_PATH;
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
 import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.io.LanguageHandler.LANG_PATH;
+import static de.thedead2.customadvancements.util.io.TextureHandler.TEXTURES_PATH;
 
 public class CommonEventListeners {
 
     public static void onCommonSetup() {
         LOGGER.info("Starting {}, Version: {}", MOD_NAME, PLATFORM.getModVersion(MOD_ID));
 
-        FileHandler.checkForMainDirectories();
+        FileHandler.createDirectoryIfNecessary(DIR_PATH.toFile());
+        FileHandler.copyModFilesIfNecessary(CUSTOM_ADVANCEMENTS_PATH, "/examples/advancements", ".json");
+
+        FileHandler.createDirectoryIfNecessary(DATA_PATH.toFile());
+        FileHandler.copyModFilesIfNecessary(TEXTURES_PATH, "/examples/data/textures", ".png");
+        FileHandler.copyModFilesIfNecessary(LANG_PATH, "/examples/data/lang", ".json");
     }
 
     public static void onServerStart() {

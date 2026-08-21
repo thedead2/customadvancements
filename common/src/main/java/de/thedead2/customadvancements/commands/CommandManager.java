@@ -7,7 +7,7 @@ import de.thedead2.customadvancements.CAMain;
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.helper.ResourceLocationHelper;
 import de.thedead2.customadvancements.util.io.AdvancementHandler;
-import de.thedead2.customadvancements.util.io.FileHandler;
+import de.thedead2.mc_libs.io.FileHandler;
 import de.thedead2.customadvancements.util.localisation.ModTranslationKeys;
 import de.thedead2.mc_libs.commands.CommandBuilder;
 import de.thedead2.mc_libs.commands.CommandResult;
