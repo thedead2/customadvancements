@@ -1,91 +1,94 @@
 package de.thedead2.customadvancements.util.io;
 
 import com.google.gson.JsonObject;
-import de.thedead2.customadvancements.util.core.ModHelper;
+import java.io.IOException;
+import java.util.function.Consumer;
+
 import net.minecraft.resources.ResourceLocation;
 
-import java.io.IOException;
+import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
 
-
-//TODO: Unite @LegacyConverter with @SecureAdvancementHandler
-//TODO: Convert VersionChecker to Enum with Version stated in file
 public class LegacyConverter {
 
-    private static final VersionChecker[] VERSION_CHECKERS = new VersionChecker[] {LegacyConverter::checkForV1};
-
-
-    public static void checkAndUpdate(ResourceLocation advancementId, JsonObject jsonObject) throws IOException {
+    /**
+     * Checks and corrects the advancement JSON format of an old version of this mod if necessary.
+     */
+    public static void checkAndUpdateIfNecessary(ResourceLocation advancementId, JsonObject jsonObject) {
         boolean jsonChanged = false;
 
-        for (VersionChecker versionChecker : VERSION_CHECKERS) {
-            if (versionChecker.check(jsonObject)) {
+        for (ModVersion version : ModVersion.values()) {
+            if (version.convert(jsonObject)) {
                 jsonChanged = true;
-
-                break;
+                LOGGER.info("Detected legacy format ({}) for advancement '{}'. Converting...", version.name(), advancementId);
             }
         }
 
         if (jsonChanged) {
-            ResourceLocation resourceLocation1 = ResourceLocation.tryBuild(advancementId.getNamespace(), advancementId.getPath().replace(".json", ""));
+            try {
+                String cleanPath = advancementId.getPath().replace(".json", "");
+                ResourceLocation cleanId = ResourceLocation.tryBuild(advancementId.getNamespace(), cleanPath);
 
-            AdvancementHandler.writeAdvancementToFile(resourceLocation1, jsonObject);
-
-            ModHelper.LOGGER.info("Converted advancement with id {} to new json format!", advancementId);
+                if (cleanId != null) {
+                    AdvancementHandler.writeAdvancementToFile(cleanId, jsonObject);
+                    LOGGER.info("Successfully converted and saved advancement '{}' to the new JSON format!", cleanId);
+                }
+            }
+            catch (IOException e) {
+                LOGGER.error("Failed to save converted legacy advancement: {}", advancementId, e);
+            }
         }
     }
 
+    private enum ModVersion {
+        V1(json -> {
+            JsonObject display = json.getAsJsonObject("display");
+            if (display == null || !display.has("background")) return;
 
-    private static boolean checkForV1(JsonObject jsonObject) {
-        JsonObject display = jsonObject.getAsJsonObject("display");
+            boolean hasLargeBg = display.has("largeBackground");
+            boolean hasBgClip = display.has("shouldBgClip");
+            boolean hasBgRatio = display.has("bgRatio");
 
-        if(display == null || !display.has("background")) {
-            return false;
-        }
+            if (!hasLargeBg && !hasBgClip && !hasBgRatio) return;
 
-        boolean jsonChanged = false;
-        JsonObject background = new JsonObject();
+            JsonObject backgroundObj = new JsonObject();
 
-        if (getAsBoolean(display, "largeBackground")) {
-            display.remove("largeBackground");
-            background.addProperty("type", "IMAGE");
+            if (hasLargeBg) {
+                boolean isLarge = display.get("largeBackground").getAsBoolean();
+                display.remove("largeBackground");
+                if (isLarge) {
+                    backgroundObj.addProperty("type", "IMAGE");
+                }
+            }
 
-            background.add("location", display.get("background"));
-            display.remove("background");
-            display.add("background", background);
+            if (hasBgClip) {
+                boolean shouldClip = display.get("shouldBgClip").getAsBoolean();
+                display.remove("shouldBgClip");
+                if (shouldClip) {
+                    backgroundObj.addProperty("object_fit", "COVER");
+                }
+            }
 
-            jsonChanged = true;
-        }
-
-        if (getAsBoolean(display, "shouldBgClip")) {
-            display.remove("shouldBgClip");
-            background.addProperty("object_fit", "COVER");
-
-            jsonChanged = true;
-        }
-
-        if (display.has("bgRatio")) {
             display.remove("bgRatio");
 
-            jsonChanged = true;
+            backgroundObj.add("location", display.get("background"));
+            display.remove("background");
+
+            display.add("background", backgroundObj);
+        });
+
+        private final Consumer<JsonObject> converter;
+
+        ModVersion(Consumer<JsonObject> converter) {
+            this.converter = converter;
         }
 
-        return jsonChanged;
-    }
+        public boolean convert(JsonObject jsonObject) {
+            String before = jsonObject.toString();
 
+            this.converter.accept(jsonObject);
 
-    private static boolean getAsBoolean(JsonObject jsonObject, String member) {
-        if (jsonObject.has(member)) {
-            return jsonObject.get(member).getAsBoolean();
+            return !before.equals(jsonObject.toString());
         }
-        else {
-            return false;
-        }
-    }
-
-
-    @FunctionalInterface
-    private interface VersionChecker {
-
-        boolean check(JsonObject jsonObject);
     }
 }
+

@@ -1,7 +1,6 @@
 package de.thedead2.customadvancements.mixin;
 
-import de.thedead2.customadvancements.client.RenderUtil;
-import net.minecraft.advancements.Advancement;
+import de.thedead2.customadvancements.client.ClientRenderer;
 import net.minecraft.advancements.AdvancementNode;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.advancements.AdvancementTab;
@@ -35,7 +34,7 @@ public class MixinAdvancementTab {
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;enableScissor(IIII)V", shift = At.Shift.BEFORE), method = "drawContents(Lnet/minecraft/client/gui/GuiGraphics;II)V", cancellable = true)
     public void onDrawContents(GuiGraphics guiGraphics, int pX, int pY, CallbackInfo ci) {
-        RenderUtil.drawAdvancementTabBg(this.rootNode, guiGraphics, ci, pX, pX + AdvancementsScreen.WINDOW_INSIDE_WIDTH, pY, pY + AdvancementsScreen.WINDOW_INSIDE_HEIGHT, this.scrollX, this.scrollY, (guiGraphics1, scrollX1, scrollY1) -> {
+        ClientRenderer.drawAdvancementTabBg(this.rootNode, guiGraphics, ci, pX, pX + AdvancementsScreen.WINDOW_INSIDE_WIDTH, pY, pY + AdvancementsScreen.WINDOW_INSIDE_HEIGHT, this.scrollX, this.scrollY, (guiGraphics1, scrollX1, scrollY1) -> {
             this.root.drawConnectivity(guiGraphics, scrollX1, scrollY1, true);
             this.root.drawConnectivity(guiGraphics, scrollX1, scrollY1, false);
             this.root.draw(guiGraphics, scrollX1, scrollY1);

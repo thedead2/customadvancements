@@ -3,9 +3,8 @@ package de.thedead2.customadvancements.advancements;
 import com.google.common.collect.ImmutableMap;
 import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.core.ModHelper;
-import de.thedead2.customadvancements.util.localisation.TranslationKeyProvider;
+import de.thedead2.customadvancements.util.localisation.ModTranslationKeys;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.resources.ResourceLocation;
@@ -73,7 +72,7 @@ public enum AdvancementProgressionMode {
 
 
     public static void resetAdvancementProgress(ServerPlayer player) {
-        player.sendSystemMessage(TranslationKeyProvider.chatMessage("advancements_reset", ChatFormatting.RED, player.getDisplayName()));
+        player.sendSystemMessage(ModTranslationKeys.chatMessage(ModTranslationKeys.ADVANCEMENTS_RESET_MESSAGE, ChatFormatting.RED, player.getDisplayName()));
 
         for (AdvancementHolder advancement : player.getServer().getAdvancements().getAllAdvancements()) {
             PlayerAdvancements playerAdvancements = player.getAdvancements();

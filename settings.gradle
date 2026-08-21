@@ -25,3 +25,6 @@ rootProject.name = 'customadvancements'
 include('common')
 include('fabric')
 include('neoforge')
+
+include ':mc_libs'
+project(':mc_libs').projectDir = file('../mc_libs')

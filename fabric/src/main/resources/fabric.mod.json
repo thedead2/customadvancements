@@ -1,22 +1,25 @@
 {
     "schemaVersion": 1,
     "id": "${mod_id}",
-    "version": "${version}",
+    "version": "${mod_version}",
     "name": "${mod_name}",
-    "description": "${description}",
+    "description": "${mod_description}",
     "authors": [
-        "${mod_author}"
+        "${mod_authors}"
     ],
     "contact": {
-        "homepage": "https://fabricmc.net/",
-        "sources": "https://github.com/FabricMC/fabric-example-mod"
+        "homepage": "${mod_homepage}",
+        "sources": "${mod_github}"
     },
-    "license": "${license}",
+    "license": "${mod_license}",
     "icon": "${mod_id}.png",
     "environment": "*",
     "entrypoints": {
         "main": [
-            "de.thedead2.minecraft_tales.Minecraft_tales"
+            "de.thedead2.customadvancements.CustomAdvancements"
+        ],
+        "client": [
+            "de.thedead2.customadvancements.CustomAdvancementsClient"
         ]
     },
     "mixins": [

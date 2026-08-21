@@ -1,37 +1,131 @@
 package de.thedead2.customadvancements.advancements;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.gson.JsonElement;
-import de.thedead2.customadvancements.util.ResourceLocationHelper;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import de.thedead2.customadvancements.network.SyncBackgroundDataPayload;
+import de.thedead2.customadvancements.util.helper.ResourceLocationHelper;
 import de.thedead2.customadvancements.util.core.ConfigManager;
-import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
+import de.thedead2.customadvancements.util.io.FileHandler;
+import de.thedead2.customadvancements.util.helper.JsonHelper;
+import de.thedead2.customadvancements.util.io.LegacyConverter;
+import de.thedead2.customadvancements.util.io.TextureHandler;
+import de.thedead2.mc_libs.concurrent.PartialCompletableFuture;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.io.File;
+import java.io.FileReader;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.CUSTOM_ADVANCEMENTS;
-import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.core.ModHelper.*;
 
 
 public class CustomAdvancementManager {
 
-    public static final Set<ResourceLocation> ADVANCEMENT_IDS = new HashSet<>();
+    public static final Path CUSTOM_ADVANCEMENTS_PATH = DIR_PATH.resolve(MOD_ID);
 
-    private static final Map<ResourceLocation, JsonElement> ADVANCEMENTS = new HashMap<>();
+    /**
+     * Holds the ids of all advancements of the advancement manager before modifying them
+     * */
+    private final Set<ResourceLocation> advancementIds = ConcurrentHashMap.newKeySet();
 
-    private static boolean SAFE_MODE = false;
+    private PartialCompletableFuture<Map<ResourceLocation, CustomAdvancement>> customAdvancementsFuture = PartialCompletableFuture.completedFuture(new ConcurrentHashMap<>());
+
+    private boolean safeMode = false;
+
+    public void loadAdvancementFiles() {
+        this.clear();
+
+        this.customAdvancementsFuture = PartialCompletableFuture.supplyAsync(new ConcurrentHashMap<>(), PartialCompletableFuture.Utils.mapClone(), (map, throwable) -> {
+            LOGGER.error("Failed to load all custom advancement files!", throwable);
+            logLoadStatus(map.size(), "custom advancement");
+            return map;
+        }, customAdvancements -> {
+            FileHandler.readDirectoryAndSubDirectories(DIR_PATH.toFile(), directory -> {
+                if (shouldSkipDirectory(directory)) return;
+
+                AtomicInteger counter = new AtomicInteger();
+                LOGGER.debug("Starting to read files in {}", directory.getPath());
+
+                Arrays.stream(Objects.requireNonNull(directory.listFiles((fileDirectory, fileName) -> fileName.endsWith(".json"))))
+                        .forEach(file -> {
+                            String fileName = file.getName();
+
+                            try (FileReader reader = new FileReader(file)){
+                                JsonObject jsonObject = GsonHelper.parse(reader);
+
+                                if (file.toPath().toString().contains("recipes" + PATH_SEPARATOR) || JsonHelper.isCorrectJsonFormat(jsonObject)) {
+                                    ResourceLocation id = ResourceLocationHelper.createIdFromFilepath(file.getPath());
+                                    LegacyConverter.checkAndUpdateIfNecessary(id, jsonObject);
+
+                                    CustomAdvancement customadvancement = new CustomAdvancement(id, jsonObject);
+                                    customAdvancements.put(customadvancement.getId(), customadvancement);
+
+                                    counter.getAndIncrement();
+                                }
+                                else {
+                                    throw new JsonParseException(fileName + " does not match the required '.json' format!");
+                                }
+                            }
+                            catch (Exception e) {
+                                LOGGER.error("Error loading advancement: {}", fileName, e);
+                            }
+                        });
+
+                LOGGER.debug("Found {} valid advancements in {}", counter.get(), directory.getPath());
+            });
+
+            logLoadStatus(customAdvancements.size(), "custom advancement");
+
+            return customAdvancements;
+        }, FileHandler.IO_POOL);
+
+        this.customAdvancementsFuture.completeOnTimeout(10, TimeUnit.SECONDS);
+    }
+
+    private boolean shouldSkipDirectory(File directory) {
+        return directory.getPath().equals(String.valueOf(DIR_PATH)) || directory.getPath().contains(String.valueOf(DATA_PATH)) || !isModLoaded(directory);
+    }
+
+    public Set<ResourceLocation> getAllAdvancementIds() {
+        Set<ResourceLocation> temp = new HashSet<>(advancementIds);
+        temp.addAll(this.customAdvancementsFuture.join().keySet());
+
+        return temp;
+    }
+
+    private boolean isModLoaded(File directory) {
+        String modId = directory.getPath().replace(String.valueOf(DIR_PATH), "");
+
+        modId = modId.replaceAll(Matcher.quoteReplacement(String.valueOf(PATH_SEPARATOR)), "/");
+        modId = modId.replaceFirst("/", "");
+        modId = modId.contains("/") ? modId.substring(0, modId.indexOf('/')) : modId;
+
+        if (modId.isEmpty() || !PLATFORM.isModLoaded(modId)) {
+            LOGGER.warn("Found advancements of unknown mod {}! Skipping them...", directory.getName());
+
+            return false;
+        }
+
+        return true;
+    }
 
 
-    public static void modifyAdvancementData(Map<ResourceLocation, JsonElement> mapIn) {
-        if (SAFE_MODE) {
+
+    public void modifyAdvancementData(Map<ResourceLocation, JsonElement> mapIn) {
+        if (safeMode) {
             LOGGER.warn("Safe Mode is enabled! Skipping advancement load...");
 
             return;
@@ -39,269 +133,195 @@ public class CustomAdvancementManager {
 
 
         long startTime = System.currentTimeMillis();
+        final Map<ResourceLocation, JsonElement> advancements = new HashMap<>();
 
         try {
-            AtomicInteger numAdvancementsRemoved = new AtomicInteger();
-            AtomicInteger numAdvancementsLoaded = new AtomicInteger();
+            int numRemoved = 0;
+            int numAdded = 0;
 
-            modification:
-            {
-                if (!ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()) {
-                    ADVANCEMENTS.putAll(mapIn);
+            if (!ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()) { // Don't remove existing advancements without replacement
+                advancements.putAll(mapIn);
+            }
+
+            advancementIds.addAll(mapIn.keySet());
+
+            if (loadNoAdvancements()) {
+                LOGGER.info("Removing all advancements...");
+                numRemoved = advancements.size();
+                advancements.clear();
+            }
+            else {
+                LOGGER.info("Starting to inject custom advancements...");
+                Map<ResourceLocation, CustomAdvancement> customAdvancements = this.customAdvancementsFuture.join();
+
+                for (Map.Entry<ResourceLocation, CustomAdvancement> entry : customAdvancements.entrySet()) {
+                    ResourceLocation id = entry.getKey();
+
+                    if (ResourceLocationHelper.containsInPath(id, "recipes/") && ConfigManager.NO_RECIPE_ADVANCEMENTS.get()) {
+                        LOGGER.debug("Skipped recipe advancement: {}", id);
+                        numRemoved++;
+                    }
+                    else {
+                        id = ResourceLocationHelper.stripFileExtension(id, ".json");
+                        advancements.put(id, entry.getValue().getJsonObject());
+
+                        LOGGER.debug("Loaded {} into Advancement Manager!", id);
+                        numAdded++;
+                    }
                 }
-                ADVANCEMENT_IDS.addAll(mapIn.keySet());
 
-                if (removeAllAdvancementsIfNeeded(numAdvancementsRemoved)) {
-                    break modification;
+                if (ConfigManager.NO_RECIPE_ADVANCEMENTS.get()) {
+                    LOGGER.info("Starting to remove recipe advancements...");
+                    int temp = advancements.size();
+                    advancements.keySet().removeIf(id -> {
+                        boolean isRecipe = ResourceLocationHelper.containsInPath(id, "recipes/");
+
+                        if(isRecipe) LOGGER.debug("Removed recipe advancement: {}", id);
+
+                        return isRecipe;
+                    });
+                    numRemoved += temp - advancements.size();
                 }
 
-                loadCustomAdvancements(numAdvancementsLoaded, numAdvancementsRemoved);
-                removeRecipeAdvancementsIfNeeded(numAdvancementsRemoved);
-                removeListedAdvancementsIfNeeded(numAdvancementsRemoved);
+                Set<ResourceLocation> blacklistedAdvancements = ConfigManager.getBlacklistedResourceLocations();
+
+                if (!blacklistedAdvancements.isEmpty()) {
+                    int sizeBefore = advancements.size();
+
+                    if (ConfigManager.BLACKLIST_IS_WHITELIST.get()) {
+                        LOGGER.info("Starting to apply advancement whitelist...");
+
+                        Set<ResourceLocation> allowedWithParents = collectWhitelistWithAllParents(advancements, blacklistedAdvancements);
+
+                        advancements.keySet().removeIf(id -> {
+                            boolean remove = !allowedWithParents.contains(id);
+                            if (remove) {
+                                LOGGER.debug("Removed non-whitelisted advancement: {}", id);
+                            }
+                            return remove;
+                        });
+
+                    } else {
+                        Multimap<ResourceLocation, ResourceLocation> parentChildrenMap = getChildren(advancements);
+                        blacklistedAdvancements.forEach(id -> {
+                            advancements.remove(id);
+                            LOGGER.debug("Removed blacklisted advancement: {}", id);
+                            removeChildren(advancements, id, parentChildrenMap);
+                        });
+                    }
+                    numRemoved += (sizeBefore - advancements.size());
+                }
+
             }
 
             mapIn.clear();
-            mapIn.putAll(ADVANCEMENTS);
+            mapIn.putAll(advancements);
 
-            LOGGER.info("Modifying Advancement data took {} ms. Added {} custom advancements, removed {} advancements.", System.currentTimeMillis() - startTime, numAdvancementsLoaded.get(), numAdvancementsRemoved.get());
+            LOGGER.info("Modifying Advancement data took {} ms. Added {} custom advancements, removed {} advancements.", System.currentTimeMillis() - startTime, numAdded, numRemoved);
         }
         catch (Throwable e) {
             CrashReport crashReport = new CrashReport("Error while modifying advancement data!", e);
-            ExceptionHandler.getInstance().printCrashReport(crashReport);
 
             throw new ReportedException(crashReport);
         }
     }
 
-
-    private static void loadCustomAdvancements(AtomicInteger numAdvancementsAdded, AtomicInteger numAdvancementsRemoved) {
-        if (CUSTOM_ADVANCEMENTS.isEmpty() || ConfigManager.NO_ADVANCEMENTS.get()) {
-            return;
-        }
-
-        LOGGER.info("Starting to load custom advancements");
-
-        if (ConfigManager.DISABLE_STANDARD_ADVANCEMENT_LOAD.get()) {
-            ignoreMissingAdvancements(numAdvancementsRemoved);
-        }
-
-        for (Map.Entry<ResourceLocation, CustomAdvancement> entry : CUSTOM_ADVANCEMENTS.entrySet()) {
-            ResourceLocation id = entry.getKey();
-
-            if (ResourceLocationHelper.containsInPath(id, "recipes/") && ConfigManager.NO_RECIPE_ADVANCEMENTS.get()) {
-                LOGGER.debug("Skipped recipe advancement: {}", id);
-                numAdvancementsRemoved.getAndIncrement();
-                continue;
-            }
-
-            if (ADVANCEMENT_IDS.contains(id)) { //TODO: Still useful?
-                LOGGER.error("Duplicate id '{}' for advancement: {}", id, entry.getValue().getFileName());
-                continue;
-            }
-
-            CustomAdvancement advancement = entry.getValue();
-            id = ResourceLocationHelper.stripFileExtension(id, ".json");
-
-            ADVANCEMENTS.put(id, advancement.getJsonObject());
-
-            LOGGER.debug("Loaded {} into Advancement Manager!", id);
-            numAdvancementsAdded.getAndIncrement();
-        }
+    private boolean loadNoAdvancements() {
+        return ConfigManager.NO_ADVANCEMENTS.get() || ConfigManager.getBlacklistedResourceLocations().isEmpty() && ConfigManager.BLACKLIST_IS_WHITELIST.get();
     }
 
 
-    private static void removeRecipeAdvancementsIfNeeded(AtomicInteger counter) {
-        if (!ConfigManager.NO_RECIPE_ADVANCEMENTS.get()) {
-            return;
-        }
-
-        LOGGER.info("Starting to remove recipe advancements...");
-
-        ADVANCEMENT_IDS.stream().filter(id -> ResourceLocationHelper.containsInPath(id, "recipes/")).forEach(id -> removeAdvancement(ADVANCEMENTS, id, counter));
-    }
-
-
-    private static void removeBlacklistedAdvancements(ImmutableSet<ResourceLocation> blacklistedAdvancements, AtomicInteger counter) {
-        LOGGER.info("Starting to remove blacklisted advancements...");
-
-        Multimap<ResourceLocation, ResourceLocation> children = getChildren(ADVANCEMENTS);
-
-        for (ResourceLocation blacklistedAdvancement : blacklistedAdvancements) {
-            removeAdvancement(ADVANCEMENTS, blacklistedAdvancement, counter);
-
-            removeChildren(ADVANCEMENTS, blacklistedAdvancement, children, counter);
-        }
-    }
-
-
-    private static void removeNoneWhitelistedAdvancements(ImmutableSet<ResourceLocation> blacklistedAdvancements, AtomicInteger counter) {
-        LOGGER.info("Starting to remove none whitelisted advancements...");
-
-        Map<ResourceLocation, ResourceLocation> parents = getParents();
-        Set<ResourceLocation> mapKeySet = new HashSet<>(ADVANCEMENTS.keySet());
-
-        for (ResourceLocation advancement : mapKeySet) {
-            if (!blacklistedAdvancements.contains(advancement) && !parents.containsValue(advancement)) {
-                removeAdvancement(ADVANCEMENTS, advancement, counter);
-            }
-        }
-    }
-
-
-    private static void removeAdvancement(Map<ResourceLocation, ?> mapIn, ResourceLocation advancement, AtomicInteger counter) {
-        mapIn.remove(advancement);
-        ExceptionHandler.getInstance().addRemovedAdvancement(advancement);
-        counter.getAndIncrement();
-
-        LOGGER.debug("Removed advancement: {}", advancement);
-    }
-
-
-    private static void removeListedAdvancementsIfNeeded(AtomicInteger counter) {
-        ImmutableSet<ResourceLocation> blacklistedAdvancements = ConfigManager.getBlacklistedResourceLocations();
-
-        if (!blacklistedAdvancements.isEmpty()) {
-            if (ConfigManager.BLACKLIST_IS_WHITELIST.get()) {
-                removeNoneWhitelistedAdvancements(blacklistedAdvancements, counter);
-            }
-            else {
-                removeBlacklistedAdvancements(blacklistedAdvancements, counter);
-            }
-        }
-        else if (ConfigManager.BLACKLIST_IS_WHITELIST.get()) {
-            removeAllAdvancementsIfNeeded(counter);
-        }
-    }
-
-
-    private static boolean removeAllAdvancementsIfNeeded(AtomicInteger counter) {
-        if (ConfigManager.NO_ADVANCEMENTS.get() || ConfigManager.getBlacklistedResourceLocations().isEmpty() && ConfigManager.BLACKLIST_IS_WHITELIST.get()) {
-            LOGGER.info("Starting to remove all advancements...");
-
-            counter.set(ADVANCEMENTS.size());
-            ExceptionHandler.getInstance().addRemovedAdvancements(ADVANCEMENTS.keySet());
-
-            ADVANCEMENTS.clear();
-
-            return true;
-        }
-
-        return false;
-    }
-
-
-    private static Multimap<ResourceLocation, ResourceLocation> getChildren(Map<ResourceLocation, ?> mapIn) {
+    private Multimap<ResourceLocation, ResourceLocation> getChildren(Map<ResourceLocation, JsonElement> mapIn) {
         Multimap<ResourceLocation, ResourceLocation> children = ArrayListMultimap.create();
 
-        for (ResourceLocation id : mapIn.keySet()) {
+        mapIn.forEach((id, jsonElement) -> {
             ResourceLocation parent;
-            Object obj = mapIn.get(id);
 
-            if (obj instanceof JsonElement jsonElement) {
-                JsonElement parentField = jsonElement.getAsJsonObject().get("parent");
-                parent = parentField != null ? ResourceLocation.tryParse(parentField.getAsString()) : null;
-            }
-            else if (obj instanceof CustomAdvancement customAdvancement) {
-                parent = customAdvancement.getParent();
-            }
-            else {
-                throw new RuntimeException("Unexpected input: Map<ResourceLocation, " + mapIn.get(id).getClass().getName() + ">!");
-            }
+            JsonElement parentField = jsonElement.getAsJsonObject().get("parent");
+            parent = parentField != null ? ResourceLocation.tryParse(parentField.getAsString()) : null;
 
             if (parent != null) {
                 children.put(parent, id);
             }
-        }
+        });
 
         return children;
     }
 
 
-    private static Map<ResourceLocation, ResourceLocation> getParents() {
-        Map<ResourceLocation, ResourceLocation> parents = new HashMap<>();
-
-        for (ResourceLocation resourceLocation : ADVANCEMENTS.keySet()) {
-            getParent(parents, resourceLocation, true);
-        }
-
-        return parents;
-    }
-
-
-    private static void getParent(Map<ResourceLocation, ResourceLocation> parents, ResourceLocation id, boolean checkForBlacklist) {
-        JsonElement parent = ADVANCEMENTS.get(id);
-
-        if (parent == null) {
-            LOGGER.warn("Unknown advancement in blacklist/ whitelist with id: {}", id);
-
-            return;
-        }
-
-        parent = parent.getAsJsonObject().get("parent");
-
-        if (ConfigManager.getBlacklistedResourceLocations().contains(id) || !checkForBlacklist) {
-            ResourceLocation parentResourceLocation = ResourceLocation.tryParse(parent.getAsString());
-
-            parents.put(id, parentResourceLocation);
-
-            getParent(parents, parentResourceLocation, false);
+    private void removeChildren(Map<ResourceLocation, JsonElement> mapIn, ResourceLocation resourceLocationIn, Multimap<ResourceLocation, ResourceLocation> children) {
+        for (ResourceLocation child : children.get(resourceLocationIn)) {
+            mapIn.remove(child);
+            LOGGER.debug("Removed child advancement {} from parent {}", child, resourceLocationIn);
+            removeChildren(mapIn, child, children);
         }
     }
 
 
-    private static void removeChildren(Map<ResourceLocation, ?> mapIn, ResourceLocation resourceLocationIn, Multimap<ResourceLocation, ResourceLocation> children, AtomicInteger counter) {
-        for (ResourceLocation childAdvancement : children.get(resourceLocationIn)) {
-            if (mapIn.containsKey(childAdvancement)) {
-                removeAdvancement(mapIn, childAdvancement, counter);
-            }
+    private Set<ResourceLocation> collectWhitelistWithAllParents(Map<ResourceLocation, JsonElement> advancements, Set<ResourceLocation> whitelist) {
+        Set<ResourceLocation> allowedIds = new HashSet<>();
 
-            removeChildren(mapIn, childAdvancement, children, counter);
-        }
-    }
+        for (ResourceLocation whitelistedId : whitelist) {
+            ResourceLocation currentId = whitelistedId;
 
-
-    private static void ignoreMissingAdvancements(AtomicInteger counter) {
-        Set<ResourceLocation> missingAdvancements = getMissingAdvancements();
-
-        if (missingAdvancements.isEmpty()) {
-            return;
-        }
-
-        Multimap<ResourceLocation, ResourceLocation> children = getChildren(CUSTOM_ADVANCEMENTS);
-
-        for (ResourceLocation advancement : missingAdvancements) {
-            removeAdvancement(CUSTOM_ADVANCEMENTS, advancement, counter);
-
-            removeChildren(CUSTOM_ADVANCEMENTS, advancement, children, counter);
-        }
-    }
-
-
-    private static Set<ResourceLocation> getMissingAdvancements() {
-        Set<ResourceLocation> parentIds = new HashSet<>();
-        Set<ResourceLocation> missingAdvancements = new HashSet<>();
-
-        CUSTOM_ADVANCEMENTS.forEach((resourceLocation, advancement) -> parentIds.add(advancement.getParent()));
-
-        if (!CUSTOM_ADVANCEMENTS.keySet().containsAll(parentIds)) {
-            CUSTOM_ADVANCEMENTS.forEach((id, advancement) -> {
-                ResourceLocation parent = advancement.getParent();
-                if (parent != null && !CUSTOM_ADVANCEMENTS.containsKey(parent)) {
-                    missingAdvancements.add(id);
+            while (currentId != null && advancements.containsKey(currentId)) {
+                if (!allowedIds.add(currentId)) {
+                    break;
                 }
-            });
+
+                JsonElement jsonElement = advancements.get(currentId);
+                JsonElement parentField = jsonElement.getAsJsonObject().get("parent");
+
+                currentId = parentField != null ? ResourceLocation.tryParse(parentField.getAsString()) : null;
+            }
         }
-        return missingAdvancements;
+
+        return allowedIds;
     }
 
 
-    public static void clearAll() {
-        ADVANCEMENTS.clear();
-        ADVANCEMENT_IDS.clear();
+
+    public void clear() {
+        advancementIds.clear();
+        this.customAdvancementsFuture = PartialCompletableFuture.completedFuture(new ConcurrentHashMap<>());
     }
 
 
-    public static void setSaveMode(boolean safeMode) {
-        SAFE_MODE = safeMode;
+    public void setSaveMode(boolean safeMode) {
+        this.safeMode = safeMode;
+    }
+
+    public boolean isCustomAdvancement(ResourceLocation resourceLocation) {
+        return this.customAdvancementsFuture.join().containsKey(resourceLocation);
+    }
+
+    public void sendBackgroundDataToClient(Consumer<CustomPacketPayload> sender, TextureHandler textureHandler) {
+        this.customAdvancementsFuture.thenAccept(map -> {
+            Map<ResourceLocation, JsonElement> backgroundInfos = new HashMap<>();
+            Map<ResourceLocation, int[]> imageDimensions = textureHandler.getImageDimensions();
+            map.entrySet().stream()
+                    .filter(entry -> entry.getValue().getBackgroundInfo() != null)
+                    .forEach(entry -> {
+                        CustomAdvancement advancement = entry.getValue();
+                        JsonElement backgroundInfo = advancement.getBackgroundInfo();
+
+                        if(backgroundInfo.isJsonObject()) {
+                            JsonObject jsonObject = backgroundInfo.getAsJsonObject();
+
+                            ResourceLocation textureId = ResourceLocation.tryParse(jsonObject.get("location").getAsString());
+
+                            int[] dimensions = imageDimensions.get(textureId);
+
+                            if (dimensions != null && dimensions.length == 2) {
+                                jsonObject.addProperty("imageWidth", dimensions[0]);
+                                jsonObject.addProperty("imageHeight", dimensions[1]);
+                            }
+                        }
+
+                        backgroundInfos.put(advancement.getId(), backgroundInfo);
+                    });
+
+            sender.accept(new SyncBackgroundDataPayload(backgroundInfos));
+        });
     }
 }

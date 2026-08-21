@@ -2,46 +2,29 @@ package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.thedead2.customadvancements.client.BackgroundType;
-import de.thedead2.customadvancements.client.IBackgroundRenderer;
-import de.thedead2.customadvancements.util.ResourceLocationHelper;
 import de.thedead2.customadvancements.util.core.ModHelper;
-import de.thedead2.customadvancements.util.io.LegacyConverter;
 import net.minecraft.resources.ResourceLocation;
-
-import javax.annotation.Nullable;
-import java.io.IOException;
+import org.jetbrains.annotations.Nullable;
 
 
 public class CustomAdvancement {
 
     private final JsonObject jsonObject;
 
-    private final String fileName;
-
-    private final ResourceLocation resourceLocation;
+    private final ResourceLocation id;
 
     @Nullable
-    private final ResourceLocation parentAdvancement;
-
-    @Nullable
-    private final IBackgroundRenderer backgroundRenderer;
+    private final JsonElement backgroundInfo;
 
 
-    public CustomAdvancement(JsonObject jsonObject, String fileName, String path) throws IOException {
+    public CustomAdvancement(ResourceLocation id, JsonObject jsonObject) {
         this.jsonObject = jsonObject;
-        this.fileName = fileName;
-        this.resourceLocation = ResourceLocationHelper.createIdFromPath(path);
-        this.parentAdvancement = this.jsonObject.has("parent") ? ResourceLocation.tryParse(this.jsonObject.get("parent").getAsString() + ".json") : null;
-
-        LegacyConverter.checkAndUpdate(this.resourceLocation, this.jsonObject);
-
-        this.backgroundRenderer = createBackgroundRenderer();
+        this.id = id;
+        this.backgroundInfo = extractBackgroundInfo();
     }
 
 
-    private @Nullable IBackgroundRenderer createBackgroundRenderer() {
-        final @Nullable IBackgroundRenderer backgroundRenderer;
+    private @Nullable JsonElement extractBackgroundInfo() {
         JsonObject display = this.jsonObject.getAsJsonObject("display");
 
         if (display == null || !display.has("background")) {
@@ -49,20 +32,9 @@ public class CustomAdvancement {
         }
 
         JsonElement jsonElement = display.get("background");
+        display.addProperty("background", ResourceLocation.tryBuild(ModHelper.MOD_ID, "fake_texture_location").toString());
 
-        if (jsonElement.isJsonPrimitive()) {
-            backgroundRenderer = BackgroundType.TEXTURE.createRenderer(jsonElement);
-        }
-        else {
-            JsonObject background = jsonElement.getAsJsonObject();
-
-            backgroundRenderer = BackgroundType.fromJson(background.get("type"), this.resourceLocation).createRenderer(background);
-
-            //display.remove("background");
-            display.addProperty("background", ResourceLocation.tryBuild(ModHelper.MOD_ID, "fake_texture_location").toString());
-        }
-
-        return backgroundRenderer;
+        return jsonElement;
     }
 
 
@@ -71,30 +43,19 @@ public class CustomAdvancement {
     }
 
 
-    public String getFileName() {
-        return this.fileName;
-    }
-
-
-    public ResourceLocation getResourceLocation() {
-        return this.resourceLocation;
+    public ResourceLocation getId() {
+        return this.id;
     }
 
 
     @Nullable
-    public ResourceLocation getParent() {
-        return this.parentAdvancement;
-    }
-
-
-    @Nullable
-    public IBackgroundRenderer getBackgroundRenderer() {
-        return backgroundRenderer;
+    public JsonElement getBackgroundInfo() {
+        return this.backgroundInfo;
     }
 
 
     @Override
     public String toString() {
-        return "Custom Advancement: {fileName = " + this.fileName + ", resourceLocation = " + this.resourceLocation + ", parent = " + this.parentAdvancement + "}";
+        return "Custom Advancement: {id = " + this.id + "}";
     }
 }

@@ -1,7 +1,5 @@
 package de.thedead2.customadvancements.platform;
 
-import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 
 import java.nio.file.Path;
@@ -10,9 +8,9 @@ import java.util.Optional;
 public interface IPlatformHelper {
 
     /**
-     * Gets the name of the current platform
+     * Gets the name of the current de.thedead2.customadvancements.platform
      *
-     * @return The name of the current platform.
+     * @return The name of the current de.thedead2.customadvancements.platform.
      */
     String getPlatformName();
 
@@ -42,9 +40,9 @@ public interface IPlatformHelper {
 
     Path getGameDirectory();
 
-    boolean executeOnClient(Runnable action);
+    boolean isClient();
 
     Optional<MinecraftServer> getServer();
 
-    void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher);
+    String getModVersion(String modId);
 }

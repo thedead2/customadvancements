@@ -1,8 +1,6 @@
 package de.thedead2.customadvancements.util.io;
 
-import de.thedead2.customadvancements.util.exceptions.ExceptionHandler;
 import de.thedead2.customadvancements.util.exceptions.FileCopyException;
-import org.slf4j.event.Level;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,23 +12,30 @@ import java.nio.file.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.CUSTOM_ADVANCEMENTS_PATH;
 import static de.thedead2.customadvancements.util.core.ModHelper.*;
+import static de.thedead2.customadvancements.util.io.LanguageHandler.LANG_PATH;
+import static de.thedead2.customadvancements.util.io.TextureHandler.TEXTURES_PATH;
 
 
 public class FileHandler {
 
+    public static final Executor IO_POOL = Executors.newCachedThreadPool();
+
     public static void checkForMainDirectories() {
         createDirectoryIfNecessary(DIR_PATH.toFile());
 
-        createAndCopyDirectoryIfNecessary(CUSTOM_ADVANCEMENTS_PATH, "examples/advancements", ".json");
+        createAndCopyDirectoryIfNecessary(CUSTOM_ADVANCEMENTS_PATH, "/examples/advancements", ".json");
 
         createDirectoryIfNecessary(DATA_PATH.toFile());
 
-        createAndCopyDirectoryIfNecessary(TEXTURES_PATH, "examples/data/textures", ".png");
-        createAndCopyDirectoryIfNecessary(LANG_PATH, "examples/data/lang", ".json");
+        createAndCopyDirectoryIfNecessary(TEXTURES_PATH, "/examples/data/textures", ".png");
+        createAndCopyDirectoryIfNecessary(LANG_PATH, "/examples/data/lang", ".json");
     }
 
 
@@ -60,7 +65,7 @@ public class FileHandler {
                 copyModFiles(examplePath, path, fileFilter);
             }
             catch (FileCopyException e) {
-                ExceptionHandler.getInstance().log("Unable to copy example files to " + path, e, Level.WARN);
+                LOGGER.warn("Unable to copy example files to {}", path, e);
             }
         }
     }

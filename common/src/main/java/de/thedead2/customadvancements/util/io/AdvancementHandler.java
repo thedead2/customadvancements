@@ -3,8 +3,11 @@ package de.thedead2.customadvancements.util.io;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
+import de.thedead2.customadvancements.util.helper.JsonHelper;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.ByteArrayInputStream;
@@ -32,21 +35,24 @@ public class AdvancementHandler {
 
         createDirectoryIfNecessary(basePath.toFile());
 
-        String formatedJsonObject = JsonHandler.formatJsonObject(advancementData);
+        String formatedJsonObject = JsonHelper.formatJsonObject(advancementData);
         Path filePath = resolvePath(basePath, advancementId.getPath(), folderNames);
 
         writeFile(new ByteArrayInputStream(formatedJsonObject.getBytes()), filePath);
     }
 
 
-    public static void writeAdvancementToFile(AdvancementHolder advancementIn) throws IOException {
-        writeAdvancementToFile(advancementIn.id(), serializeToJson(advancementIn.value()));
+    public static void writeAdvancementToFile(AdvancementHolder advancementIn, HolderLookup.Provider registryAccess) throws IOException {
+        writeAdvancementToFile(advancementIn.id(), serializeToJson(advancementIn.value(), registryAccess));
     }
 
 
-    public static JsonElement serializeToJson(Advancement advancementIn) {
-        JsonObject jsonObject = Advancement.CODEC.encodeStart(JsonOps.INSTANCE, advancementIn).result().get().getAsJsonObject();
-        JsonHandler.removeNullFields(jsonObject);
+    public static JsonElement serializeToJson(Advancement advancementIn, HolderLookup.Provider registryAccess) {
+        RegistryOps<JsonElement> ops = registryAccess.createSerializationContext(JsonOps.INSTANCE);
+
+        var temp = Advancement.CODEC.encodeStart(ops, advancementIn).getOrThrow(s -> new NullPointerException("Can't serialize advancement " + advancementIn + "\n\n" + s));
+        JsonObject jsonObject = temp.getAsJsonObject();
+        JsonHelper.removeNullFields(jsonObject);
 
         return jsonObject;
     }

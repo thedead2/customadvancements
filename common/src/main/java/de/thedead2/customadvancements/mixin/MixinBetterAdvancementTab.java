@@ -1,18 +1,18 @@
 /*
-package de.thedead2.customadvancements.mixin;
+package de.thedead2.customadvancements.de.thedead2.customadvancements.mixin;
 
 import betteradvancements.common.gui.BetterAdvancementTab;
 import betteradvancements.common.gui.BetterAdvancementWidget;
 import de.thedead2.customadvancements.client.RenderUtil;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.gui.GuiGraphics;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.de.thedead2.customadvancements.mixin.Final;
+import org.spongepowered.asm.de.thedead2.customadvancements.mixin.Mixin;
+import org.spongepowered.asm.de.thedead2.customadvancements.mixin.Pseudo;
+import org.spongepowered.asm.de.thedead2.customadvancements.mixin.Shadow;
+import org.spongepowered.asm.de.thedead2.customadvancements.mixin.injection.At;
+import org.spongepowered.asm.de.thedead2.customadvancements.mixin.injection.Inject;
+import org.spongepowered.asm.de.thedead2.customadvancements.mixin.injection.callback.CallbackInfo;
 
 
 @Pseudo

@@ -1,7 +1,6 @@
 
 plugins {
     id 'java'
-    id 'idea'
     id 'maven-publish'
     id "fabric-loom" version "$fabric_loom_version"
 }
@@ -20,10 +19,13 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
-    implementation project(":common")
+    implementation project(path: ":common", configuration: "namedElements")
+    implementation project(path: ":mc_libs", configuration: "namedElements")
 
     modApi("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeconfig_api_port_version}")
 }
+
+loom.log4jConfigs.from "log4j-dev.xml"
 
 loom {
     if (project(":common").file("src/main/resources/${mod_id}.accesswidener").exists()) {
@@ -32,34 +34,38 @@ loom {
     mixin {
         defaultRefmapName.set("${mod_id}.refmap.json")
     }
+
     runs {
         client {
             client()
-            name = "Fabric - Client"
+            name = "fabric - Client"
             ideConfigGenerated(true)
             runDir("run/client")
         }
         server {
             server()
-            name = "Fabric - Server"
+            name = "fabric - Server"
             ideConfigGenerated(true)
             runDir("run/server")
         }
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    source(project(":common").sourceSets.main.allSource)
-}
-tasks.withType(Javadoc).configureEach {
-    source(project(":common").sourceSets.main.allJava)
-}
-tasks.named("sourcesJar", Jar) {
-    from(project(":common").sourceSets.main.allSource)
+jar {
+    from project(":common").sourceSets.main.output.classesDirs
+    from project(":mc_libs").sourceSets.main.output.classesDirs
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 processResources {
     from project(":common").sourceSets.main.resources
+    from project(":mc_libs").sourceSets.main.resources
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named("sourcesJar", Jar) {
+    from(project(":common").sourceSets.main.allSource)
+    from(project(":mc_libs").sourceSets.main.allSource)
 }
 
 publishing {

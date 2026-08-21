@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.mixin;
 
 import de.thedead2.customadvancements.util.core.ConfigManager;
-import de.thedead2.customadvancements.util.io.MixinHelper;
+import de.thedead2.customadvancements.util.helper.MixinHelper;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementNode;
 import net.minecraft.advancements.AdvancementProgress;
@@ -32,7 +32,7 @@ public class MixinAdvancementsScreen {
     }
 
 
-    @Inject(at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", shift = At.Shift.AFTER), method = "onAddAdvancementRoot(Lnet/minecraft/advancements/AdvancementNode;)V", locals = LocalCapture.CAPTURE_FAILSOFT)
+    @Inject(at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", shift = At.Shift.AFTER), method = "onAddAdvancementRoot(Lnet/minecraft/advancements/AdvancementNode;)V")
     public void onNewAdvancementTab(AdvancementNode pAdvancement, CallbackInfo ci) {
         ConfigManager.ADVANCEMENT_TAB_SORTING_MODE.get().sortAdvancementTabs(this.tabs);
     }
