@@ -6,7 +6,7 @@ plugins {
 }
 
 base {
-    archivesName = "${mod_id}"
+    archivesName = "${mod_id}-common"
 }
 
 dependencies {

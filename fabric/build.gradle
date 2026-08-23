@@ -6,7 +6,7 @@ plugins {
 }
 
 base {
-    archivesName = "${mod_id}"
+    archivesName = "${mod_id}-fabric"
 }
 
 dependencies {
@@ -19,8 +19,8 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
-    implementation project(path: ":common", configuration: "namedElements")
-    implementation project(path: ":mc_libs", configuration: "namedElements")
+  /*  implementation project(path: ":common", configuration: "namedElements")
+    implementation project(path: ":mc_libs", configuration: "namedElements")*/
 
     modApi("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeconfig_api_port_version}")
 }
@@ -51,7 +51,7 @@ loom {
     }
 }
 
-jar {
+/*jar {
     from project(":common").sourceSets.main.output.classesDirs
     from project(":mc_libs").sourceSets.main.output.classesDirs
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -66,7 +66,7 @@ processResources {
 tasks.named("sourcesJar", Jar) {
     from(project(":common").sourceSets.main.allSource)
     from(project(":mc_libs").sourceSets.main.allSource)
-}
+}*/
 
 publishing {
     publications {

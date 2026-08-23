@@ -3,7 +3,7 @@ plugins {
 }
 
 base {
-    archivesName = "${mod_id}"
+    archivesName = "${mod_id}-neoforge"
 }
 
 /*// Automatically enable neoforge AccessTransformers if the file exists
@@ -134,9 +134,9 @@ neoForge {
     }
 }
 
-dependencies {
+/*dependencies {
     compileOnly project(path: ":common", configuration: "namedElements")
-}
+}*/
 
 // Exclude Fabric Loader from NeoForge
 configurations {
@@ -159,3 +159,14 @@ tasks.named('createMinecraftArtifacts') {
 tasks.withType(JavaExec).configureEach {
     dependsOn tasks.named('processResources')
 }
+/*
+
+tasks.named('jar', Jar) {
+    from project(":common").sourceSets.main.output
+    from project(":mc_libs").sourceSets.main.output
+}
+
+tasks.named('sourcesJar', Jar) {
+    from project(":common").sourceSets.main.allSource
+    from project(":mc_libs").sourceSets.main.allSource
+}*/
