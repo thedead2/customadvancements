@@ -26,6 +26,7 @@ public class LanguageHandler {
 
     private PartialCompletableFuture<Map<String, JsonElement>> langFilesFuture = PartialCompletableFuture.completedFuture(new ConcurrentHashMap<>());
 
+
     public void loadLangFiles() {
         this.langFilesFuture = PartialCompletableFuture.supplyAsync(new ConcurrentHashMap<>(), PartialCompletableFuture.Utils.mapClone(), (map, throwable) -> {
             LOGGER.error("Failed to load lang files!", throwable);
