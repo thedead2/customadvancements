@@ -35,10 +35,6 @@ public class CommonEventListeners {
         }
     }
 
-    public static void onGameShutdown() {
-        ConfigManager.resetDebugMode();
-    }
-
     public static void onServerStop() {
         CAMain.getInstance().clearLoadingStates();
     }

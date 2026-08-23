@@ -46,8 +46,6 @@ public class TextureHandler {
                     String fileExtension = fileName.substring(texture.getName().lastIndexOf('.'));
 
                     if (fileExtension.matches("(?i)" + String.join("|", VALID_FILE_EXTENSIONS))) {
-                        LOGGER.debug("Found file: {}", fileName);
-
                         ResourceLocation textureId = ResourceLocation.tryParse(MOD_ID + ":" + "textures" + "/" + fileName);
                         int[] dimensions;
 
@@ -58,6 +56,7 @@ public class TextureHandler {
                             LOGGER.error("Failed to read image dimensions of file: {}", fileName, e);
                             dimensions = new int[]{};
                         }
+                        LOGGER.debug("Found valid texture file {} with dimensions: {}", fileName, Arrays.toString(dimensions));
                         textures.put(textureId, Pair.of(texture, dimensions));
                     }
                     else {

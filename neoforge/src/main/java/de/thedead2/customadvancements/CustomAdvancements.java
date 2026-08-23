@@ -22,7 +22,6 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
-import net.neoforged.neoforge.event.GameShuttingDownEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -44,7 +43,6 @@ public class CustomAdvancements {
         NeoForge.EVENT_BUS.addListener(this::onPlayerJoin);
         NeoForge.EVENT_BUS.addListener(this::onCommandsRegister);
         NeoForge.EVENT_BUS.addListener(this::onPlayerDeath);
-        NeoForge.EVENT_BUS.addListener(this::onGameShutdown);
         NeoForge.EVENT_BUS.addListener(this::onServerStopping);
         NeoForge.EVENT_BUS.addListener(this::onAddReloadListeners);
 
@@ -116,10 +114,6 @@ public class CustomAdvancements {
 
     private void onPlayerDeath(final PlayerEvent.PlayerRespawnEvent event) {
         CommonEventListeners.onPlayerDeath((ServerPlayer) event.getEntity());
-    }
-
-    private void onGameShutdown(final GameShuttingDownEvent ignored) {
-        CommonEventListeners.onGameShutdown();
     }
 
     private void onRegisterClientReloadListeners(final RegisterClientReloadListenersEvent event) {

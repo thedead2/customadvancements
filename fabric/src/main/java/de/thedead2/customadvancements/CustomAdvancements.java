@@ -35,7 +35,6 @@ public class CustomAdvancements implements ModInitializer {
             CommonEventListeners.onServerStart();
         }));
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> CommonEventListeners.onPlayerDeath(newPlayer));
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> CommonEventListeners.onGameShutdown());
 
         if(PLATFORM.isClient())
             ClientLifecycleEvents.CLIENT_STARTED.register(client -> CommonEventListeners.onCommonSetup());

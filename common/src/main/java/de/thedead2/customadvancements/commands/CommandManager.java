@@ -4,7 +4,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.thedead2.customadvancements.CAMain;
-import de.thedead2.customadvancements.util.core.ConfigManager;
 import de.thedead2.customadvancements.util.helper.ResourceLocationHelper;
 import de.thedead2.customadvancements.util.io.AdvancementHandler;
 import de.thedead2.mc_libs.io.FileHandler;
@@ -17,7 +16,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.ByteArrayInputStream;
@@ -49,21 +47,6 @@ public class CommandManager {
 
 
     static {
-        register(CommandBuilder
-                .newCommand("ca/debug")
-                .withAction(command -> {
-                    boolean current = ConfigManager.DEBUG_MODE.getAsBoolean();
-
-                    ConfigManager.DEBUG_MODE.set(!current);
-
-                    command.getSource().sendSuccess(() -> Component.literal("Debug Mode set to " + !current), true);
-
-                    return CommandResult.SUCCESS;
-                })
-                .build()
-        );
-
-
         register(CommandBuilder
                 .newCommand("ca/reload")
                 .withAction(commandContext -> {

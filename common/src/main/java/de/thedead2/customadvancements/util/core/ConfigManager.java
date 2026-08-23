@@ -12,7 +12,6 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import java.util.*;
 import java.util.function.Predicate;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
 
 public class ConfigManager {
 
@@ -21,10 +20,6 @@ public class ConfigManager {
     private static final ModConfigSpec.Builder CONFIG_BUILDER = new ModConfigSpec.Builder();
 
     // ################################################################ All Config fields for Custom Advancements ################################################################
-
-    public static final ModConfigSpec.BooleanValue DEBUG_MODE;
-
-    public static final ModConfigSpec.BooleanValue OUT_DATED_MESSAGE;
 
     public static final ModConfigSpec.BooleanValue NO_RECIPE_ADVANCEMENTS;
 
@@ -55,10 +50,6 @@ public class ConfigManager {
 
     static {
         CONFIG_BUILDER.push("Config for " + ModHelper.MOD_NAME);
-
-        DEBUG_MODE = newBoolVal("Enables the mods debug mode. Only use if you're having problems! Will be reset after each restart of the game.", "debugMode", false);
-
-        OUT_DATED_MESSAGE = newBoolVal("Whether the mod should send a chat message if an update is available", "warnMessage", true);
 
         NO_ADVANCEMENTS = newBoolVal("Whether the mod should remove all advancements", "noAdvancements", false);
 
@@ -195,12 +186,5 @@ public class ConfigManager {
 
     private static Collection<AdvancementHolder> getAllAdvancements() {
         return ModHelper.getServer().get().getAdvancements().getAllAdvancements();
-    }
-
-    public static void resetDebugMode() {
-        DEBUG_MODE.set(DEBUG_MODE.getDefault());
-        DEBUG_MODE.save();
-
-        LOGGER.debug("Debug mode has been reset!");
     }
 }

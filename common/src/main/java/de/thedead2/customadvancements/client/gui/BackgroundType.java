@@ -24,7 +24,7 @@ public enum BackgroundType {
     IMAGE(jsonElement -> {
         TextureInfo textureInfo = TextureInfo.fromJson(jsonElement.getAsJsonObject());
 
-        return (guiGraphics, xMin, xMax, yMin, yMax, scrollX, scrollY) -> RenderUtils.renderImage(guiGraphics, textureInfo, Area.withCorners(xMin, xMax, yMin, yMax, 0), new float[] {1, 1, 1, 1});
+        return (guiGraphics, xMin, xMax, yMin, yMax, scrollX, scrollY) -> RenderUtils.renderImage(guiGraphics, textureInfo, Area.withCorners(xMin, xMax, yMin, yMax, 0));
     }),
 
     TEXTURE(jsonElement -> {
@@ -46,9 +46,9 @@ public enum BackgroundType {
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate((float) xMin, (float) yMin, 0.0F);
 
-            for (int columns = -1; columns < (xMax - xMin) / textureSize; ++columns) {
-                for (int rows = 0; rows <= (yMax - yMin) / textureSize; ++rows) {
-                    guiGraphics.blit(resourcelocation, k + textureSize * columns, l + textureSize * rows, 0.0F, 0.0F, textureSize, textureSize, textureSize, textureSize); //FIXME: Sometimes wrong starting offset?
+            for (int columns = -1; columns <= (xMax - xMin) / textureSize + 1; columns++) {
+                for (int rows = -1; rows <= (yMax - yMin) / textureSize + 1; rows++) {
+                    guiGraphics.blit(resourcelocation, k + textureSize * columns, l + textureSize * rows, 0.0F, 0.0F, textureSize, textureSize, textureSize, textureSize);
                 }
             }
 
