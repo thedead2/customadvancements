@@ -2,7 +2,7 @@ package de.thedead2.customadvancements.advancements;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.thedead2.customadvancements.util.core.ModHelper;
+import de.thedead2.customadvancements.util.ModHelper;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 

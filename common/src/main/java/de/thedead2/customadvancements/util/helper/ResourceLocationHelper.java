@@ -4,8 +4,8 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.regex.Matcher;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.DIR_PATH;
-import static de.thedead2.customadvancements.util.core.ModHelper.PATH_SEPARATOR;
+import static de.thedead2.customadvancements.util.ModHelper.DIR_PATH;
+import static de.thedead2.customadvancements.util.ModHelper.PATH_SEPARATOR;
 
 
 public class ResourceLocationHelper {

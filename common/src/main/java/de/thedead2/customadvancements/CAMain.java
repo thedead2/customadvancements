@@ -1,12 +1,13 @@
 package de.thedead2.customadvancements;
 
 import de.thedead2.customadvancements.advancements.CustomAdvancementManager;
-import de.thedead2.customadvancements.util.io.*;
+import de.thedead2.customadvancements.data.LanguageHandler;
+import de.thedead2.customadvancements.data.TextureHandler;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import java.util.function.Consumer;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.*;
+import static de.thedead2.customadvancements.util.ModHelper.*;
 
 public class CAMain {
     private static final CAMain INSTANCE = new CAMain();
@@ -24,10 +25,6 @@ public class CAMain {
 
     public void loadData() {
         LOGGER.info("Starting to load advancement data from disk...");
-
-        /*if (BA_COMPATIBILITY.get()) {
-            LOGGER.info("Found BetterAdvancements to be present! Enabling compatibility mode...");
-        }*/
 
         textureHandler.loadTextureFiles();
         languageHandler.loadLangFiles();

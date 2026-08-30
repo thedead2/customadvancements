@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 
 import net.minecraft.resources.ResourceLocation;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
 
 public class LegacyConverter {
 

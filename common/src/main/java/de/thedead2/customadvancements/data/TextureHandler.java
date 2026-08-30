@@ -1,8 +1,9 @@
-package de.thedead2.customadvancements.util.io;
+package de.thedead2.customadvancements.data;
 
-import de.thedead2.customadvancements.network.SyncTextureDataPayload;
+import de.thedead2.mc_libs.network.NetworkUtils;
 import de.thedead2.mc_libs.concurrent.PartialCompletableFuture;
 import de.thedead2.mc_libs.io.FileHandler;
+import de.thedead2.mc_libs.network.SyncChunkedDataPayload;
 import de.thedead2.mc_libs.util.ImageUtils;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -17,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.*;
+import static de.thedead2.customadvancements.util.ModHelper.*;
 
 
 public class TextureHandler {
@@ -74,26 +75,13 @@ public class TextureHandler {
     }
 
     public void sendTexturesToClient(Consumer<CustomPacketPayload> sender) {
-        final int chunkSize = 32768; // 32 KB
-
         this.resourcesFuture.thenAccept(map -> {
             LOGGER.info("Sending texture data to client...");
 
             map.forEach((id, pair) -> {
                 try {
-                    byte[] bytes = Files.readAllBytes(pair.getLeft().toPath());
-
-                    int totalChunks = (int) Math.ceil((double) bytes.length / chunkSize);
-
-                    for (int i = 0; i < totalChunks; i++) {
-                        int start = i * chunkSize;
-                        int end = Math.min(bytes.length, start + chunkSize);
-
-                        byte[] chunk = Arrays.copyOfRange(bytes, start, end);
-
-                        LOGGER.debug("Sending texture chunk {}/{} for texture {}", i+1, totalChunks, id);
-                        sender.accept(new SyncTextureDataPayload(id, i, totalChunks, chunk));
-                    }
+                    byte[] data = Files.readAllBytes(pair.getLeft().toPath());
+                    NetworkUtils.sendInChunks(SyncChunkedDataPayload.DataType.TEXTURE, id, data, LOGGER, sender);
                 }
                 catch (IOException e) {
                     LOGGER.error("Failed to read file: {}", pair.getLeft().getPath());

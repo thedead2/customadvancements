@@ -2,15 +2,15 @@ package de.thedead2.customadvancements.events;
 
 import de.thedead2.customadvancements.CAMain;
 import de.thedead2.customadvancements.advancements.AdvancementProgressionMode;
-import de.thedead2.customadvancements.util.core.ConfigManager;
+import de.thedead2.customadvancements.util.ConfigManager;
 import de.thedead2.mc_libs.io.FileHandler;
 import net.minecraft.server.level.ServerPlayer;
 
 import static de.thedead2.customadvancements.advancements.CustomAdvancementManager.CUSTOM_ADVANCEMENTS_PATH;
-import static de.thedead2.customadvancements.util.core.ModHelper.*;
-import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
-import static de.thedead2.customadvancements.util.io.LanguageHandler.LANG_PATH;
-import static de.thedead2.customadvancements.util.io.TextureHandler.TEXTURES_PATH;
+import static de.thedead2.customadvancements.util.ModHelper.*;
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.data.LanguageHandler.LANG_PATH;
+import static de.thedead2.customadvancements.data.TextureHandler.TEXTURES_PATH;
 
 public class CommonEventListeners {
 

@@ -6,8 +6,8 @@ import de.thedead2.customadvancements.commands.CommandManager;
 import de.thedead2.customadvancements.events.CommonEventListeners;
 import de.thedead2.customadvancements.network.SyncBackgroundDataPayload;
 import de.thedead2.customadvancements.network.SyncLangDataPayload;
-import de.thedead2.customadvancements.network.SyncTextureDataPayload;
-import de.thedead2.customadvancements.util.core.ConfigManager;
+import de.thedead2.mc_libs.network.SyncChunkedDataPayload;
+import de.thedead2.customadvancements.util.ConfigManager;
 import de.thedead2.customadvancements.util.logging.FilterRegistration;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -29,7 +29,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import org.jetbrains.annotations.NotNull;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.*;
+import static de.thedead2.customadvancements.util.ModHelper.*;
 
 
 @Mod(MOD_ID)
@@ -68,8 +68,8 @@ public class CustomAdvancements {
         );
 
         registrar.playToClient(
-                SyncTextureDataPayload.TYPE,
-                SyncTextureDataPayload.STREAM_CODEC,
+                SyncChunkedDataPayload.TYPE,
+                SyncChunkedDataPayload.STREAM_CODEC,
                 ((payload, context) -> context.enqueueWork(() -> ClientSyncHandler.acceptTextureSync(payload)))
         );
 

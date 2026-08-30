@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements;
 
 import de.thedead2.customadvancements.events.ClientEventListeners;
-import de.thedead2.customadvancements.util.core.ModHelper;
+import de.thedead2.customadvancements.util.ModHelper;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;

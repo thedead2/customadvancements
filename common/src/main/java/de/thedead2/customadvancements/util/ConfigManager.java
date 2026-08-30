@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.util.core;
+package de.thedead2.customadvancements.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

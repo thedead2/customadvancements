@@ -7,26 +7,25 @@ import de.thedead2.customadvancements.client.gui.BackgroundType;
 import de.thedead2.customadvancements.client.gui.IBackgroundRenderer;
 import de.thedead2.customadvancements.network.SyncBackgroundDataPayload;
 import de.thedead2.customadvancements.network.SyncLangDataPayload;
-import de.thedead2.customadvancements.network.SyncTextureDataPayload;
+import de.thedead2.mc_libs.network.NetworkUtils;
+import de.thedead2.mc_libs.network.SyncChunkedDataPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
 
 public class ClientSyncHandler {
 
     public static final Map<ResourceLocation, IBackgroundRenderer> BACKGROUND_RENDERERS = new HashMap<>();
     private static final Set<ResourceLocation> TEXTURE_LOCATIONS = new HashSet<>();
-    private static final Map<ResourceLocation, Map<Integer, byte[]>> TEXTURE_CHUNK_CACHE = new HashMap<>();
 
 
     public static void acceptAdvancementSync(SyncBackgroundDataPayload payload) {
@@ -60,52 +59,24 @@ public class ClientSyncHandler {
     }
 
 
-    public static void acceptTextureSync(SyncTextureDataPayload payload) {
-        ResourceLocation id = payload.textureId();
+    public static void acceptTextureSync(SyncChunkedDataPayload payload) {
+        NetworkUtils.acceptChunkedSync(SyncChunkedDataPayload.DataType.TEXTURE, payload, LOGGER, (id, data) -> {
+            LOGGER.info("Received texture with id {} ({} bytes) from server. Tying to inject it...", id, data.length);
 
-        LOGGER.debug("Received texture chunk {}/{} for texture {}", payload.chunkIndex()+1, payload.totalChunks(), id);
-        TEXTURE_CHUNK_CACHE.computeIfAbsent(id, k -> new HashMap<>())
-                .put(payload.chunkIndex(), payload.chunkData());
-
-        Map<Integer, byte[]> receivedChunks = TEXTURE_CHUNK_CACHE.get(id);
-
-        if (receivedChunks.size() == payload.totalChunks()) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-            for (int i = 0; i < payload.totalChunks(); i++) {
+            Minecraft.getInstance().execute(() -> {
                 try {
-                    buffer.write(receivedChunks.get(i));
+                    NativeImage image = NativeImage.read(new ByteArrayInputStream(data));
+                    DynamicTexture dynamicTexture = new DynamicTexture(image);
+
+                    Minecraft.getInstance().getTextureManager().register(id, dynamicTexture);
+                    TEXTURE_LOCATIONS.add(id);
                 }
                 catch (IOException e) {
-                    LOGGER.error("Error recreating texture {} from chunks", id, e);
-                    TEXTURE_CHUNK_CACHE.remove(id);
-                    return;
+                    LOGGER.error("Failed to inject texture data into texture manager: ", e);
                 }
-            }
-
-            byte[] completeImageBytes = buffer.toByteArray();
-            TEXTURE_CHUNK_CACHE.remove(id);
-            injectTexture(id, completeImageBytes);
-        }
-    }
-
-    private static void injectTexture(ResourceLocation location, byte[] bytes) {
-        LOGGER.info("Received texture with id {} ({} bytes) from server. Tying to inject it...", location, bytes.length);
-
-        Minecraft.getInstance().execute(() -> {
-            try {
-                NativeImage image = NativeImage.read(new ByteArrayInputStream(bytes));
-                DynamicTexture dynamicTexture = new DynamicTexture(image);
-
-                Minecraft.getInstance().getTextureManager().register(location, dynamicTexture);
-                TEXTURE_LOCATIONS.add(location);
-            }
-            catch (IOException e) {
-                LOGGER.error("Failed to inject texture data into texture manager: ", e);
-            }
+            });
         });
     }
-    
 
     public static void cleanUp() {
         LOGGER.info("Cleaning up client sync data...");
@@ -114,6 +85,5 @@ public class ClientSyncHandler {
 
         TEXTURE_LOCATIONS.forEach(location -> Minecraft.getInstance().getTextureManager().release(location));
         TEXTURE_LOCATIONS.clear();
-        TEXTURE_CHUNK_CACHE.clear();
     }
 }

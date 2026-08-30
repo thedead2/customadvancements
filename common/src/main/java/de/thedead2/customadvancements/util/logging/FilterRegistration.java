@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-import static de.thedead2.customadvancements.util.core.ModHelper.LOGGER;
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
 
 public class FilterRegistration {
 

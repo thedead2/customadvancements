@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.util.io;
+package de.thedead2.customadvancements.data;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.*;
+import static de.thedead2.customadvancements.util.ModHelper.*;
 
 
 public class LanguageHandler {

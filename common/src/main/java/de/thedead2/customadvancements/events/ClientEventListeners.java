@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.events;
 
 import de.thedead2.customadvancements.client.ClientSyncHandler;
-import de.thedead2.customadvancements.util.core.ConfigManager;
+import de.thedead2.customadvancements.util.ConfigManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -35,21 +35,6 @@ public class ClientEventListeners {
                 });
             }
         }
-        /*else if (BA_COMPATIBILITY.get() && screen instanceof BetterAdvancementsScreen betterAdvancementsScreen) {
-            try {
-                var clazz = betterAdvancementsScreen.getClass();
-                Field tabs = clazz.getDeclaredField("tabs");
-
-                tabs.setAccessible(true);
-
-                Object obj = tabs.get(betterAdvancementsScreen);
-
-                ConfigManager.ADVANCEMENT_TAB_SORTING_MODE.get().sortAdvancementTabs((Map<AdvancementHolder, Object>) obj);
-            }
-            catch (NoSuchFieldException | IllegalAccessException e) {
-                CrashHandler.getInstance().handleException("Failed to sort advancement tabs of BetterAdvancementsScreen!", "AdvancementTabsSorter", e, Level.ERROR);
-            }
-        }*/
     }
 
     private static Optional<Button> findButton(List<? extends GuiEventListener> listeners, String name) {
@@ -63,7 +48,7 @@ public class ClientEventListeners {
     }
 
     public static void beforeScreenInit(Screen screen) {
-        if ((screen instanceof AdvancementsScreen /*|| (BA_COMPATIBILITY.get() && screen instanceof BetterAdvancementsScreen)*/) && ConfigManager.NO_ADVANCEMENTS.get()) {
+        if ((screen instanceof AdvancementsScreen) && ConfigManager.NO_ADVANCEMENTS.get()) {
             Minecraft.getInstance().setScreen(null);
         }
     }

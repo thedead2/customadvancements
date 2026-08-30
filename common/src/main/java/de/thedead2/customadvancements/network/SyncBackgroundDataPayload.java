@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 public record SyncBackgroundDataPayload(Map<ResourceLocation, JsonElement> backgroundData) implements CustomPacketPayload {
 

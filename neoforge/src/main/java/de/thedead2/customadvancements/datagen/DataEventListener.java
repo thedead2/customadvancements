@@ -8,7 +8,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 
 @EventBusSubscriber(modid = MOD_ID, bus = EventBusSubscriber.Bus.MOD)

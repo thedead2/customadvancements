@@ -1,8 +1,8 @@
 package de.thedead2.customadvancements.advancements;
 
 import com.google.common.collect.ImmutableMap;
-import de.thedead2.customadvancements.util.core.ConfigManager;
-import de.thedead2.customadvancements.util.core.ModHelper;
+import de.thedead2.customadvancements.util.ConfigManager;
+import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.customadvancements.util.localisation.ModTranslationKeys;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.AdvancementHolder;
@@ -13,7 +13,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Optional;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 
 public enum AdvancementProgressionMode {

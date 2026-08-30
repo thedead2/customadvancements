@@ -7,11 +7,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import de.thedead2.customadvancements.network.SyncBackgroundDataPayload;
 import de.thedead2.customadvancements.util.helper.ResourceLocationHelper;
-import de.thedead2.customadvancements.util.core.ConfigManager;
+import de.thedead2.customadvancements.util.ConfigManager;
 import de.thedead2.mc_libs.io.FileHandler;
 import de.thedead2.customadvancements.util.helper.JsonHelper;
 import de.thedead2.customadvancements.util.io.LegacyConverter;
-import de.thedead2.customadvancements.util.io.TextureHandler;
+import de.thedead2.customadvancements.data.TextureHandler;
 import de.thedead2.mc_libs.concurrent.PartialCompletableFuture;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.*;
+import static de.thedead2.customadvancements.util.ModHelper.*;
 
 
 public class CustomAdvancementManager {
@@ -308,13 +308,15 @@ public class CustomAdvancementManager {
                         if(backgroundInfo.isJsonObject()) {
                             JsonObject jsonObject = backgroundInfo.getAsJsonObject();
 
-                            ResourceLocation textureId = ResourceLocation.tryParse(jsonObject.get("location").getAsString());
+                            if (jsonObject.has("location")) {
+                                ResourceLocation textureId = ResourceLocation.tryParse(jsonObject.get("location").getAsString());
 
-                            int[] dimensions = imageDimensions.get(textureId);
+                                int[] dimensions = imageDimensions.get(textureId);
 
-                            if (dimensions != null && dimensions.length == 2) {
-                                jsonObject.addProperty("imageWidth", dimensions[0]);
-                                jsonObject.addProperty("imageHeight", dimensions[1]);
+                                if (dimensions != null && dimensions.length == 2) {
+                                    jsonObject.addProperty("imageWidth", dimensions[0]);
+                                    jsonObject.addProperty("imageHeight", dimensions[1]);
+                                }
                             }
                         }
 

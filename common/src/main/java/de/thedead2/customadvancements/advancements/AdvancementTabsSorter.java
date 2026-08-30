@@ -1,7 +1,7 @@
 package de.thedead2.customadvancements.advancements;
 
 import com.google.common.collect.ImmutableList;
-import de.thedead2.customadvancements.util.core.ConfigManager;
+import de.thedead2.customadvancements.util.ConfigManager;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.client.gui.screens.advancements.AdvancementTab;
 import net.minecraft.resources.ResourceLocation;
@@ -13,25 +13,15 @@ public enum AdvancementTabsSorter {
 
     ALPHABETICALLY {
         @Override
-        protected <T> void sort(List<T> tabList) {
-            tabList.sort(Comparator.comparing(t -> {
-                if (t instanceof AdvancementTab advancementTab) {
-                    return advancementTab.getTitle().getString();
-                }
-                /*else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) {
-                    return advancementTab.getTitle().getString();
-                }*/
-                else {
-                    throw new IllegalArgumentException("Unknown Advancement Tab Type: " + t.getClass());
-                }
-            }));
+        protected void sort(List<AdvancementTab> tabList) {
+            tabList.sort(Comparator.comparing(advancementTab -> advancementTab.getTitle().getString()));
         }
     },
 
     DEFINED_LIST {
         @Override
-        protected <T> void sort(List<T> tabList) {
-            List<T> advancementTabs = new ArrayList<>();
+        protected void sort(List<AdvancementTab> tabList) {
+            List<AdvancementTab> advancementTabs = new ArrayList<>();
             ImmutableList<ResourceLocation> sortedAdvancementList = ConfigManager.getSortedAdvancementList();
 
             sortedAdvancementList.forEach(resourceLocation -> getAdvancementTabFor(resourceLocation, tabList).ifPresent(advancementTabs::add));
@@ -49,22 +39,12 @@ public enum AdvancementTabsSorter {
         }
 
 
-        private <T> Optional<T> getAdvancementTabFor(ResourceLocation resourceLocation, List<T> tabList) {
-            for (T t : tabList) {
-                ResourceLocation advancementId;
-
-                if (t instanceof AdvancementTab advancementTab) {
-                    advancementId = advancementTab.getRootNode().holder().id();
-                }
-                /*else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) {
-                    advancementId = advancementTab.getAdvancement().getId();
-                }*/
-                else {
-                    throw new IllegalArgumentException("Unknown Advancement Tab Type: " + t.getClass());
-                }
+        private Optional<AdvancementTab> getAdvancementTabFor(ResourceLocation resourceLocation, List<AdvancementTab> tabList) {
+            for (AdvancementTab advancementTab : tabList) {
+                ResourceLocation advancementId = advancementTab.getRootNode().holder().id();
 
                 if (resourceLocation.equals(advancementId)) {
-                    return Optional.of(t);
+                    return Optional.of(advancementTab);
                 }
             }
 
@@ -74,42 +54,23 @@ public enum AdvancementTabsSorter {
 
     UNSORTED {
         @Override
-        protected <T> void sort(List<T> tabList) {}
+        protected void sort(List<AdvancementTab> tabList) {}
     };
 
 
-    public <T> void sortAdvancementTabs(Map<AdvancementHolder, T> tabs) {
-        List<T> tabList = new ArrayList<>(tabs.values());
+    public void sortAdvancementTabs(Map<AdvancementHolder, AdvancementTab> tabs) {
+        List<AdvancementTab> tabList = new ArrayList<>(tabs.values());
 
         this.sort(tabList);
         tabs.clear();
 
-        tabList.forEach(t -> {
-            if (t instanceof AdvancementTab advancementTab) {
-                advancementTab.index = tabList.indexOf(t);
+        tabList.forEach(advancementTab -> {
+            advancementTab.index = tabList.indexOf(advancementTab);
 
-                tabs.put(advancementTab.getRootNode().holder(), t);
-            }
-            /*else if (BA_COMPATIBILITY.get() && t instanceof BetterAdvancementTab advancementTab) {
-                try {
-                    var clazz = advancementTab.getClass();
-                    Field indexField = clazz.getDeclaredField("index");
-
-                    indexField.setAccessible(true);
-                    indexField.set(advancementTab, tabList.indexOf(t));
-                }
-                catch (NoSuchFieldException | IllegalAccessException e) {
-                    CrashHandler.getInstance().handleException("Failed to sort advancement tabs of BetterAdvancementsScreen!", "AdvancementTabsSorter", e, Level.ERROR);
-                }
-
-                tabs.put(advancementTab.getAdvancement(), t);
-            }*/
-            else {
-                throw new IllegalArgumentException("Unknown Advancement Tab Type: " + t.getClass());
-            }
+            tabs.put(advancementTab.getRootNode().holder(), advancementTab);
         });
     }
 
 
-    protected abstract <T> void sort(List<T> tabList);
+    protected abstract void sort(List<AdvancementTab> tabList);
 }

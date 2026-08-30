@@ -1,4 +1,4 @@
-package de.thedead2.customadvancements.util.core;
+package de.thedead2.customadvancements.util;
 
 import com.google.common.collect.Lists;
 import de.thedead2.customadvancements.CAMain;
@@ -32,8 +32,6 @@ public class ModHelper {
     public static final Path DIR_PATH = PLATFORM.getGameDirectory().resolve(MOD_ID);
 
     public static final Path DATA_PATH = DIR_PATH.resolve("data");
-
-    //public static final Supplier<Boolean> BA_COMPATIBILITY = () -> PLATFORM.isModLoaded("betteradvancements");
 
 
     private static <T> T load(Class<T> clazz) {

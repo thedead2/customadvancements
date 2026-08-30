@@ -3,8 +3,8 @@ package de.thedead2.customadvancements.util.localisation;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.MOD_ID;
-import static de.thedead2.customadvancements.util.core.ModHelper.MOD_NAME;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_NAME;
 
 
 public class ModTranslationKeys {

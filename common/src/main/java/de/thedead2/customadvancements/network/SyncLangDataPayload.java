@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static de.thedead2.customadvancements.network.SyncBackgroundDataPayload.JSON_ELEMENT_CODEC;
-import static de.thedead2.customadvancements.util.core.ModHelper.MOD_ID;
+import static de.thedead2.customadvancements.util.ModHelper.MOD_ID;
 
 public record SyncLangDataPayload(Map<String, JsonElement> langData) implements CustomPacketPayload {
 

@@ -30,7 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static de.thedead2.customadvancements.util.core.ModHelper.*;
+import static de.thedead2.customadvancements.util.ModHelper.*;
 import static de.thedead2.customadvancements.util.localisation.ModTranslationKeys.*;
 
 

@@ -3,7 +3,7 @@ package de.thedead2.customadvancements.client.gui;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.thedead2.customadvancements.util.core.ModHelper;
+import de.thedead2.customadvancements.util.ModHelper;
 import de.thedead2.mc_libs.gui.RenderUtils;
 import de.thedead2.mc_libs.gui.misc.Area;
 import de.thedead2.mc_libs.gui.misc.GradientColor;
@@ -85,15 +85,26 @@ public enum BackgroundType {
 
     COLOR(jsonElement -> {
         JsonObject jsonObject = jsonElement.getAsJsonObject();
-        String s = jsonObject.get("color").getAsString();
-        String[] strings = Strings.splitList(s);
-        int[] colors = new int[4];
+        JsonElement colorField = jsonObject.get("color");
+        int color;
 
-        for (int i = 0; i < strings.length; i++) {
-            colors[i] = Integer.parseInt(strings[i]);
+        if(colorField == null) throw new IllegalArgumentException("Missing 'color' field in 'background' object!");
+
+        if (colorField.isJsonPrimitive()) {
+            color = getColorFromString(colorField.getAsString());
+        }
+        else {
+            JsonObject colorObj = colorField.getAsJsonObject();
+            int red = colorObj.get("red").getAsInt();
+            int green = colorObj.get("green").getAsInt();
+            int blue = colorObj.get("blue").getAsInt();
+            int alpha = colorObj.get("alpha").getAsInt();
+
+            int[] colorData = new int[]{red, green, blue, alpha};
+
+            color = RenderUtils.convertColor(colorData);
         }
 
-        int color = RenderUtils.convertColor(colors);
 
         return (guiGraphics, xMin, xMax, yMin, yMax, scrollX, scrollY) -> guiGraphics.fill(xMin, yMin, xMax, yMax, color);
     });
@@ -135,6 +146,29 @@ public enum BackgroundType {
 
     public IBackgroundRenderer createRenderer(JsonElement jsonElement) {
         return rendererFactory.create(jsonElement);
+    }
+
+    private static int getColorFromString(String s) {
+        String[] strings = Strings.splitList(s);
+
+        if(strings.length == 4) {
+            int[] colors = new int[4];
+
+            for (int i = 0; i < strings.length; i++) {
+                colors[i] = Integer.parseInt(strings[i]);
+            }
+
+            return RenderUtils.convertColor(colors);
+        }
+
+        try {
+            return Integer.parseInt(s);
+        }
+        catch (NumberFormatException e) {
+            ModHelper.LOGGER.error("Invalid color format: {}", s);
+
+            return 0;
+        }
     }
 
 
