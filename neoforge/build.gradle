@@ -74,6 +74,7 @@ configurations {
 
 tasks.named('processResources') {
     dependsOn tasks.named('generateAccessTransformers')
+    exclude 'customadvancements.refmap.json'
 }
 
 tasks.named('createMinecraftArtifacts') {

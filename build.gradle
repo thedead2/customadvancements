@@ -122,7 +122,8 @@ subprojects {
                 "parchment_version"            : parchment_version,
                 "parchment_mc_version"         : parchment_mc_version,
                 "fabric_loom_version"          : fabric_loom_version,
-                "neogradle_version"            : neogradle_version
+                "neogradle_version"            : neogradle_version,
+                "forgeconfig_api_port_version" : forgeconfig_api_port_version
         ]
         filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/neoforge.mods.toml', '*.mixins.json']) {
             expand expandProps
@@ -137,6 +138,14 @@ configure(subprojects.findAll { it.name in ['neoforge', 'fabric'] }) {
 
     dependencies {
         implementation project(path: ":common", configuration: "namedElements")
+    }
+
+    compileJava {
+        source project(":common").sourceSets.main.allSource
+    }
+
+    processResources {
+        from project(":common").sourceSets.main.resources
     }
 
     tasks.named('jar', Jar) {
