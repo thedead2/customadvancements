@@ -150,4 +150,8 @@ configure(subprojects.findAll { it.name in ['neoforge', 'fabric'] }) {
         from project(":mc_libs").sourceSets.main.allSource
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
+
+    tasks.withType(JavaExec).configureEach {
+        dependsOn tasks.named('processResources')
+    }
 }
