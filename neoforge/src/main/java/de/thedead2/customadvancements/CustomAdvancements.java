@@ -4,6 +4,7 @@ import de.thedead2.customadvancements.client.ClientRenderer;
 import de.thedead2.customadvancements.client.ClientTranslationManager;
 import de.thedead2.customadvancements.commands.CommandManager;
 import de.thedead2.customadvancements.events.CommonEventListeners;
+import de.thedead2.customadvancements.events.ServerEventListeners;
 import de.thedead2.customadvancements.network.SyncBackgroundDataPayload;
 import de.thedead2.customadvancements.network.SyncLangDataPayload;
 import de.thedead2.mc_libs.network.SyncChunkedDataPayload;
@@ -22,6 +23,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -45,6 +47,7 @@ public class CustomAdvancements {
         NeoForge.EVENT_BUS.addListener(this::onPlayerDeath);
         NeoForge.EVENT_BUS.addListener(this::onServerStopping);
         NeoForge.EVENT_BUS.addListener(this::onAddReloadListeners);
+        NeoForge.EVENT_BUS.addListener(this::onDatapackSync);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, ConfigManager.CONFIG_SPEC);
 
@@ -81,7 +84,7 @@ public class CustomAdvancements {
     }
 
     private void onServerStopping(final ServerStoppingEvent ignored) {
-        CommonEventListeners.onServerStop();
+        ServerEventListeners.onServerStop();
     }
 
     private void onPlayerJoin(final PlayerEvent.PlayerLoggedInEvent event) {
@@ -109,14 +112,18 @@ public class CustomAdvancements {
         CommandManager.registerCommandsToDispatcher(event.getDispatcher());
 
         // We need to load the data this early as advancement loading happens right after the command registration
-        CommonEventListeners.onServerStart();
+        ServerEventListeners.onServerStart();
     }
 
     private void onPlayerDeath(final PlayerEvent.PlayerRespawnEvent event) {
-        CommonEventListeners.onPlayerDeath((ServerPlayer) event.getEntity());
+        ServerEventListeners.onPlayerDeath((ServerPlayer) event.getEntity());
     }
 
     private void onRegisterClientReloadListeners(final RegisterClientReloadListenersEvent event) {
         event.registerReloadListener((ResourceManagerReloadListener) resourceManager -> ClientTranslationManager.reloadLang());
+    }
+
+    private void onDatapackSync(final OnDatapackSyncEvent event) {
+        ServerEventListeners.onDatapackReload(event.getPlayerList().getServer());
     }
 }

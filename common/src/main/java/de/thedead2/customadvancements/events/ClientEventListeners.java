@@ -2,7 +2,6 @@ package de.thedead2.customadvancements.events;
 
 import de.thedead2.customadvancements.client.ClientRenderer;
 import de.thedead2.customadvancements.client.ClientTranslationManager;
-import de.thedead2.customadvancements.util.ConfigManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -27,7 +26,7 @@ public class ClientEventListeners {
                 return;
             }
 
-            if (ConfigManager.NO_ADVANCEMENTS.get()) {
+            if (hasNoAdvancements()) {
                 findButton(listeners, "gui.advancements").ifPresent((button) -> {
                     buttonRemover.accept(button);
 
@@ -51,9 +50,17 @@ public class ClientEventListeners {
     }
 
     public static void preventAdvancementScreenOpeningIfNeeded(Screen screen) {
-        if ((screen instanceof AdvancementsScreen) && ConfigManager.NO_ADVANCEMENTS.get()) {
+        if ((screen instanceof AdvancementsScreen) && hasNoAdvancements()) {
             Minecraft.getInstance().setScreen(null);
         }
+    }
+
+    private static boolean hasNoAdvancements() {
+        var connection = Minecraft.getInstance().getConnection();
+        if (connection != null) {
+            return connection.getAdvancements().getTree().nodes().isEmpty();
+        }
+        return false;
     }
 
     public static void onClientLogout() {

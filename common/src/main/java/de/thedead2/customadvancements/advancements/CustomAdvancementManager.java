@@ -227,7 +227,7 @@ public class CustomAdvancementManager {
     }
 
     private boolean loadNoAdvancements() {
-        return ConfigManager.NO_ADVANCEMENTS.get() || ConfigManager.getBlacklistedResourceLocations().isEmpty() && ConfigManager.BLACKLIST_IS_WHITELIST.get();
+        return ConfigManager.getBlacklistedResourceLocations().isEmpty() && ConfigManager.BLACKLIST_IS_WHITELIST.get();
     }
 
 

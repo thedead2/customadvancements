@@ -23,8 +23,6 @@ public class ConfigManager {
 
     public static final ModConfigSpec.BooleanValue NO_RECIPE_ADVANCEMENTS;
 
-    public static final ModConfigSpec.BooleanValue NO_ADVANCEMENTS;
-
     public static final ModConfigSpec.BooleanValue BLACKLIST_IS_WHITELIST;
 
     public static final ModConfigSpec.BooleanValue DISABLE_STANDARD_ADVANCEMENT_LOAD;
@@ -50,8 +48,6 @@ public class ConfigManager {
 
     static {
         CONFIG_BUILDER.push("Config for " + ModHelper.MOD_NAME);
-
-        NO_ADVANCEMENTS = newBoolVal("Whether the mod should remove all advancements", "noAdvancements", false);
 
         NO_RECIPE_ADVANCEMENTS = newBoolVal("Whether the mod should remove all recipe advancements", "noRecipeAdvancements", false);
 

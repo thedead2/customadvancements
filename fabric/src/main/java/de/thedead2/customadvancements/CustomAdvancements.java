@@ -2,6 +2,7 @@ package de.thedead2.customadvancements;
 
 import de.thedead2.customadvancements.commands.CommandManager;
 import de.thedead2.customadvancements.events.CommonEventListeners;
+import de.thedead2.customadvancements.events.ServerEventListeners;
 import de.thedead2.customadvancements.network.SyncBackgroundDataPayload;
 import de.thedead2.customadvancements.network.SyncLangDataPayload;
 import de.thedead2.mc_libs.network.SyncChunkedDataPayload;
@@ -35,7 +36,7 @@ public class CustomAdvancements implements ModInitializer {
         CommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess, environment) -> {
             CommonEventListeners.onCommonSetup();
             CommandManager.registerCommandsToDispatcher(dispatcher);
-            CommonEventListeners.onServerStart();
+            ServerEventListeners.onServerStart();
         }));
         NeoForgeConfigRegistry.INSTANCE.register(MOD_ID, ModConfig.Type.COMMON, ConfigManager.CONFIG_SPEC);
 
@@ -43,8 +44,7 @@ public class CustomAdvancements implements ModInitializer {
                 new SimpleSynchronousResourceReloadListener() {
                     @Override
                     public void onResourceManagerReload(ResourceManager resourceManager) {
-                        getServer().ifPresent(server -> server.getPlayerList().getPlayers().forEach(serverPlayer ->
-                                                                                                            CAMain.getInstance().sendDataToClient(packet -> ServerPlayNetworking.send(serverPlayer, packet))));
+                        getServer().ifPresent(server -> server.getPlayerList().getPlayers().forEach(serverPlayer -> CAMain.getInstance().sendDataToClient(packet -> ServerPlayNetworking.send(serverPlayer, packet))));
                     }
 
                     @Override
@@ -54,9 +54,14 @@ public class CustomAdvancements implements ModInitializer {
                 }
         );
 
+        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+            if(success) ServerEventListeners.onDatapackReload(server);
+        });
+
+
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> CAMain.getInstance().sendDataToClient(sender::sendPacket));
-        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> CommonEventListeners.onPlayerDeath(newPlayer));
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> CommonEventListeners.onServerStop());
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> ServerEventListeners.onPlayerDeath(newPlayer));
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> ServerEventListeners.onServerStop());
 
         ((FabricPlatformHelper) PLATFORM).initServerTracker();
         FilterRegistration.registerLoggerFilters();
