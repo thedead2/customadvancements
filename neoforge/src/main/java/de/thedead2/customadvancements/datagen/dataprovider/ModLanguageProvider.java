@@ -22,9 +22,9 @@ public class ModLanguageProvider extends LanguageProvider {
             this.add(RELOAD_FAILED_MESSAGE, "%s Failed to execute reload!");
             this.add(RELOAD_START_MESSAGE, "%s Reloading...");
             this.add(RELOAD_SUCCESS_MESSAGE, "%s Reload complete!");
-            this.add(GENERATE_IDS_MESSAGE, "%s Starting to write ids to file...");
+            this.add(GENERATE_IDS_MESSAGE, "%s Starting to write advancement ids to file...");
             this.add(GENERATE_IDS_SUCCESS_MESSAGE, "%s Finished!");
-            this.add(GENERATE_IDS_FAILED_MESSAGE, "%s Unable to write ids to file!");
+            this.add(GENERATE_IDS_FAILED_MESSAGE, "%s Unable to write advancement ids to file!");
             this.add(GENERATE_ADVANCEMENTS_MESSAGE, "%s Starting to generate files for advancements...");
             this.add(GENERATE_ADVANCEMENTS_FAILED_MESSAGE, "%s Unable to write %s to file!");
             this.add(GENERATE_ADVANCEMENTS_SUCCESS_MESSAGE, "%s Generated %s advancement files successfully!");
