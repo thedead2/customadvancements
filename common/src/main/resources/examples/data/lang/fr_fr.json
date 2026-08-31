@@ -2,5 +2,7 @@
   "customadvancements.advancements.example_root.title": "Custom Advancements",
   "customadvancements.advancements.example_root.description": "Suivez votre imagination!",
   "customadvancements.advancements.example_example.title": "Exemple",
-  "customadvancements.advancements.example_example.description": "Voici un exemple d'avancement!"
+  "customadvancements.advancements.example_example.description": "Voici un exemple d'avancement!",
+  "customadvancements.advancements.back_to_the_roots.title" : "Retour aux sources",
+  "customadvancements.advancements.back_to_the_roots.description" : "Tuez un zombie avec de la chair pourrie !"
 }

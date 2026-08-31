@@ -61,7 +61,7 @@ public class ConfigManager {
 
         ADVANCEMENT_PROGRESSION = newBoolVal("Changing this to true causes each advancement to only be achievable if it's parent has been achieved. Useful for progression systems!", "advancementProgression", false);
 
-        CONNECTED_ADVANCEMENTS = newListVal("A list of connected advancements in the format of parent -> child", "connectedAdvancementsList", List.of("minecraft:story/follow_ender_eye -> minecraft:end/root", "minecraft:story/form_obsidian -> minecraft:nether/root"), in -> in instanceof String);
+        CONNECTED_ADVANCEMENTS = newListVal("A list of connected advancements in the format of parent -> child used by the advancement progression system (adds basically dummy parents for advancements). Has no effect if advancementProgression = false", "connectedAdvancementsList", List.of("minecraft:story/follow_ender_eye -> minecraft:end/root", "minecraft:story/form_obsidian -> minecraft:nether/root"), in -> in instanceof String);
 
         RESET_ADVANCEMENTS_ON_DEATH = newBoolVal("Whether all advancement progress should be reset when the player dies", "resetAdvancementProgressOnDeath", false);
 
@@ -73,9 +73,9 @@ public class ConfigManager {
 
         ADVANCEMENT_TAB_SORTING_MODE = newEnumVal("In which order the advancement tabs in the advancement screen should be ordered", "advancementTabSortingMode", AdvancementTabsSorter.UNSORTED);
 
-        ADVANCEMENT_SORTING_LIST = newListVal("Order of the advancement tabs when DEFINED_LIST is selected", "advancementSortingList", Collections.emptyList(), ConfigManager::isValidRootAdvancementID);
+        ADVANCEMENT_SORTING_LIST = newListVal("Order of the advancement tabs when DEFINED_LIST is selected. Please enter the root advancement ids in the order you want them to be displayed.", "advancementSortingList", Collections.emptyList(), ConfigManager::isValidRootAdvancementID);
 
-        DISABLE_STANDARD_ADVANCEMENT_LOAD = newBoolVal("Whether the mod should overwrite vanilla advancements with generated ones", "disableStandardAdvancementLoad", false);
+        DISABLE_STANDARD_ADVANCEMENT_LOAD = newBoolVal("Whether the mod should overwrite the advancement system completely. This means that only custom advancements inside the customadvancements folder get loaded and everything else is omitted.", "disableStandardAdvancements", false);
 
         CONFIG_BUILDER.pop();
         CONFIG_SPEC = CONFIG_BUILDER.build();

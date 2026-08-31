@@ -2,5 +2,7 @@
   "customadvancements.advancements.example_root.title": "Custom Advancements",
   "customadvancements.advancements.example_root.description": "Folge deiner Fantasie!",
   "customadvancements.advancements.example_example.title": "Beispiel",
-  "customadvancements.advancements.example_example.description": "Dies ist ein Beispiel Advancement!"
+  "customadvancements.advancements.example_example.description": "Dies ist ein Beispiel Advancement!",
+  "customadvancements.advancements.back_to_the_roots.title": "Zurück zu den Wurzeln",
+  "customadvancements.advancements.back_to_the_roots.description": "Töte einen Zombie mit seinem eigenen Fleisch!"
 }
