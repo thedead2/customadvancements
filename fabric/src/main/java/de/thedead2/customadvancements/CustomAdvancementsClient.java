@@ -1,6 +1,6 @@
 package de.thedead2.customadvancements;
 
-import de.thedead2.customadvancements.client.ClientSyncHandler;
+import de.thedead2.customadvancements.client.ClientRenderer;
 import de.thedead2.customadvancements.client.ClientTranslationManager;
 import de.thedead2.customadvancements.events.ClientEventListeners;
 import de.thedead2.customadvancements.events.CommonEventListeners;
@@ -22,12 +22,12 @@ import net.minecraft.server.packs.resources.ResourceManager;
 public class CustomAdvancementsClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        ClientPlayNetworking.registerGlobalReceiver(SyncBackgroundDataPayload.TYPE, (payload, context) -> context.client().execute(() -> ClientSyncHandler.acceptAdvancementSync(payload)));
-        ClientPlayNetworking.registerGlobalReceiver(SyncChunkedDataPayload.TYPE, (payload, context) -> context.client().execute(() -> ClientSyncHandler.acceptTextureSync(payload)));
-        ClientPlayNetworking.registerGlobalReceiver(SyncLangDataPayload.TYPE, (payload, context) -> context.client().execute(() -> ClientSyncHandler.acceptLangSync(payload)));
+        ClientPlayNetworking.registerGlobalReceiver(SyncBackgroundDataPayload.TYPE, (payload, context) -> context.client().execute(() -> ClientRenderer.acceptBackgroundSync(payload)));
+        ClientPlayNetworking.registerGlobalReceiver(SyncChunkedDataPayload.TYPE, (payload, context) -> context.client().execute(() -> ClientRenderer.acceptTextureSync(payload)));
+        ClientPlayNetworking.registerGlobalReceiver(SyncLangDataPayload.TYPE, (payload, context) -> context.client().execute(() -> ClientTranslationManager.acceptLangSync(payload)));
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> CommonEventListeners.onCommonSetup());
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientSyncHandler.cleanUp());
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientEventListeners.onClientLogout());
 
         ScreenEvents.BEFORE_INIT.register((client, screen, scaledWidth, scaledHeight) -> ClientEventListeners.beforeScreenInit(screen));
         ScreenEvents.AFTER_INIT.register(((client, screen, scaledWidth, scaledHeight) -> ClientEventListeners.afterScreenInit(screen, screen.children(), button -> screen.children().remove(button))));

@@ -32,7 +32,7 @@ public class CAMain {
     }
 
     public void sendDataToClient(Consumer<CustomPacketPayload> sender) {
-        textureHandler.sendTexturesToClient(sender);
+        textureHandler.sendTexturesToClient(sender, customAdvancementManager);
         languageHandler.sendLangDataToClient(sender);
         customAdvancementManager.sendBackgroundDataToClient(sender, textureHandler);
     }

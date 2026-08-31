@@ -2,16 +2,20 @@ package de.thedead2.customadvancements.client;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.thedead2.customadvancements.network.SyncLangDataPayload;
 import net.minecraft.client.Minecraft;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
+
+
 public class ClientTranslationManager {
     private static final Map<String, JsonElement> LANG_FILES = new HashMap<>();
     private static final Map<String, String> CUSTOM_TRANSLATIONS = new HashMap<>();
 
-    public static void setTranslations(Map<String, JsonElement> langFiles, Map<String, String> translations) {
+    private static void setTranslations(Map<String, JsonElement> langFiles, Map<String, String> translations) {
         clear();
 
         LANG_FILES.putAll(langFiles);
@@ -22,7 +26,7 @@ public class ClientTranslationManager {
         processTranslationData(Map.copyOf(LANG_FILES));
     }
 
-    public static void processTranslationData(Map<String, JsonElement> langFiles) {
+    private static void processTranslationData(Map<String, JsonElement> langFiles) {
         Map<String, String> mergedTranslations = new HashMap<>();
 
         if (langFiles.containsKey("en_us")) {
@@ -61,5 +65,11 @@ public class ClientTranslationManager {
     public static void clear() {
         CUSTOM_TRANSLATIONS.clear();
         LANG_FILES.clear();
+    }
+
+
+    public static void acceptLangSync(SyncLangDataPayload payload) {
+        LOGGER.info("Received language data from server...");
+        processTranslationData(payload.langData());
     }
 }

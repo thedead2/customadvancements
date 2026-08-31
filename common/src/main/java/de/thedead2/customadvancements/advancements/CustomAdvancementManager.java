@@ -326,4 +326,12 @@ public class CustomAdvancementManager {
             sender.accept(new SyncBackgroundDataPayload(backgroundInfos));
         });
     }
+
+
+    public boolean isTextureUsed(ResourceLocation textureId) {
+        return this.customAdvancementsFuture.join().entrySet().stream().anyMatch((entry) -> {
+            JsonElement background = entry.getValue().getBackgroundInfo();
+            return background != null && ((background.isJsonObject() && background.getAsJsonObject().has("location") && background.getAsJsonObject().get("location").getAsString().equals(textureId.toString())) || (background.isJsonPrimitive() && background.getAsString().equals(textureId.toString())));
+        });
+    }
 }

@@ -1,6 +1,7 @@
 package de.thedead2.customadvancements.events;
 
-import de.thedead2.customadvancements.client.ClientSyncHandler;
+import de.thedead2.customadvancements.client.ClientRenderer;
+import de.thedead2.customadvancements.client.ClientTranslationManager;
 import de.thedead2.customadvancements.util.ConfigManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
@@ -14,6 +15,8 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+
+import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
 
 
 public class ClientEventListeners {
@@ -54,6 +57,8 @@ public class ClientEventListeners {
     }
 
     public static void onClientLogout() {
-        ClientSyncHandler.cleanUp();
+        LOGGER.info("Cleaning up client sync data...");
+        ClientTranslationManager.clear();
+        ClientRenderer.clear();
     }
 }

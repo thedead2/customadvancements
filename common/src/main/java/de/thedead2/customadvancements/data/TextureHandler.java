@@ -1,5 +1,6 @@
 package de.thedead2.customadvancements.data;
 
+import de.thedead2.customadvancements.advancements.CustomAdvancementManager;
 import de.thedead2.mc_libs.network.NetworkUtils;
 import de.thedead2.mc_libs.concurrent.PartialCompletableFuture;
 import de.thedead2.mc_libs.io.FileHandler;
@@ -28,7 +29,6 @@ public class TextureHandler {
     private PartialCompletableFuture<Map<ResourceLocation, Pair<File, int[]>>> resourcesFuture = PartialCompletableFuture.completedFuture(new ConcurrentHashMap<>());
 
     public void loadTextureFiles() {
-
         this.resourcesFuture = PartialCompletableFuture.supplyAsync(new ConcurrentHashMap<>(), PartialCompletableFuture.Utils.mapClone(), (map, throwable) -> {
             LOGGER.error("Failed to load texture files!", throwable);
             logLoadStatus(map.size(), "texture file");
@@ -74,11 +74,13 @@ public class TextureHandler {
         this.resourcesFuture.completeOnTimeout(45, TimeUnit.SECONDS);
     }
 
-    public void sendTexturesToClient(Consumer<CustomPacketPayload> sender) {
+    public void sendTexturesToClient(Consumer<CustomPacketPayload> sender, CustomAdvancementManager customAdvancementManager) {
         this.resourcesFuture.thenAccept(map -> {
             LOGGER.info("Sending texture data to client...");
 
             map.forEach((id, pair) -> {
+                if(!customAdvancementManager.isTextureUsed(id)) return;
+
                 try {
                     byte[] data = Files.readAllBytes(pair.getLeft().toPath());
                     NetworkUtils.sendInChunks(SyncChunkedDataPayload.DataType.TEXTURE, id, data, LOGGER, sender);

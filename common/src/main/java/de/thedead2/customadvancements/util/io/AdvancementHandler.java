@@ -33,7 +33,7 @@ public class AdvancementHandler {
         List<String> folderNames = new ArrayList<>();
         Path basePath = Path.of(String.valueOf(DIR_PATH), advancementId.getNamespace());
 
-        createDirectoryIfNecessary(basePath.toFile());
+        createDirectoryIfNecessary(basePath.toFile(), LOGGER);
 
         String formatedJsonObject = JsonHelper.formatJsonObject(advancementData);
         Path filePath = resolvePath(basePath, advancementId.getPath(), folderNames);
@@ -83,7 +83,7 @@ public class AdvancementHandler {
             for (String folderName : folderNames) {
                 basePath = Path.of(String.valueOf(basePath), folderName);
 
-                createDirectoryIfNecessary(basePath.toFile());
+                createDirectoryIfNecessary(basePath.toFile(), LOGGER);
             }
 
             return Path.of(String.valueOf(basePath), advancementPath.substring(advancementPath.lastIndexOf("/")) + ".json");

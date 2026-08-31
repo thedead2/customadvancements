@@ -16,6 +16,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.ByteArrayInputStream;
@@ -48,25 +49,6 @@ public class CommandManager {
 
     static {
         register(CommandBuilder
-                .newCommand("ca/reload")
-                .withAction(commandContext -> {
-                    CommandSourceStack source = commandContext.getSource();
-
-                    source.getServer().executeIfPossible(() -> {
-                        source.sendSuccess(() -> ModTranslationKeys.chatMessage(RELOAD_START_MESSAGE), false);
-
-                        reloadAll(source.getServer());
-
-                        source.sendSuccess(() -> ModTranslationKeys.chatMessage(RELOAD_SUCCESS_MESSAGE), false);
-                    });
-
-                    return CommandResult.SUCCESS;
-                })
-                .build()
-        );
-
-
-        register(CommandBuilder
                 .newCommand("ca/generate/ids")
                 .withAction(command -> {
                     CommandSourceStack source = command.getSource();
@@ -90,6 +72,11 @@ public class CommandManager {
 
                         return CommandResult.FAILURE;
                     }
+                }, (context, throwable) -> {
+                    LOGGER.error("Error executing the command!", throwable);
+                    context.getSource().sendFailure(Component.literal("Error executing the command: ").append(throwable.getMessage()));
+
+                    return CommandResult.FAILURE;
                 })
                 .build()
         );
@@ -108,7 +95,7 @@ public class CommandManager {
                         long startTime = System.currentTimeMillis();
                         AtomicInteger counter = new AtomicInteger();
 
-                        FileHandler.createDirectoryIfNecessary(DIR_PATH.toFile());
+                        FileHandler.createDirectoryIfNecessary(DIR_PATH.toFile(), LOGGER);
 
                         source.getServer().getAdvancements().getAllAdvancements().forEach((advancement) -> {
                             try {
@@ -134,6 +121,11 @@ public class CommandManager {
                     });
 
                     return CommandResult.SUCCESS;
+                }, (context, throwable) -> {
+                    LOGGER.error("Error executing the command!", throwable);
+                    context.getSource().sendFailure(Component.literal("Error executing the command: ").append(throwable.getMessage()));
+
+                    return CommandResult.FAILURE;
                 })
                 .build()
         );
@@ -169,6 +161,11 @@ public class CommandManager {
                     LOGGER.debug("Successfully generated file for: {}", advancementId);
 
                     source.getServer().executeIfPossible(() -> reloadAll(command.getSource().getServer()));
+
+                    return CommandResult.FAILURE;
+                }, (context, throwable) -> {
+                    LOGGER.error("Error executing the command!", throwable);
+                    context.getSource().sendFailure(Component.literal("Error executing the command: ").append(throwable.getMessage()));
 
                     return CommandResult.FAILURE;
                 })

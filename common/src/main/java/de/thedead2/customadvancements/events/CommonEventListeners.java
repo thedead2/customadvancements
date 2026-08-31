@@ -17,12 +17,12 @@ public class CommonEventListeners {
     public static void onCommonSetup() {
         LOGGER.info("Starting {}, Version: {}", MOD_NAME, PLATFORM.getModVersion(MOD_ID));
 
-        FileHandler.createDirectoryIfNecessary(DIR_PATH.toFile());
-        FileHandler.copyModFilesIfNecessary(CUSTOM_ADVANCEMENTS_PATH, "/examples/advancements", ".json");
+        FileHandler.createDirectoryIfNecessary(DIR_PATH.toFile(), LOGGER);
+        FileHandler.copyModFilesIfNecessary(CUSTOM_ADVANCEMENTS_PATH, "/examples/advancements", ".json", LOGGER);
 
-        FileHandler.createDirectoryIfNecessary(DATA_PATH.toFile());
-        FileHandler.copyModFilesIfNecessary(TEXTURES_PATH, "/examples/data/textures", ".png");
-        FileHandler.copyModFilesIfNecessary(LANG_PATH, "/examples/data/lang", ".json");
+        FileHandler.createDirectoryIfNecessary(DATA_PATH.toFile(), LOGGER);
+        FileHandler.copyModFilesIfNecessary(TEXTURES_PATH, "/examples/data/textures", ".png", LOGGER);
+        FileHandler.copyModFilesIfNecessary(LANG_PATH, "/examples/data/lang", ".json", LOGGER);
     }
 
     public static void onServerStart() {

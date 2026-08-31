@@ -1,6 +1,6 @@
 package de.thedead2.customadvancements;
 
-import de.thedead2.customadvancements.client.ClientSyncHandler;
+import de.thedead2.customadvancements.client.ClientRenderer;
 import de.thedead2.customadvancements.client.ClientTranslationManager;
 import de.thedead2.customadvancements.commands.CommandManager;
 import de.thedead2.customadvancements.events.CommonEventListeners;
@@ -64,19 +64,19 @@ public class CustomAdvancements {
         registrar.playToClient(
                 SyncBackgroundDataPayload.TYPE,
                 SyncBackgroundDataPayload.CODEC,
-                (payload, context) -> context.enqueueWork(() -> ClientSyncHandler.acceptAdvancementSync(payload))
+                (payload, context) -> context.enqueueWork(() -> ClientRenderer.acceptBackgroundSync(payload))
         );
 
         registrar.playToClient(
                 SyncChunkedDataPayload.TYPE,
                 SyncChunkedDataPayload.STREAM_CODEC,
-                ((payload, context) -> context.enqueueWork(() -> ClientSyncHandler.acceptTextureSync(payload)))
+                ((payload, context) -> context.enqueueWork(() -> ClientRenderer.acceptTextureSync(payload)))
         );
 
         registrar.playToClient(
                 SyncLangDataPayload.TYPE,
                 SyncLangDataPayload.STREAM_CODEC,
-                ((payload, context) -> context.enqueueWork(() -> ClientSyncHandler.acceptLangSync(payload)))
+                ((payload, context) -> context.enqueueWork(() -> ClientTranslationManager.acceptLangSync(payload)))
         );
     }
 
