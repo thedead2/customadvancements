@@ -21,7 +21,7 @@ import static de.thedead2.customadvancements.util.ModHelper.LOGGER;
 
 public class ClientEventListeners {
 
-    public static void afterScreenInit(Screen screen, List<? extends GuiEventListener> listeners, Consumer<Button> buttonRemover) {
+    public static void removeAdvancementsButtonIfNeeded(Screen screen, List<? extends GuiEventListener> listeners, Consumer<Button> buttonRemover) {
         if (screen instanceof PauseScreen pauseScreen) {
             if (!pauseScreen.showsPauseMenu()) {
                 return;
@@ -50,7 +50,7 @@ public class ClientEventListeners {
         return Optional.empty();
     }
 
-    public static void beforeScreenInit(Screen screen) {
+    public static void preventAdvancementScreenOpeningIfNeeded(Screen screen) {
         if ((screen instanceof AdvancementsScreen) && ConfigManager.NO_ADVANCEMENTS.get()) {
             Minecraft.getInstance().setScreen(null);
         }

@@ -13,12 +13,12 @@ public class ClientListeners {
 
     @SubscribeEvent
     public static void beforeScreenInit(final ScreenEvent.Init.Pre event) {
-        ClientEventListeners.beforeScreenInit(event.getScreen());
+        ClientEventListeners.preventAdvancementScreenOpeningIfNeeded(event.getScreen());
     }
 
     @SubscribeEvent
     public static void afterScreenInit(final ScreenEvent.Init.Post event) {
-        ClientEventListeners.afterScreenInit(event.getScreen(), event.getListenersList(), event::removeListener);
+        ClientEventListeners.removeAdvancementsButtonIfNeeded(event.getScreen(), event.getListenersList(), event::removeListener);
     }
 
     @SubscribeEvent

@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.ResourceLocation;
@@ -29,8 +30,10 @@ public class CustomAdvancementsClient implements ClientModInitializer {
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> CommonEventListeners.onCommonSetup());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientEventListeners.onClientLogout());
 
-        ScreenEvents.BEFORE_INIT.register((client, screen, scaledWidth, scaledHeight) -> ClientEventListeners.beforeScreenInit(screen));
-        ScreenEvents.AFTER_INIT.register(((client, screen, scaledWidth, scaledHeight) -> ClientEventListeners.afterScreenInit(screen, screen.children(), button -> screen.children().remove(button))));
+        ScreenEvents.AFTER_INIT.register(((client, screen, scaledWidth, scaledHeight) -> {
+            ClientEventListeners.preventAdvancementScreenOpeningIfNeeded(screen);
+            ClientEventListeners.removeAdvancementsButtonIfNeeded(screen, Screens.getButtons(screen), button -> Screens.getButtons(screen).remove(button));
+        }));
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(
                 new SimpleSynchronousResourceReloadListener() {
