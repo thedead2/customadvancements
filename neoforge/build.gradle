@@ -134,10 +134,6 @@ neoForge {
     }
 }
 
-/*dependencies {
-    compileOnly project(path: ":common", configuration: "namedElements")
-}*/
-
 // Exclude Fabric Loader from NeoForge
 configurations {
     compileClasspath { exclude group: 'net.fabricmc', module: 'fabric-loader' }
@@ -159,14 +155,3 @@ tasks.named('createMinecraftArtifacts') {
 tasks.withType(JavaExec).configureEach {
     dependsOn tasks.named('processResources')
 }
-/*
-
-tasks.named('jar', Jar) {
-    from project(":common").sourceSets.main.output
-    from project(":mc_libs").sourceSets.main.output
-}
-
-tasks.named('sourcesJar', Jar) {
-    from project(":common").sourceSets.main.allSource
-    from project(":mc_libs").sourceSets.main.allSource
-}*/
