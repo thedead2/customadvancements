@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import static de.thedead2.customadvancements.util.ModHelper.*;
 
@@ -183,7 +184,7 @@ public class CustomAdvancementManager {
                     numRemoved += temp - advancements.size();
                 }
 
-                Set<ResourceLocation> blacklistedAdvancements = ConfigManager.getBlacklistedResourceLocations();
+                Set<ResourceLocation> blacklistedAdvancements = getBlacklistedAdvancements();
 
                 if (!blacklistedAdvancements.isEmpty()) {
                     int sizeBefore = advancements.size();
@@ -226,8 +227,24 @@ public class CustomAdvancementManager {
         }
     }
 
+    private Set<ResourceLocation> getBlacklistedAdvancements() {
+        List<? extends String> ids = ConfigManager.ADVANCEMENT_BLACKLIST.get();
+        Set<ResourceLocation> blacklistedAdvancements = new HashSet<>(ids.size());
+
+        for (String id : ids) {
+            if(id.contains("*")) {
+                String modId = id.substring(0, id.indexOf(":"));
+                blacklistedAdvancements.addAll(getAllAdvancementIds().stream().filter(advancementId -> advancementId.getNamespace().equals(modId)).map(resourceLocation -> ResourceLocationHelper.stripFileExtension(resourceLocation, ".json")).collect(Collectors.toSet()));
+            }
+            else
+                blacklistedAdvancements.add(ResourceLocation.tryParse(id));
+        }
+
+        return blacklistedAdvancements;
+    }
+
     private boolean loadNoAdvancements() {
-        return ConfigManager.getBlacklistedResourceLocations().isEmpty() && ConfigManager.BLACKLIST_IS_WHITELIST.get();
+        return ConfigManager.ADVANCEMENT_BLACKLIST.get().isEmpty() && ConfigManager.BLACKLIST_IS_WHITELIST.get();
     }
 
 

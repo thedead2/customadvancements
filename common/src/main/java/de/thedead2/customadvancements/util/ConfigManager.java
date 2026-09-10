@@ -2,7 +2,6 @@ package de.thedead2.customadvancements.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import de.thedead2.customadvancements.advancements.AdvancementProgressionMode;
 import de.thedead2.customadvancements.advancements.AdvancementTabsSorter;
 import net.minecraft.advancements.AdvancementHolder;
@@ -39,7 +38,7 @@ public class ConfigManager {
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_PROGRESSION_MODE_MOD_BLACKLIST;
 
-    private static final ModConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> ADVANCEMENT_BLACKLIST;
 
     private static final ModConfigSpec.ConfigValue<List<? extends String>> CONNECTED_ADVANCEMENTS;
 
@@ -94,24 +93,13 @@ public class ConfigManager {
     }
 
 
-    public static ImmutableSet<ResourceLocation> getBlacklistedResourceLocations() {
-        Set<ResourceLocation> blacklistedResourceLocations = new HashSet<>();
-
-        ADVANCEMENT_BLACKLIST.get().forEach(String -> blacklistedResourceLocations.add(ResourceLocation.tryParse(String)));
-
-        return ImmutableSet.copyOf(blacklistedResourceLocations);
-    }
-
-
     public static ImmutableMap<ResourceLocation, ResourceLocation> getConnectedAdvancements() {
         Map<ResourceLocation, ResourceLocation> connectedAdvancements = new HashMap<>();
 
         CONNECTED_ADVANCEMENTS.get().forEach(s -> {
-            int index = s.indexOf("->");
-            String s1 = s.substring(0, index - 1);
-            String s2 = s.substring(index + 3);
+            String[] parts = s.split("->");
 
-            connectedAdvancements.put(ResourceLocation.tryParse(s2), ResourceLocation.tryParse(s1));
+            connectedAdvancements.put(ResourceLocation.tryParse(parts[0]), ResourceLocation.tryParse(parts[1]));
         });
 
         return ImmutableMap.copyOf(connectedAdvancements);
@@ -132,6 +120,12 @@ public class ConfigManager {
             return false;
         }
 
+        if(s.contains("*")) {
+            String modId = s.substring(0, s.indexOf(":"));
+
+            return isValidModID(modId);
+        }
+
         ResourceLocation resourceLocation = ResourceLocation.tryParse(s);
 
         if (resourceLocation != null) {
@@ -139,7 +133,9 @@ public class ConfigManager {
                 return true;
             }
             else {
-                return getAllAdvancements().stream().map(AdvancementHolder::id).toList().contains(resourceLocation);
+                return getAllAdvancements().stream()
+                                           .map(AdvancementHolder::id)
+                                           .anyMatch(resourceLocation::equals);
             }
         }
 
@@ -159,7 +155,10 @@ public class ConfigManager {
                 return true;
             }
             else {
-                return getAllAdvancements().stream().filter(advancement -> advancement.value().isRoot()).map(AdvancementHolder::id).toList().contains(resourceLocation);
+                return getAllAdvancements().stream()
+                                           .filter(advancement -> advancement.value().isRoot())
+                                           .map(AdvancementHolder::id)
+                                           .anyMatch(resourceLocation::equals);
             }
         }
 
@@ -176,11 +175,13 @@ public class ConfigManager {
             return true;
         }
         else {
-            return getAllAdvancements().stream().map(advancement -> advancement.id().getNamespace()).toList().contains(s);
+            return getAllAdvancements().stream()
+                                       .map(advancement -> advancement.id().getNamespace())
+                                       .anyMatch(s::equals);
         }
     }
 
     private static Collection<AdvancementHolder> getAllAdvancements() {
-        return ModHelper.getServer().get().getAdvancements().getAllAdvancements();
+        return ModHelper.getServer().orElseThrow().getAdvancements().getAllAdvancements();
     }
 }
