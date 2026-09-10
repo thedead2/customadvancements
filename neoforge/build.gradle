@@ -3,7 +3,7 @@ plugins {
 }
 
 base {
-    archivesName = "${mod_id}-neoforge"
+    archivesName = "${mod_id}-neoforge-${minecraft_version}"
 }
 
 apply from: rootProject.file('gradle/genAccessTransformers.gradle')
