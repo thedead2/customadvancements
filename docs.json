@@ -1,0 +1,68 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Custom Advancements",
+  "theme": "palm",
+  "colors": {
+    "primary": "#f16529"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/thedead2/customadvancements"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/thedead2/customadvancements"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Creating Advancements",
+            "pages": [
+              "advancements/structure",
+              "advancements/display",
+              "advancements/background-types",
+              "advancements/criteria",
+              "advancements/examples"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/config-file",
+              "configuration/blacklist-whitelist",
+              "configuration/progression",
+              "configuration/tab-sorting"
+            ]
+          },
+          {
+            "group": "Commands",
+            "pages": [
+              "commands/overview"
+            ]
+          },
+          {
+            "group": "Localization & Textures",
+            "pages": [
+              "data/lang",
+              "data/textures"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
