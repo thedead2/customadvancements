@@ -1,0 +1,86 @@
+---
+title: "Sorting Advancement Tabs in the Advancements Screen"
+sidebarTitle: "Tab Sorting"
+description: "Control the order of advancement tabs in the Minecraft advancements screen using Custom Advancements' UNSORTED, ALPHABETICALLY, and DEFINED_LIST modes."
+---
+
+By default, Minecraft displays advancement tabs in the order they happen to be loaded, which can vary between game versions, mod updates, and modpack changes. Custom Advancements lets you take full control over that order — sorting tabs alphabetically with a single config line, or defining an exact sequence using a hand-crafted list. All tab-sorting options live in `config/customadvancements.toml` and are applied client-side every time the advancements screen opens.
+
+---
+
+## `advancementTabSortingMode`
+
+<ParamField path="advancementTabSortingMode" type="enum" default="UNSORTED">
+  Controls how the tabs in the advancements screen are ordered. Accepted values:
+
+  - **`UNSORTED`** (default) — Tabs appear in their natural load order. No reordering is applied. This is identical to unmodded behaviour.
+  - **`ALPHABETICALLY`** — Tabs are sorted A–Z by their display title (the text shown on the tab). Sorting uses the title string as rendered in the current game language and is case-sensitive (uppercase letters sort before lowercase).
+  - **`DEFINED_LIST`** — Tabs are ordered according to the root advancement IDs listed in `advancementSortingList`. Any tab not present in the list retains its natural position after all explicitly ordered tabs.
+</ParamField>
+
+---
+
+## `advancementSortingList`
+
+<ParamField path="advancementSortingList" type="list of strings" default="[]">
+  An ordered list of root advancement resource location IDs used exclusively when `advancementTabSortingMode = DEFINED_LIST`. Each entry identifies the root advancement of a tab (the advancement with no parent that represents the tab itself). Tabs are displayed in the same order as their root IDs appear in this list.
+
+  If the list contains every loaded tab, the full tab order is replaced exactly. If only some tabs are listed, those tabs are placed at their respective index positions and all unlisted tabs are left at the end in their natural order.
+
+  If a tab's root advancement ID is **not** in the list, that tab falls through to its natural load-order position after all explicitly sorted tabs have been placed.
+</ParamField>
+
+<Tip>
+  Not sure which advancements are root advancements? Run `/ca/generate/ids` to export every loaded advancement ID to a file, then look for advancements with no `"parent"` field in their JSON. See [Commands Overview](/commands/overview) for details.
+</Tip>
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="UNSORTED">
+    No sorting is applied. Tabs appear exactly as Minecraft loads them. This is the default behaviour and requires no extra configuration.
+
+    ```toml config/customadvancements.toml
+    ["Config for Custom Advancements"]
+
+        advancementTabSortingMode = "UNSORTED"
+    ```
+  </Tab>
+  <Tab title="ALPHABETICALLY">
+    Tabs are sorted A–Z by their display title every time the advancements screen opens. Sorting is case-sensitive (uppercase letters sort before lowercase). No list is required.
+
+    ```toml config/customadvancements.toml
+    ["Config for Custom Advancements"]
+
+        advancementTabSortingMode = "ALPHABETICALLY"
+    ```
+
+    With vanilla advancements the resulting order would be roughly:
+    *Adventure → Husbandry → Minecraft (Story) → Nether → The End*.
+  </Tab>
+  <Tab title="DEFINED_LIST">
+    Tabs are displayed in the exact order of the root advancement IDs listed in `advancementSortingList`. If the list covers all loaded tabs, the entire tab order is replaced. If only a subset is listed, those tabs are placed at their index positions and unlisted tabs appear at the end.
+
+    ```toml config/customadvancements.toml
+    ["Config for Custom Advancements"]
+
+        advancementTabSortingMode = "DEFINED_LIST"
+
+        # Show the custom modpack tab first, then vanilla progression order,
+        # then mod tabs (they are not listed so they fall through naturally)
+        advancementSortingList = [
+            "customadvancements:modpack/root",
+            "minecraft:story/root",
+            "minecraft:nether/root",
+            "minecraft:end/root",
+            "minecraft:adventure/root",
+            "minecraft:husbandry/root"
+        ]
+    ```
+
+    Any mod-added advancement tabs that are not listed will appear after the
+    six explicitly ordered vanilla tabs, in whatever order they were loaded.
+  </Tab>
+</Tabs>

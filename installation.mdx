@@ -1,0 +1,76 @@
+---
+title: "Installing Custom Advancements on Fabric or NeoForge"
+sidebarTitle: "Installation"
+description: "Step-by-step instructions to install Custom Advancements on Fabric and NeoForge for Minecraft 1.21.1, including all required dependencies."
+---
+
+Installing Custom Advancements takes only a few minutes. The process differs slightly between Fabric and NeoForge, mainly because the Fabric build requires two additional library mods. Follow the tab for your loader below, then launch the game — the mod will create its working folder automatically on first run.
+
+You can download Custom Advancements from either of the two official distribution platforms:
+
+- **CurseForge:** [https://www.curseforge.com/minecraft/mc-mods/custom-advancements](https://www.curseforge.com/minecraft/mc-mods/custom-advancements)
+- **Modrinth:** [https://modrinth.com/mod/custom-advancements](https://modrinth.com/mod/custom-advancements)
+
+## Installation Steps
+
+<Tabs>
+  <Tab title="Fabric">
+    <Warning>
+      **Forge Config API Port is required.** Custom Advancements uses NeoForge's configuration API on the Fabric loader via the Forge Config API Port compatibility library. The mod will **not** load without it — you will see a missing-dependency error on the title screen if it is absent.
+    </Warning>
+
+    <Steps>
+      <Step title="Install a compatible Fabric Loader">
+        Download and install **Fabric Loader 0.18.6** or newer from [https://fabricmc.net/use/installer/](https://fabricmc.net/use/installer/) for Minecraft **1.21.1**. Select the correct Minecraft version in the installer before confirming.
+      </Step>
+      <Step title="Add Fabric API">
+        Download the latest **Fabric API** build for Minecraft 1.21.1 from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fabric-api) or [Modrinth](https://modrinth.com/mod/fabric-api) and place the `.jar` file in your `mods/` folder.
+      </Step>
+      <Step title="Add Forge Config API Port">
+        Download **Forge Config API Port** version **21.1.6** or newer (the version built for Minecraft 1.21.1 / Fabric) from [Modrinth](https://modrinth.com/mod/forge-config-api-port) and place the `.jar` file in your `mods/` folder.
+      </Step>
+      <Step title="Add Custom Advancements">
+        Download the Fabric build of **Custom Advancements** for Minecraft 1.21.1 from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/custom-advancements) or [Modrinth](https://modrinth.com/mod/custom-advancements) and place the `.jar` file in your `mods/` folder.
+      </Step>
+      <Step title="Launch the game">
+        Start Minecraft using your Fabric profile. On first launch, the mod creates the `customadvancements/` folder inside your game directory. You are now ready to add custom advancements.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="NeoForge">
+    <Steps>
+      <Step title="Install a compatible NeoForge version">
+        Download and install **NeoForge 21.1.47** or newer from [https://neoforged.net](https://neoforged.net) for Minecraft **1.21.1**. NeoForge ships its own configuration API, so no extra dependency mods are needed.
+      </Step>
+      <Step title="Add Custom Advancements">
+        Download the NeoForge build of **Custom Advancements** for Minecraft 1.21.1 from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/custom-advancements) or [Modrinth](https://modrinth.com/mod/custom-advancements) and place the `.jar` file in your `mods/` folder.
+      </Step>
+      <Step title="Launch the game">
+        Start Minecraft using your NeoForge profile. On first launch, the mod creates the `customadvancements/` folder inside your game directory. You are now ready to add custom advancements.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## The `customadvancements/` Folder
+
+After the first successful launch, your game directory will contain a new folder called `customadvancements/`. This is where all of your custom advancement JSON files, language files, and textures live. The folder is created automatically — you do not need to create it manually.
+
+<Note>
+  The `customadvancements/` folder behaves like a global datapack: its contents are injected into every world you play or host on that installation, not just a single world's `datapacks/` folder. This makes it ideal for modpack-wide advancement customisation.
+</Note>
+
+The expected layout inside the folder is:
+
+```
+customadvancements/
+├── customadvancements/       ← advancement JSON files (namespace = "customadvancements")
+│   └── my_tree/
+│       ├── root.json
+│       └── first_step.json
+└── data/
+    ├── lang/
+    │   └── en_us.json        ← optional translation overrides
+    └── textures/
+        └── my_background.png ← optional custom background images
+```

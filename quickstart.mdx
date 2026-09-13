@@ -1,0 +1,123 @@
+---
+title: "Get Started: Create Your First Custom Advancement Tree"
+sidebarTitle: "Quickstart"
+description: "Create your first custom advancement JSON file and see it appear in the Minecraft advancements screen in under five minutes with Custom Advancements."
+---
+
+This guide walks you through creating your first custom advancement tree from scratch. By the end you will have a root tab and a child advancement visible in the Minecraft advancements screen, built entirely from JSON files — no coding required. The whole process takes under five minutes once the mod is installed.
+
+<Steps>
+  <Step title="Install the mod">
+    Follow the [Installation guide](/installation) to add Custom Advancements and its dependencies to your Fabric or NeoForge instance for Minecraft 1.21.1.
+  </Step>
+
+  <Step title="Launch the game once">
+    Start Minecraft at least once with the mod installed. Custom Advancements automatically creates the `customadvancements/` folder inside your game directory on the first run. You can close the game again after reaching the main menu.
+  </Step>
+
+  <Step title="Create the advancement namespace folder">
+    Inside the `customadvancements/` folder that was just created, make a subfolder named `customadvancements`:
+
+    ```
+    <game directory>/
+    └── customadvancements/
+        └── customadvancements/    ← create this folder
+    ```
+
+    <Note>
+      The name of this subfolder must exactly match a **loaded mod ID**. The mod validates every subfolder name against the list of loaded mods and skips any folder whose name does not correspond to a known mod. Using `customadvancements` (the mod's own ID) is always safe and is the recommended namespace when you are creating original advancements rather than overriding another mod's trees.
+    </Note>
+  </Step>
+
+  <Step title="Create the root advancement">
+    A root advancement defines a new tab in the advancements screen. Create the file `root.json` inside the `customadvancements/customadvancements/` folder with the following content:
+
+    ```json root.json
+    {
+      "display": {
+        "icon": {
+          "id": "minecraft:diamond_block"
+        },
+        "title": {
+          "translate": "customadvancements.advancements.example_root.title"
+        },
+        "description": {
+          "translate": "customadvancements.advancements.example_root.description"
+        },
+        "background": {
+          "type": "IMAGE",
+          "location": "customadvancements:textures/screenshot.png",
+          "object_fit": "COVER"
+        },
+        "show_toast": false,
+        "announce_to_chat": false,
+        "hidden": false
+      },
+      "criteria": {
+        "requirement": {
+          "trigger": "minecraft:tick"
+        }
+      }
+    }
+    ```
+
+    Key fields to note:
+    - **`display.icon`** — the item shown on the tab header. Any valid item ID works.
+    - **`display.title` / `display.description`** — use `translate` keys that you can define in a lang file, or replace them with `{"text": "Your Title"}` for a hardcoded string.
+    - **`display.background`** — sets a custom background image for this tab. Remove this field entirely to use the default stone texture, or see [Background Types](/advancements/background-types) for all options.
+    - **`criteria`** — root advancements are granted automatically via the `minecraft:tick` trigger; the player earns it on the first game tick.
+  </Step>
+
+  <Step title="Create a child advancement">
+    Child advancements appear as nodes branching off the root inside its tab. Create the file `example.json` in the same folder:
+
+    ```json example.json
+    {
+      "display": {
+        "icon": {
+          "id": "minecraft:dirt"
+        },
+        "title": {
+          "translate": "customadvancements.advancements.example_example.title"
+        },
+        "description": {
+          "translate": "customadvancements.advancements.example_example.description"
+        },
+        "frame": "task",
+        "show_toast": true,
+        "announce_to_chat": true
+      },
+      "parent": "customadvancements:root",
+      "criteria": {
+        "requirement": {
+          "trigger": "minecraft:inventory_changed",
+          "conditions": {
+            "items": [
+              {
+                "id": "minecraft:dirt"
+              }
+            ]
+          }
+        }
+      }
+    }
+    ```
+
+    Key fields to note:
+    - **`parent`** — the resource location of the advancement this node connects to. Here `customadvancements:root` refers to the `root.json` file you created in the previous step. The format is `<namespace>:<path>` where the path mirrors the file path relative to the namespace folder, without the `.json` extension.
+    - **`frame`** — controls the border shape of the advancement icon in the screen. Valid values are `task`, `goal`, and `challenge`.
+    - **`criteria`** — this advancement is granted when the player picks up dirt. Replace the trigger and conditions to match whatever goal you have in mind.
+
+    See the [Advancement JSON Reference](/advancements/structure) for the full list of fields, triggers, and conditions.
+  </Step>
+
+  <Step title="Load the game and open advancements">
+    Launch Minecraft (or, if the game is already running on a server, run the vanilla `/reload` command to pick up changes to the `customadvancements/` folder without restarting). Once in a world, press **L** to open the advancements screen. A new tab labelled with your root advancement's title should appear alongside the vanilla tabs.
+
+    <Tip>
+      Want to customise or override existing vanilla advancements? Run `/ca/generate/advancement/all` in-game. The mod will export every currently loaded advancement as an editable JSON file into `customadvancements/` and then automatically reload the server, registering them as custom advancements under your control. See the [Commands overview](/commands/overview) for the full list of available commands.
+    </Tip>
+
+    If the tab does not appear, check the game log for lines beginning with `[Custom Advancements]` — the most common causes are a misspelled folder name (not matching a loaded mod ID) or malformed JSON syntax in one of your files.
+  </Step>
+</Steps>

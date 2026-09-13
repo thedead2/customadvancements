@@ -1,0 +1,116 @@
+---
+title: "Filter Advancements with Blacklist and Whitelist Mode"
+sidebarTitle: "Blacklist & Whitelist"
+description: "Remove specific advancements or entire mods from Minecraft using Custom Advancements' blacklist and whitelist configuration options."
+---
+
+Custom Advancements lets you surgically control which advancements exist in your game. You can remove individual advancements, wipe out everything from a specific mod, or flip the logic entirely so that only the advancements you explicitly list are kept. All of these options live in `config/customadvancements.toml` and take effect on every server start.
+
+---
+
+## `advancementsBlacklist`
+
+`advancementsBlacklist` is a list of advancement resource location IDs that Custom Advancements will remove before the game presents them to players. Resource locations follow the standard Minecraft format: `namespace:path`, for example `"minecraft:story/root"` or `"alexsmobs:main/animal_lover"`.
+
+**Wildcard support:** If you want to remove every advancement belonging to a specific mod in one line, use the wildcard form `"modid:*"`. For example, `"create:*"` removes all advancements from the *Create* mod without needing to list each one individually.
+
+<Note>
+  Use the `/ca/generate/ids` command to export a file containing every currently loaded advancement ID, making it easy to find the exact resource locations you need. See [Commands Overview](/commands/overview) for details.
+</Note>
+
+When an advancement is removed, **all of its children are removed automatically** as well. The cascade is recursive — grandchildren, great-grandchildren, and so on are all cleared without needing to list them individually.
+
+<Warning>
+  Removing a root advancement (an advancement with no parent) removes its entire tab from the advancements screen. Players will see no trace of that tab. Make sure this is intentional before blacklisting a root advancement.
+</Warning>
+
+---
+
+## `blacklistIsWhitelist`
+
+Setting `blacklistIsWhitelist = true` inverts the list: instead of removing the listed advancements, Custom Advancements **keeps only** the listed advancements and removes everything else.
+
+When whitelist mode is active, parent advancements of any whitelisted advancement are automatically preserved even if they are not explicitly listed — this prevents broken advancement trees where a child exists without its parent.
+
+**Edge case — empty list + whitelist mode:** If `advancementsBlacklist` is empty and `blacklistIsWhitelist = true`, there are no advancements to keep, so **all advancements are removed**. This can be combined with `disableStandardAdvancements = true` and a custom advancements folder to build a fully custom advancement system from scratch.
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="Blacklist mode">
+    Remove specific advancements while keeping everything else.
+
+    ```toml config/customadvancements.toml
+    ["Config for Custom Advancements"]
+
+        # Remove individual advancements and all advancements from one mod
+        advancementsBlacklist = [
+            "minecraft:end/root",
+            "minecraft:nether/root",
+            "create:*"
+        ]
+
+        blacklistIsWhitelist = false
+    ```
+
+    This removes the End and Nether advancement tabs along with every advancement
+    from the *Create* mod. All other advancements load normally.
+  </Tab>
+  <Tab title="Whitelist mode">
+    Keep only the advancements you list; remove everything else.
+
+    ```toml config/customadvancements.toml
+    ["Config for Custom Advancements"]
+
+        # Only these advancements (and their ancestors) will be kept
+        advancementsBlacklist = [
+            "minecraft:story/root",
+            "minecraft:story/mine_stone",
+            "minecraft:story/upgrade_tools",
+            "minecraft:story/smelt_iron",
+            "minecraft:story/obtain_armor"
+        ]
+
+        blacklistIsWhitelist = true
+    ```
+
+    Only the listed advancements and their required parent advancements survive.
+    Every other advancement — including those from other mods — is removed.
+  </Tab>
+</Tabs>
+
+---
+
+## Additional filtering options
+
+### `noRecipeAdvancements`
+
+Setting `noRecipeAdvancements = true` removes every advancement whose path contains `recipes/`. This covers both vanilla recipe-unlock advancements and any added by mods. It is processed independently of `advancementsBlacklist`, so you do not need to list recipe advancements by hand.
+
+```toml config/customadvancements.toml
+["Config for Custom Advancements"]
+
+    noRecipeAdvancements = true
+```
+
+### `disableStandardAdvancements`
+
+Setting `disableStandardAdvancements = true` bypasses the vanilla and mod advancement loading pipeline entirely. When this option is active, **only** advancements you have placed in the `customadvancements` folder are loaded — no vanilla advancements, no mod advancements, nothing else. This is the most aggressive option and is intended for modpack authors who want full control over the advancement system.
+
+```toml config/customadvancements.toml
+["Config for Custom Advancements"]
+
+    disableStandardAdvancements = true
+```
+
+<Warning>
+  Enabling `disableStandardAdvancements` will remove every recipe advancement unlock notification and all mod-added advancements. Recipes that rely on advancement triggers may behave unexpectedly unless you recreate the necessary advancements yourself.
+</Warning>
+
+---
+
+## Finding advancement IDs
+
+Run `/ca/generate/ids` in-game or from the server console to write a file containing every currently loaded advancement ID to disk. This is the fastest way to find the exact resource location strings to use in `advancementsBlacklist`. See [Commands Overview](/commands/overview) for more information.

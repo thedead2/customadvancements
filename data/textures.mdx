@@ -1,0 +1,80 @@
+---
+title: "Using Custom Textures as Advancement Backgrounds"
+sidebarTitle: "Textures"
+description: "Place image files in customadvancements/data/textures/ to use them as custom backgrounds in your advancement tab definitions."
+---
+
+Custom Advancements can load image files directly from your `customadvancements/data/textures/` folder and automatically sync them to connecting clients. This means you can use any image on your server as an advancement background without requiring players to install resource packs or additional files — the mod handles the transfer for you.
+
+## Folder Location
+
+Place your image files inside the `customadvancements/` folder in your game directory, under `data/textures/`:
+
+```
+customadvancements/
+└── data/
+    └── textures/
+        ├── my_background.png
+        ├── screenshot.jpeg
+        └── fancy_tab.gif
+```
+
+## Supported File Types
+
+The following file extensions are recognised by the texture loader. Files with any other extension are skipped with a warning in the server log.
+
+| Extension | Format |
+|-----------|--------|
+| `.png`    | PNG    |
+| `.jpeg`   | JPEG   |
+| `.jpg`    | JPEG   |
+| `.hdr`    | HDR Radiance |
+| `.bmp`    | Bitmap |
+| `.tga`    | Targa  |
+| `.psd`    | Photoshop |
+| `.gif`    | GIF    |
+| `.pic`    | Softimage PIC |
+| `.pnm`    | Portable Any Map |
+
+## Referencing a Texture in an Advancement
+
+Textures placed in the `data/textures/` folder are registered under the resource location namespace `customadvancements`, using the format:
+
+```
+customadvancements:textures/<filename>
+```
+
+For example, a file named `my_background.png` is accessible as `customadvancements:textures/my_background.png`.
+
+To use it as an advancement background, set the `background` field in your advancement JSON with a `type` of `IMAGE` or `TEXTURE` and supply the resource location in the `location` field:
+
+```json title="customadvancements/data/advancements/example_root.json"
+{
+  "display": {
+    "background": {
+      "type": "IMAGE",
+      "location": "customadvancements:textures/my_background.png",
+      "object_fit": "COVER"
+    },
+    "title": { "translate": "customadvancements.advancements.example_root.title" },
+    "description": { "translate": "customadvancements.advancements.example_root.description" },
+    "icon": { "id": "minecraft:diamond" }
+  }
+}
+```
+
+Use `"type": "IMAGE"` for a single scaled image (supports `object_fit` options such as `COVER` and `CONTAIN`), or `"type": "TEXTURE"` to tile the image at 16×16 pixel intervals — the same behaviour as vanilla advancement backgrounds.
+
+See the [Background Types reference](/advancements/background-types) for the complete list of types, fields, and options available for the `background` object.
+
+## How Textures Are Delivered to Clients
+
+Texture files are loaded asynchronously on the server at startup, with a 45-second timeout. When a player joins, the server reads each texture file that is actually referenced by at least one custom advancement and sends the raw image bytes to the client over the network. The client stores the received textures in memory and uses them to render advancement backgrounds — no manual installation of files on the client side is required.
+
+<Warning>
+  Only textures that are referenced in the `background` field of at least one custom advancement are transmitted to the client. Image files sitting in `data/textures/` that are not used by any advancement are loaded into the server's registry but never sent over the network.
+</Warning>
+
+<Tip>
+  Large images noticeably increase the time it takes for players to finish joining the server, because the full image data must be transferred before the advancement screen can render correctly. For most backgrounds, a resolution of **256×256** or **512×512** pixels is more than sufficient. Avoid using full-resolution photographs or uncompressed formats when a smaller, compressed PNG will look identical in-game.
+</Tip>

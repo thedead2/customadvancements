@@ -1,0 +1,61 @@
+---
+title: "Custom Advancements — Minecraft Advancement Customisation"
+sidebarTitle: "Introduction"
+description: "Custom Advancements is a Minecraft mod for Fabric and NeoForge that gives players and modpack creators full control over the advancement system."
+---
+
+Custom Advancements is a Minecraft mod that hands complete creative control of the advancement system back to players and modpack creators. Whether you want to replace the default advancement trees with something entirely your own, silently remove recipe unlocks, or lock players behind a strict progression gate until they earn the right to move forward, this mod makes it possible — without writing a datapack for every individual world.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Custom Advancements" icon="trophy" href="/advancements/structure">
+    Add your own advancement JSON files and inject them into the game alongside — or entirely in place of — vanilla and mod advancements. The mod reads every `.json` file inside the `customadvancements/` folder and registers them as a global datapack applied to all worlds.
+  </Card>
+  <Card title="Blacklist & Whitelist" icon="filter" href="/configuration/config-file">
+    Remove specific advancements, entire mod trees, or recipe advancements from the game via a flexible blacklist. Flip a single config flag to turn that blacklist into a whitelist and keep only the advancements you care about.
+  </Card>
+  <Card title="Progression System" icon="lock" href="/configuration/progression">
+    Enable strict advancement progression so that every advancement is only achievable once its parent has been completed. Four modes — `ALL`, `MINECRAFT`, `MODS`, and `CUSTOM_ADVANCEMENTS` — let you scope the enforcement precisely, with per-mod exemptions and optional progress reset on death.
+  </Card>
+  <Card title="Custom Backgrounds" icon="image" href="/advancements/background-types">
+    Override the background texture of any root advancement tab with your own image files. The `IMAGE` background type supports `COVER`, `CONTAIN`, and `FILL` object-fit modes so you can tailor how your artwork is displayed in the advancement screen.
+  </Card>
+  <Card title="Tab Sorting" icon="arrow-up-arrow-down" href="/configuration/config-file">
+    Control the order of tabs in the advancements screen using three sorting modes: `UNSORTED` (default), `ALPHABETICALLY`, or `DEFINED_LIST` — where you supply a specific ordered list of root advancement IDs.
+  </Card>
+  <Card title="In-Game Commands" icon="terminal" href="/commands/overview">
+    Use built-in server commands such as `/ca/generate/advancement/all` to export every loaded advancement as an editable JSON file, or `/ca/generate/ids` to dump all advancement resource locations to a text file — no manual digging through JARs required.
+  </Card>
+  <Card title="Internationalisation" icon="language" href="/data/lang">
+    Ship translation files alongside your advancements. The mod loads `.json` language files from `customadvancements/data/lang/` and syncs them to connected clients, so your custom advancement titles and descriptions are fully localisable.
+  </Card>
+  <Card title="Multi-Loader Support" icon="puzzle-piece" href="/installation">
+    A single mod, two loaders. Custom Advancements runs on both Fabric (with Fabric API and Forge Config API Port) and NeoForge, targeting Minecraft 1.21.1 on both platforms.
+  </Card>
+</CardGroup>
+
+## How the Folder Structure Works
+
+On first launch, Custom Advancements creates a `customadvancements/` folder directly inside your Minecraft game directory (the same directory that holds `saves/`, `mods/`, and `config/`). This folder acts as a global datapack — its contents are injected into every world you load or host.
+
+Inside `customadvancements/`, the mod expects subfolders whose names match a loaded mod ID. Advancement JSON files placed inside a matching subfolder are registered under that mod's namespace. For example, a file at `customadvancements/customadvancements/my_tree/root.json` is registered with the resource location `customadvancements:my_tree/root`. The `customadvancements` namespace (the mod's own ID) is always available and is the recommended starting point for new content.
+
+Language files live at `customadvancements/data/lang/<locale>.json` and texture files at `customadvancements/data/textures/<name>.png`. These paths are separate from the advancement subfolder tree.
+
+<Tip>
+  You can use the `/ca/generate/advancement/all` command in-game to export all currently loaded advancements as ready-to-edit JSON files placed directly into `customadvancements/`. This is the fastest way to start customising or overriding existing advancements.
+</Tip>
+
+## Supported Platforms & Versions
+
+Custom Advancements targets **Minecraft 1.21.1** and is available for two mod loaders:
+
+| Platform  | Minimum Version       | Required Dependencies                          |
+|-----------|-----------------------|------------------------------------------------|
+| Fabric    | fabric-loader 0.18.6  | Fabric API, Forge Config API Port 21.1.6+      |
+| NeoForge  | NeoForge 21.1.47      | None beyond NeoForge itself                    |
+
+<Note>
+  The NeoForge build accepts any NeoForge version in the range `[21.1.47, ∞)` and any Minecraft version in `[1.21, 1.22)`. The Fabric build is pinned to Minecraft **1.21.1** exactly.
+</Note>

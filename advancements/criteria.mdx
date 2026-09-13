@@ -1,0 +1,220 @@
+---
+title: "Custom Advancement Criteria, Triggers, and Rewards"
+sidebarTitle: "Criteria"
+description: "Learn how to define criteria and triggers in Custom Advancements JSON files, including requirements logic and common Minecraft trigger examples."
+---
+
+Criteria define the conditions a player must meet to earn an advancement. Each criterion listens for a specific game event — called a **trigger** — and optionally narrows it down with a `conditions` block. An advancement can require one criterion or many, and the `requirements` field gives you precise control over which combination must be satisfied.
+
+## Criteria Object Structure
+
+The `criteria` field is a JSON object where each key is an arbitrary name you give to a criterion, and the value is an object with:
+
+- `"trigger"` — the namespaced ID of the Minecraft advancement trigger to listen for
+- `"conditions"` — an optional object whose shape depends on the chosen trigger
+
+```json
+"criteria": {
+  "has_diamond": {
+    "trigger": "minecraft:inventory_changed",
+    "conditions": {
+      "items": [
+        { "id": "minecraft:diamond" }
+      ]
+    }
+  }
+}
+```
+
+Criterion names are arbitrary strings. They are referenced only within the same advancement's `requirements` field; they have no effect outside the file.
+
+## Requirements Logic
+
+The optional `requirements` field is a two-dimensional array that expresses a logical combination of criteria using AND and OR.
+
+- The **outer** array is AND — every inner array must be satisfied.
+- Each **inner** array is OR — at least one criterion in the group must be satisfied.
+
+```json
+"requirements": [
+  ["criterion_a", "criterion_b"],
+  ["criterion_c"]
+]
+```
+
+This reads as: `(criterion_a OR criterion_b) AND criterion_c`.
+
+If `requirements` is omitted, every criterion defined in the `criteria` object must be satisfied (equivalent to a single-element AND of all criteria individually).
+
+## Common Triggers
+
+Custom Advancements does not add any new trigger types. It loads advancements that use any trigger Minecraft natively supports. The table below covers the triggers used in the bundled example files; the complete list is documented on the [Minecraft Wiki — Advancement triggers](https://minecraft.wiki/w/Advancement/JSON_format#List_of_triggers).
+
+| Trigger | When it fires | Key condition fields |
+|---------|---------------|----------------------|
+| `minecraft:tick` | Every game tick | None — always fires |
+| `minecraft:inventory_changed` | Player's inventory changes | `items` — array of item predicate objects |
+| `minecraft:player_killed_entity` | Player lands the killing blow on an entity | `entity` — entity condition array; `killing_blow` — damage source predicate |
+
+<Note>
+  The full list of vanilla triggers is documented on the [Minecraft Wiki](https://minecraft.wiki/w/Advancement/JSON_format#List_of_triggers). Custom Advancements does not add new trigger types — it loads advancements that use any trigger Minecraft supports.
+</Note>
+
+## Trigger Examples
+
+### minecraft:tick
+
+The simplest possible criterion. The `minecraft:tick` trigger fires on every game tick, so the advancement completes the instant the player loads in. This is the standard pattern for root advancements.
+
+```json
+"criteria": {
+  "requirement": {
+    "trigger": "minecraft:tick"
+  }
+}
+```
+
+### minecraft:inventory_changed
+
+Fires whenever the player's inventory is modified. The `items` array lists item predicates — each object can match by `"id"` (exact item), `"tag"` (item tag), count, components, and more.
+
+```json
+"criteria": {
+  "requirement": {
+    "trigger": "minecraft:inventory_changed",
+    "conditions": {
+      "items": [
+        {
+          "id": "minecraft:dirt"
+        }
+      ]
+    }
+  }
+}
+```
+
+This criterion fires as soon as any dirt appears in the player's inventory.
+
+### minecraft:player_killed_entity
+
+Fires when the player is the direct cause of an entity's death. The `entity` field is an array of condition objects, each with a `"condition"` type key. The `killing_blow` field inspects the damage source, including the item held when the kill was made.
+
+```json
+"criteria": {
+  "back_to_the_roots": {
+    "trigger": "minecraft:player_killed_entity",
+    "conditions": {
+      "entity": [
+        {
+          "condition": "minecraft:entity_properties",
+          "entity": "this",
+          "predicate": {
+            "type": "minecraft:zombie",
+            "flags": {
+              "is_baby": false
+            }
+          }
+        }
+      ],
+      "killing_blow": {
+        "direct_entity": {
+          "equipment": {
+            "mainhand": {
+              "items": [
+                "minecraft:rotten_flesh"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+This criterion fires when the player kills an adult zombie while holding rotten flesh in their main hand.
+
+## Complete Example: back_to_the_roots.json
+
+The following is the full `back_to_the_roots.json` example file shipped with the mod. It demonstrates a single-criterion advancement with a `requirements` array and an experience reward.
+
+```json back_to_the_roots.json
+{
+  "parent": "customadvancements:example",
+  "criteria": {
+    "back_to_the_roots": {
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "minecraft:zombie",
+              "flags": {
+                "is_baby": false
+              }
+            }
+          }
+        ],
+        "killing_blow": {
+          "direct_entity": {
+            "equipment": {
+              "mainhand": {
+                "items": [
+                  "minecraft:rotten_flesh"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "trigger": "minecraft:player_killed_entity"
+    }
+  },
+  "display": {
+    "announce_to_chat": true,
+    "description": {
+      "translate": "customadvancements.advancements.back_to_the_roots.description"
+    },
+    "frame": "task",
+    "hidden": false,
+    "icon": {
+      "id": "minecraft:rotten_flesh"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "customadvancements.advancements.back_to_the_roots.title"
+    }
+  },
+  "requirements": [
+    [
+      "back_to_the_roots"
+    ]
+  ],
+  "rewards": {
+    "experience": 50
+  }
+}
+```
+
+## Rewards
+
+The optional `rewards` object grants the player something when the advancement is completed. It is placed at the top level of the advancement JSON, alongside `criteria` and `display`.
+
+```json
+"rewards": {
+  "experience": 50,
+  "loot_tables": ["minecraft:chests/simple_dungeon"],
+  "recipes": ["minecraft:iron_sword"],
+  "function": "mymod:on_complete"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `experience` | integer | XP points awarded |
+| `loot_tables` | array of strings | Loot tables rolled and items given directly to the player's inventory |
+| `recipes` | array of strings | Recipes unlocked in the recipe book |
+| `function` | string | Server-side function run as the player |
+
+All `rewards` sub-fields are optional; include only those you need.

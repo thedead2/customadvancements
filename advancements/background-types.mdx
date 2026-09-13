@@ -1,0 +1,190 @@
+---
+title: "Custom Advancement Background Types and Configuration"
+sidebarTitle: "Background Types"
+description: "Configure custom backgrounds for root advancement tabs using IMAGE, TEXTURE, COLOR, LINEAR_GRADIENT, and RADIAL_GRADIENT types in Custom Advancements."
+---
+
+The `background` field on root advancements controls what is drawn behind the advancement tree in the tab panel. Custom Advancements extends this field beyond vanilla's plain resource-location string to accept a typed JSON object with a `type` property. This allows you to use scaled images, tiled textures, solid colors, or gradient fills — all without touching a resourcepack.
+
+<Warning>
+  The `background` field is only rendered for **root** advancements, i.e. those that have no `parent` field. Placing a `background` on a child advancement has no visual effect and is silently ignored.
+</Warning>
+
+<Note>
+  Vanilla Minecraft expects `background` to be a plain resource-location string. Custom Advancements intercepts this field on its own advancements before passing the data to vanilla and replaces the value internally with a placeholder string (`customadvancements:fake_texture_location`). The actual background rendering is handled entirely by the mod's client-side renderer.
+</Note>
+
+## Background Types
+
+<Accordion title="NONE">
+
+Renders no background. The tab panel is left empty (transparent or showing Minecraft's default dark overlay).
+
+```json
+"background": {
+  "type": "NONE"
+}
+```
+
+<ParamField body="type" type="string" required>
+  Must be `"NONE"`.
+</ParamField>
+
+Use this when you want to suppress any background for a root tab, for example if another layer already provides a backdrop via a resourcepack.
+
+</Accordion>
+
+<Accordion title="IMAGE">
+
+Renders a single image scaled to fill the tab area. This is the most visually rich option and is used in the bundled `root.json` example. The image is drawn according to the `object_fit` rule — it does not tile.
+
+```json
+"background": {
+  "type": "IMAGE",
+  "location": "customadvancements:textures/screenshot.png",
+  "object_fit": "COVER"
+}
+```
+
+<ParamField body="type" type="string" required>
+  Must be `"IMAGE"`.
+</ParamField>
+
+<ParamField body="location" type="string" required>
+  Resource location of the image file, e.g. `customadvancements:textures/screenshot.png`. The file must exist as a registered texture. Place custom image files in `customadvancements/data/textures/` — see [Textures](/data/textures) for details.
+</ParamField>
+
+<ParamField body="object_fit" type="string">
+  Controls how the image is scaled to fit the available tab area. Passed to `TextureInfo.fromJson` internally. Common values include `"COVER"` (scale to fill, cropping edges if needed) and `"CONTAIN"` (scale to fit fully within bounds, potentially leaving empty space).
+</ParamField>
+
+<Tip>
+  `"COVER"` is the best choice for full-bleed screenshots or artwork where you want the image to fill the entire tab without letterboxing.
+</Tip>
+
+</Accordion>
+
+<Accordion title="TEXTURE">
+
+Tiles a 16×16 texture across the full tab area, repeating it in both axes — the classic vanilla advancement background style. This matches how Minecraft renders its own advancement backgrounds (e.g. `stone.png`).
+
+```json
+"background": {
+  "type": "TEXTURE",
+  "location": "minecraft:textures/gui/advancements/backgrounds/stone.png"
+}
+```
+
+As a convenience, you can also pass the location as a plain string instead of an object:
+
+```json
+"background": "minecraft:textures/gui/advancements/backgrounds/stone.png"
+```
+
+<ParamField body="type" type="string" required>
+  Must be `"TEXTURE"` when using the object form.
+</ParamField>
+
+<ParamField body="location" type="string" required>
+  Resource location of the texture to tile. Can reference any texture registered in the game, including vanilla textures and those from other mods. For custom textures, place the file in `customadvancements/data/textures/` and reference it as `customadvancements:textures/<filename>.png`.
+</ParamField>
+
+<Note>
+  The plain-string shorthand (`"background": "namespace:path"`) is the vanilla format and is fully supported by Custom Advancements. It behaves identically to `{ "type": "TEXTURE", "location": "namespace:path" }`.
+</Note>
+
+</Accordion>
+
+<Accordion title="COLOR">
+
+Fills the entire tab area with a solid color. Useful for minimalist designs or when you want a branded background without needing an image asset.
+
+```json
+"background": {
+  "type": "COLOR",
+  "color": "30,30,30,255"
+}
+```
+
+<ParamField body="type" type="string" required>
+  Must be `"COLOR"`.
+</ParamField>
+
+<ParamField body="color" type="string | integer | object" required>
+  The fill color. Three formats are accepted:
+
+  **Comma-separated RGBA string** — four integers for red, green, blue, and alpha channels, each in the range 0–255:
+  ```json
+  "color": "255,128,0,255"
+  ```
+
+  **Integer** — a packed 32-bit ARGB integer:
+  ```json
+  "color": "4278190080"
+  ```
+
+  **Object** — separate named channel fields:
+  ```json
+  "color": {
+    "red": 255,
+    "green": 128,
+    "blue": 0,
+    "alpha": 255
+  }
+  ```
+</ParamField>
+
+</Accordion>
+
+<Accordion title="LINEAR_GRADIENT">
+
+Fills the tab area with a linear gradient that blends between two or more colors along a straight line at a configurable angle.
+
+```json
+"background": {
+  "type": "LINEAR_GRADIENT",
+  "degrees": 135,
+  "colors": [ ... ]
+}
+```
+
+<ParamField body="type" type="string" required>
+  Must be `"LINEAR_GRADIENT"`.
+</ParamField>
+
+<ParamField body="degrees" type="number" default="0">
+  The angle of the gradient in degrees, measured clockwise from the top. `0` is top-to-bottom, `90` is left-to-right, `135` is top-left to bottom-right.
+</ParamField>
+
+<ParamField body="colors" type="array" required>
+  An array of `GradientColor` objects parsed by `GradientColor.fromJson` from the companion mc_libs library. Each element represents a color stop along the gradient. Supply two or more stops; they are applied in the order they appear in the array. Consult the mc_libs documentation for the exact field names and color formats accepted by `GradientColor.fromJson`.
+</ParamField>
+
+</Accordion>
+
+<Accordion title="RADIAL_GRADIENT">
+
+Fills the tab area with a radial gradient that blends outward from the center of the tab to its edges.
+
+```json
+"background": {
+  "type": "RADIAL_GRADIENT",
+  "colors": [ ... ]
+}
+```
+
+<ParamField body="type" type="string" required>
+  Must be `"RADIAL_GRADIENT"`.
+</ParamField>
+
+<ParamField body="colors" type="array" required>
+  An array of `GradientColor` objects in the same format as `LINEAR_GRADIENT`. Parsed by `GradientColor.fromJson` from the mc_libs library. Consult the mc_libs documentation for the exact field names and color formats supported.
+</ParamField>
+
+</Accordion>
+
+## Placing Custom Texture Files
+
+When using `IMAGE` or `TEXTURE` with a custom file, place the image inside `customadvancements/data/textures/`. The mod reads textures from that folder and syncs them to connected clients. A file at `customadvancements/data/textures/screenshot.png` is referenced as `customadvancements:textures/screenshot.png` in the `location` field.
+
+See [Textures](/data/textures) for the full guide on supported formats and file placement.

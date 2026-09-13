@@ -1,0 +1,127 @@
+---
+title: "Custom Advancements In-Game Commands Reference"
+sidebarTitle: "Commands"
+description: "Reference for all Custom Advancements in-game commands: generate advancement JSON files, export IDs, and manage the mod directly from the game chat."
+---
+
+Custom Advancements registers a set of server-side commands under the `/ca/` prefix that let you interact with the mod directly from the in-game chat or console. These commands cover everything from listing all known advancement IDs to exporting fully-formed JSON templates for any loaded advancement. All commands require server operator privileges and are available on both Fabric and NeoForge.
+
+<Note>
+  Every `/ca/` command requires the executing player to have server operator
+  permissions. On a dedicated server this means an appropriate `ops.json` entry;
+  in single-player it means cheats must be enabled for the world.
+</Note>
+
+---
+
+## `/ca/generate/ids`
+
+Writes every currently-loaded advancement resource location ID to a plain-text file on disk. Use this command first when you need to find the exact IDs required to build a blacklist or a custom sort order.
+
+```bash
+/ca/generate/ids
+```
+
+This command takes no arguments. When executed it:
+
+1. Sends the message **"Starting to write advancement ids to file..."** to the executing player's chat.
+2. Iterates over all advancement IDs known to the Custom Advancements manager.
+3. Writes each ID to `<game_dir>/customadvancements/advancements.txt`, one entry per line in the format `namespace:path,`.
+4. Sends a **"Finished!"** confirmation on success, or an error message if the file could not be written.
+
+### Output file format
+
+Each line in `advancements.txt` looks like this:
+
+```
+minecraft:story/mine_stone,
+minecraft:story/upgrade_tools,
+mymod:custom/my_advancement,
+```
+
+### Failure conditions
+
+| Situation | In-game message |
+|---|---|
+| File could not be written (e.g. permissions error) | `Unable to write advancement ids to file!` |
+| Unexpected command exception | `Error executing the command: <reason>` |
+
+---
+
+## `/ca/generate/advancement/all`
+
+Exports **every** currently-loaded advancement (except those that are already managed as custom advancements) as individual JSON files into your `customadvancements/` folder, organised by mod namespace. After all files are written the mod automatically triggers a full reload so the exported files are picked up immediately.
+
+```bash
+/ca/generate/advancement/all
+```
+
+This command takes no arguments. When executed it:
+
+1. Sends the message **"Starting to generate files for advancements..."** to the executing player's chat.
+2. Iterates over every advancement registered on the server.
+3. **Skips** any advancement that is already tracked by the Custom Advancements manager (i.e. a corresponding `.json` file already exists in your `customadvancements/` folder). A per-skipped-entry failure notice is sent to chat for visibility.
+4. Writes remaining advancements to `<game_dir>/customadvancements/<namespace>/<path>.json`.
+5. Reports **"Generated \<N\> advancement files successfully!"** on completion.
+6. Triggers an automatic reload so all exported files become active custom advancements.
+
+### Failure conditions
+
+| Situation | In-game message |
+|---|---|
+| Individual advancement is already a custom advancement | `The file for <id> already exist!` |
+| Individual advancement could not be written to disk | `Unable to generate file for: <id>` |
+| Unexpected command exception | `Error executing the command: <reason>` |
+
+<Note>
+  Advancements that are already managed as custom advancements are skipped to
+  prevent overwriting your edits. You will see a separate chat notice for each
+  skipped entry.
+</Note>
+
+---
+
+## `/ca/generate/advancement/[advancement]`
+
+Exports a **single** advancement by its resource location ID as a JSON file into the `customadvancements/` folder. Tab-completion is available for the argument and shows every advancement currently loaded on the server. After a successful export the mod automatically triggers a reload.
+
+```bash
+/ca/generate/advancement/[advancement]
+```
+
+### Arguments
+
+<ParamField path="advancement" type="ResourceLocation" required>
+  The resource location ID of the advancement to export, in `namespace:path`
+  format (e.g. `minecraft:story/mine_stone`). Tab-complete shows all loaded
+  advancements. The command fails immediately if the supplied ID belongs to the
+  `customadvancements` namespace, because that advancement is already a custom
+  advancement.
+</ParamField>
+
+When executed it:
+
+1. Validates that the advancement's namespace is **not** `customadvancements`. If it is, the command fails with an "already exists" message.
+2. Writes the advancement to `<game_dir>/customadvancements/<namespace>/<path>.json`.
+3. Sends **"Successfully generated file for: \<id\>"** on success.
+4. Triggers an automatic reload so the exported file is picked up immediately.
+
+### Failure conditions
+
+| Situation | In-game message |
+|---|---|
+| The advancement namespace is `customadvancements` | `The file for <id> already exist!` |
+| The file could not be written to disk | `Unable to generate file for: <id>` |
+| Unexpected command exception | `Error executing the command: <reason>` |
+
+---
+
+<Tip>
+  **Recommended workflow for editing a specific advancement:**
+
+  1. Run `/ca/generate/ids` to write all advancement IDs to `customadvancements/advancements.txt`.
+  2. Open the file and find the `namespace:path` ID you want to customise.
+  3. Run `/ca/generate/advancement/[advancement]` with that ID (tab-complete to select it). The JSON template is written to `customadvancements/<namespace>/<path>.json` and a reload fires automatically.
+  4. Edit the exported JSON in your favourite text editor — change criteria, rewards, display text, or anything else.
+  5. The next time the server reloads (or you trigger one manually) your changes will be live.
+</Tip>
