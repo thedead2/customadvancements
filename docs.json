@@ -26,19 +26,6 @@
             "default": true,
             "groups": [
               {
-                "group": "Localization & Textures",
-                "pages": [
-                  "data/lang",
-                  "data/textures"
-                ]
-              },
-              {
-                "group": "Commands",
-                "pages": [
-                  "commands/overview"
-                ]
-              },
-              {
                 "group": "Getting Started",
                 "pages": [
                   "introduction",
@@ -57,12 +44,25 @@
                 ]
               },
               {
+                "group": "Localization & Textures",
+                "pages": [
+                  "data/lang",
+                  "data/textures"
+                ]
+              },
+              {
                 "group": "Configuration",
                 "pages": [
                   "configuration/config-file",
                   "configuration/blacklist-whitelist",
                   "configuration/progression",
                   "configuration/tab-sorting"
+                ]
+              },
+              {
+                "group": "Commands",
+                "pages": [
+                  "commands/overview"
                 ]
               }
             ]
