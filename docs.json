@@ -70,5 +70,14 @@
         ]
       }
     ]
+  },
+  "favicon": {
+    "light": "/images/customadvancements_logo_with_bg.png",
+    "dark": "/images/customadvancements_logo_with_bg.png"
+  },
+  "banner": {
+    "content": "This wiki is currently a work in progress. Not all mod versions are done yet.",
+    "dismissible": true,
+    "type": "warning"
   }
 }
