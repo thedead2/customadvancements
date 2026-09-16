@@ -1,0 +1,149 @@
+---
+title: "Advancement Display Field: Icons, Titles, and Frames"
+sidebarTitle: "Display"
+description: "Configure the display object for a Custom Advancements JSON file — icon, title, description, frame type, toast, chat announcement, and parent links."
+---
+
+The `display` object controls every visual aspect of an advancement: the icon shown in the tree, the title and description in the tooltip, the frame style around the icon, whether a toast notification pops up on completion, and whether the chat broadcasts the unlock. For root advancements it also carries the `background` field that fills the tab panel behind the advancement tree.
+
+## Fields
+
+<ParamField body="icon" type="object" required>
+  The item displayed as the advancement's icon in the advancement tree. Must contain at least an `"item"` field with a valid item resource location. An optional `"nbt"` field accepts an NBT string in the same format Minecraft uses for item data.
+
+  ```json
+  "icon": {
+    "item": "minecraft:diamond"
+  }
+  ```
+</ParamField>
+
+<ParamField body="title" type="string | object" required>
+  The advancement title displayed at the top of the tooltip. Accepts either a plain string or a Minecraft text component object.
+
+  Hardcoded string:
+
+  ```json
+  "title": { "text": "Back to the roots" }
+  ```
+
+  Translation key (recommended for localizable content):
+
+  ```json
+  "title": { "translate": "customadvancements.advancements.my_advancement.title" }
+  ```
+
+  If you use a `translate` key you must supply the matching string in a language file. See [Language Files](/data/lang) for details.
+</ParamField>
+
+<ParamField body="description" type="string | object" required>
+  The advancement description shown below the title in the tooltip. Accepts the same plain-string or text-component formats as `title`.
+
+  ```json
+  "description": { "translate": "customadvancements.advancements.my_advancement.description" }
+  ```
+</ParamField>
+
+<ParamField body="frame" type="string" default="task">
+  The frame style drawn around the icon in the advancement tree. Controls the visual emphasis of the advancement.
+
+  | Value | Appearance |
+  |-------|------------|
+  | `"task"` | Standard square frame — everyday objectives |
+  | `"goal"` | Rounded frame — mid-tier milestones |
+  | `"challenge"` | Star-shaped frame — difficult or prestigious feats |
+</ParamField>
+
+<ParamField body="show_toast" type="boolean" default="true">
+  Whether a toast notification slides in from the top-right corner of the screen when the player earns this advancement. Set to `false` for silent advancements such as root nodes that complete immediately on login.
+</ParamField>
+
+<ParamField body="announce_to_chat" type="boolean" default="true">
+  Whether the server broadcasts a chat message to all players when someone earns this advancement. Set to `false` for internal progression steps or root advancements that fire on every login.
+</ParamField>
+
+<ParamField body="hidden" type="boolean" default="false">
+  When `true`, this advancement is invisible in the advancement tree until the player has completed it. Use this for secret objectives or spoiler-sensitive advancements that should not be revealed prematurely.
+</ParamField>
+
+<ParamField body="background" type="string">
+  Resource location of the texture drawn behind the advancement tree in this tab, for example `"customadvancements:textures/screenshot.png"`. **Required on root advancements** (those with no `parent` field) — a root without it fails validation and is skipped. The field has no visual effect on child advancements.
+
+  Custom Advancements adds three companion fields — `largeBackground`, `shouldBgClip`, and `bgRatio` — that control how the texture is rendered. See [Background Types](/advancements/background-types) for all of them.
+
+  ```json
+  "background": "customadvancements:textures/my_background.png"
+  ```
+</ParamField>
+
+---
+
+## The `parent` Field
+
+The `parent` field is not part of `display` — it sits at the top level of the advancement JSON — but it works hand in hand with it, because it determines whether the advancement is a tab of its own or a node inside an existing tab.
+
+`parent` is a resource location string that points at another advancement. Setting it places your advancement as a child of that one in the tree, visually connected by a line. You can point it at:
+
+- another advancement you created (e.g. `customadvancements:root`)
+- a vanilla advancement (e.g. `minecraft:story/root`)
+- an advancement added by any other mod, using that mod's namespace
+
+Omit `parent` entirely and your advancement becomes a **root**: it gets its own tab in the advancements screen, and its `display` must include a `background`.
+
+```json
+{
+  "parent": "customadvancements:root",
+  "display": { }
+}
+```
+
+<Warning>
+  The value is a resource location, **not** a file path: no `.json` extension and no leading slash. A `parent` that points at an advancement which does not exist will break the tree it belongs to.
+</Warning>
+
+---
+
+## Complete Display Example
+
+The following shows a fully populated `display` block combining all available fields. It is drawn from the `back_to_the_roots.json` example file shipped with the mod.
+
+```json back_to_the_roots.json (display block)
+{
+  "display": {
+    "announce_to_chat": true,
+    "description": {
+      "translate": "customadvancements.advancements.back_to_the_roots.description"
+    },
+    "frame": "task",
+    "hidden": false,
+    "icon": {
+      "item": "minecraft:rotten_flesh"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "customadvancements.advancements.back_to_the_roots.title"
+    }
+  }
+}
+```
+
+---
+
+## Translation Keys
+
+When you use `{ "translate": "some.key" }` for a title or description, you must provide the actual string in a language file placed at `customadvancements/data/lang/<locale>.json`. The mod injects these entries into Minecraft's language system at load time.
+
+```json customadvancements/data/lang/en_us.json
+{
+  "customadvancements.advancements.back_to_the_roots.title": "Back to the roots",
+  "customadvancements.advancements.back_to_the_roots.description": "Kill a zombie with rotten flesh!"
+}
+```
+
+See [Language Files](/data/lang) for the full guide on structuring and naming locale files.
+
+<Note>
+  Minecraft text components support color, formatting, click events, and hover text — the same rich-text JSON format used in signs, books, and chat messages. Custom Advancements passes the `title` and `description` values straight to Minecraft's component parser, so any valid component is accepted.
+</Note>
+
+For details on the `background` field and its rendering options, see [Background Types](/advancements/background-types).

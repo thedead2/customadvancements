@@ -1,0 +1,174 @@
+---
+title: "Custom Advancements In-Game Commands Reference"
+sidebarTitle: "Commands"
+description: "Reference for all Custom Advancements in-game commands: generate advancement JSON files, export resource locations, and hot-reload the mod from chat."
+---
+
+Custom Advancements registers a small set of server-side commands that let you interact with the mod directly from the in-game chat or the server console. They cover everything from listing all known advancement IDs to exporting fully-formed JSON templates for any loaded advancement, plus a hot-reload that applies your edits without a restart.
+
+Every command is available under two equivalent aliases — the short `/ca` and the full `/customadvancements`. Pick whichever fits your workflow; the examples on this page use the short form.
+
+```
+# These two commands do exactly the same thing
+/ca reload
+/customadvancements reload
+```
+
+<Note>
+  None of these commands require server operator permissions — any player connected to the server can run them, and in single-player they work whether or not cheats are enabled. Because the mod enforces no permission level of its own, use a permissions plugin or restrict access at the server level if you want to limit who can run them on a public server.
+</Note>
+
+---
+
+## `/ca reload`
+
+Re-reads everything Custom Advancements manages and pushes the updated state to connected players, without bringing the server down.
+
+```
+/ca reload
+```
+
+This command takes no arguments. When executed it:
+
+1. Sends a **"Reloading..."** message to the executing player's chat and the server log.
+2. Clears the mod's loaded advancement, texture, and language data.
+3. Re-scans the `customadvancements/` folder tree for advancement JSON files, `customadvancements/data/textures/` for image files, and `customadvancements/data/lang/` for language files.
+4. Triggers a full game-data reload so the new advancement set reaches every connected player.
+5. Sends a **"Reload complete!"** confirmation, or an error message if something failed.
+
+Run it whenever you:
+
+- add a new advancement JSON file to the `customadvancements/` folder
+- edit an existing advancement's display properties, criteria, or rewards
+- add or replace a texture or language file
+
+<Warning>
+  **`/ca reload` does not re-read the config file.** It reloads advancement JSON, textures, and language files only. Changes to `config/customadvancements-common.toml` — blacklists, progression settings, tab sorting, and everything else on the [Config File](/configuration/config-file) page — require a full game or server restart.
+</Warning>
+
+<Tip>
+  During active development of an advancement tree, keep a chat window or console open and run `/ca reload` after every save. This tight feedback loop lets you see display changes, reward tweaks, and criteria adjustments in real time without ever leaving your world.
+</Tip>
+
+<Frame>
+  [INSERT IMAGE: Chat output after running /ca reload, showing the "Reloading..." and "Reload complete!" messages]
+</Frame>
+
+---
+
+## `/ca generate resource_locations`
+
+Writes every currently loaded advancement resource location ID to a plain-text file on disk. Use this command first when you need the exact IDs required to build a blacklist or a custom sort order.
+
+```
+/ca generate resource_locations
+```
+
+This command takes no arguments. When executed it:
+
+1. Sends a **"Starting to write resource locations to file..."** message to chat.
+2. Collects every advancement ID known to the mod, including both game advancements and your own custom advancements.
+3. Writes each ID to `<game_dir>/customadvancements/resource_locations.txt`, one entry per line in the format `namespace:path,`.
+4. Sends a confirmation on success, or an error message if the file could not be written.
+
+### Output file format
+
+Each line in `resource_locations.txt` looks like this:
+
+```
+minecraft:story/root,
+minecraft:story/mine_stone,
+minecraft:nether/root,
+minecraft:nether/find_bastion,
+minecraft:end/root,
+```
+
+The trailing comma makes it easy to paste entries straight into a TOML list in your config file.
+
+<Note>
+  The file covers vanilla advancements, advancements added by other mods, and your own custom advancements. Re-run the command whenever you add or remove mods to refresh the list.
+</Note>
+
+<Frame>
+  [INSERT IMAGE: The generated resource_locations.txt open in a text editor, showing one advancement ID per line]
+</Frame>
+
+---
+
+## `/ca generate advancement all`
+
+Exports **every** currently loaded advancement as an individual JSON file into your `customadvancements/` folder, organized into namespace subfolders. Because a file placed in a namespace folder overrides the original advancement, this is the fastest way to take control of the entire existing advancement set.
+
+```
+/ca generate advancement all
+```
+
+This command takes no arguments. When executed it:
+
+1. Sends a **"Starting to generate files for advancements..."** message to chat.
+2. Starts a low-priority background daemon thread so the game and tick loop are not frozen while it works.
+3. Writes each advancement to `<game_dir>/customadvancements/<namespace>/<path>.json`.
+4. Reports how many files were generated on completion, and sends a per-file failure notice for any advancement that could not be written.
+5. Triggers an automatic reload so the exported files become active immediately.
+
+### Failure conditions
+
+| Situation | In-game message |
+|---|---|
+| An individual advancement could not be written to disk | `Unable to generate file for: <id>` |
+| Unexpected command exception | `Error executing the command: <reason>` |
+
+<Warning>
+  This command can write **hundreds or thousands of files** depending on how many mods are installed. Make sure you have enough free disk space before running it, and be prepared to wait a moment for the background thread to finish.
+</Warning>
+
+<Note>
+  After generation you are free to edit any file, delete the ones you do not need to customize, or reorganize the folders. Only the files that remain on disk at reload time are applied.
+</Note>
+
+---
+
+## `/ca generate advancement <advancement>`
+
+Exports a **single** advancement, named by its resource location ID, as a JSON file into the `customadvancements/` folder. Tab-completion is available for the argument and lists every advancement currently loaded on the server. After a successful export the mod automatically triggers a reload.
+
+```
+/ca generate advancement minecraft:story/mine_stone
+```
+
+### Arguments
+
+<ParamField path="advancement" type="ResourceLocation" required>
+  The resource location ID of the advancement to export, in `namespace:path` format (e.g. `minecraft:story/mine_stone`). Press <kbd>Tab</kbd> after typing `/ca generate advancement ` to browse all loaded advancements. The command fails immediately if the supplied ID belongs to the `customadvancements` namespace, because that advancement is already sourced from a file you control.
+</ParamField>
+
+When executed it:
+
+1. Validates that the advancement's namespace is **not** `customadvancements`.
+2. Writes the advancement to `<game_dir>/customadvancements/<namespace>/<path>.json` — for `minecraft:story/mine_stone`, that is `customadvancements/minecraft/story/mine_stone.json`.
+3. Sends a success message naming the exported advancement.
+4. Triggers an automatic reload so the exported file is picked up immediately.
+
+### Failure conditions
+
+| Situation | In-game message |
+|---|---|
+| The advancement namespace is `customadvancements` | `The file for <id> already exist!` |
+| The file could not be written to disk | `Unable to generate file for: <id>` |
+| Unexpected command exception | `Error executing the command: <reason>` |
+
+<Note>
+  To edit one of your own advancements, open its source file in `customadvancements/customadvancements/` directly — there is nothing to generate, because the file already exists.
+</Note>
+
+---
+
+<Tip>
+  **Recommended workflow for customizing a specific advancement:**
+
+  1. Run `/ca generate resource_locations` to write all advancement IDs to `customadvancements/resource_locations.txt`.
+  2. Open the file and find the `namespace:path` ID you want to customize.
+  3. Run `/ca generate advancement <advancement>` with that ID (tab-complete to select it). The JSON template is written to `customadvancements/<namespace>/<path>.json` and a reload fires automatically.
+  4. Edit the exported JSON in your text editor — change criteria, rewards, display text, or anything else.
+  5. Run `/ca reload` to see your changes live.
+</Tip>

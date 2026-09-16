@@ -1,0 +1,182 @@
+---
+title: "Filter Advancements with Blacklist and Whitelist Mode"
+sidebarTitle: "Blacklist & Whitelist"
+description: "Remove specific advancements, entire categories, or everything at once from Minecraft using Custom Advancements' blacklist and whitelist configuration."
+---
+
+Every advancement that already exists in Minecraft or in another mod you have installed is something Custom Advancements can take over. There are two ways to do that: **override** it, by placing your own JSON file in a namespace folder so the mod replaces the original data, or **remove** it outright through the configuration file. Overriding is covered in [Structure](/advancements/structure); this page covers removal.
+
+All of these options live in `config/customadvancements-common.toml` and are applied when the game or server starts.
+
+<Note>
+  Removing an advancement is usually cleaner than overriding it when your goal is simply for players not to see it — for example, story advancements that no longer apply in a custom modpack scenario. Reach for an override only when you want to change what an advancement does or how it looks.
+</Note>
+
+---
+
+## Finding Advancement IDs
+
+Every advancement is identified by a **resource location** in the format `namespace:path`, for example `minecraft:story/mine_stone`. Before you can blacklist anything, you need the exact IDs of the advancements you want to target.
+
+Run the following command in-game or from the server console:
+
+```
+/ca generate resource_locations
+```
+
+It writes every currently loaded advancement ID, one per line, to `customadvancements/resource_locations.txt`. Open that file and search it to find the IDs you need. See [Commands](/commands/overview) for details.
+
+<Tip>
+  Resource location paths mirror the folder structure of the advancement data. A vanilla advancement stored at `data/minecraft/advancements/story/mine_stone.json` has the ID `minecraft:story/mine_stone`.
+</Tip>
+
+---
+
+## `advancementsBlacklist`
+
+`advancementsBlacklist` is a list of advancement resource location IDs that Custom Advancements removes before the game presents them to players. Each entry must be a quoted string in `namespace:path` form — no `.json` extension and no leading slash.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementsBlacklist = [
+        "minecraft:story/mine_stone",
+        "minecraft:story/upgrade_tools"
+    ]
+    blacklistIsWhitelist = false
+```
+
+With `blacklistIsWhitelist = false` (the default), every ID in the list is removed and all other advancements continue to work normally.
+
+When an advancement is removed, **all of its children are removed automatically** as well. The cascade is recursive — grandchildren, great-grandchildren, and so on are all cleared without needing to list them individually.
+
+<Warning>
+  Removing a root advancement (one with no parent) removes its entire tab from the advancements screen. Players will see no trace of that tab. Make sure this is intentional before blacklisting a root advancement.
+</Warning>
+
+<Note>
+  Entries are validated against the advancements actually loaded on the server. An ID that does not correspond to a real advancement — a typo, or an advancement belonging to a mod you have since removed — is rejected and the option falls back to its default. If your whole blacklist appears to be ignored, check every entry for spelling and case.
+</Note>
+
+---
+
+## `blacklistIsWhitelist`
+
+Setting `blacklistIsWhitelist = true` inverts the list: instead of removing the listed advancements, Custom Advancements **keeps only** the listed advancements and removes everything else.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementsBlacklist = [
+        "minecraft:story/root",
+        "minecraft:story/mine_stone",
+        "minecraft:story/upgrade_tools"
+    ]
+    blacklistIsWhitelist = true
+```
+
+When whitelist mode is active, the parent advancements of any whitelisted advancement are preserved automatically even if they are not explicitly listed. This prevents broken trees where a child exists without its parent.
+
+<Warning>
+  **Empty list plus whitelist mode removes everything.** If `advancementsBlacklist` is empty and `blacklistIsWhitelist = true`, there is nothing to keep, so every advancement is removed. This is a useful way to start from a blank slate and add back only your own custom advancements — but it is easy to trigger by accident.
+</Warning>
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="Blacklist mode">
+    Remove specific advancements while keeping everything else.
+
+    ```toml config/customadvancements-common.toml
+    ["Config for Custom Advancements"]
+
+        advancementsBlacklist = [
+            "minecraft:end/root",
+            "minecraft:nether/root",
+            "minecraft:adventure/kill_all_mobs"
+        ]
+
+        blacklistIsWhitelist = false
+    ```
+
+    This removes the End and Nether advancement tabs entirely — along with every
+    advancement beneath them — plus one adventure advancement. All other
+    advancements load normally.
+  </Tab>
+  <Tab title="Whitelist mode">
+    Keep only the advancements you list; remove everything else.
+
+    ```toml config/customadvancements-common.toml
+    ["Config for Custom Advancements"]
+
+        advancementsBlacklist = [
+            "minecraft:story/root",
+            "minecraft:story/mine_stone",
+            "minecraft:story/upgrade_tools",
+            "minecraft:story/smelt_iron",
+            "minecraft:story/obtain_armor"
+        ]
+
+        blacklistIsWhitelist = true
+    ```
+
+    Only the listed advancements and their required parent advancements survive.
+    Every other advancement — including those from other mods — is removed.
+  </Tab>
+</Tabs>
+
+---
+
+## Additional Filtering Options
+
+### `noRecipeAdvancements`
+
+Setting `noRecipeAdvancements = true` removes every recipe-unlock advancement. This covers both vanilla recipe advancements and any added by mods, and it suppresses the recipe unlock toast notifications that go with them. It is processed independently of `advancementsBlacklist`, so you do not need to list recipe advancements by hand.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    noRecipeAdvancements = true
+```
+
+<Tip>
+  Combining `noRecipeAdvancements = true` with a targeted `advancementsBlacklist` is a clean way to tidy up the advancement screen without losing any gameplay-relevant advancements.
+</Tip>
+
+### `noAdvancements`
+
+Setting `noAdvancements = true` removes every advancement in the game without listing any of them individually — vanilla, mod-added, and custom alike. It takes precedence over `advancementsBlacklist`, so there is no need to populate the blacklist alongside it.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    noAdvancements = true
+```
+
+<Note>
+  Recipe advancements are the one exception: they are skipped by the bulk removal so that recipe unlocks keep working. Set `noRecipeAdvancements = true` as well if you want those gone too.
+</Note>
+
+### `disableStandardAdvancementLoad`
+
+Setting `disableStandardAdvancementLoad = true` makes the mod overwrite the standard advancement loading pipeline with its own generated advancements rather than loading the game's advancement data as-is. This is the most aggressive option and is intended for modpack authors who want full control over what reaches the advancement screen.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    disableStandardAdvancementLoad = true
+```
+
+<Warning>
+  Recipes that rely on advancement triggers may behave unexpectedly under this option unless you recreate the necessary advancements yourself. Test thoroughly before shipping it in a pack.
+</Warning>
+
+---
+
+## Applying Your Changes
+
+<Warning>
+  Blacklist and whitelist changes are read from the config file at startup. `/ca reload` reloads advancement JSON, textures, and language files but does **not** re-read the config — restart the game or server to apply an edit to any option on this page. See [Config File](/configuration/config-file).
+</Warning>

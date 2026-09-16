@@ -1,0 +1,193 @@
+---
+title: "Get Started: Build Your First Custom Advancement Tab"
+sidebarTitle: "Quickstart"
+description: "Create your first custom advancement JSON files and see a new tab appear in the Minecraft 1.18.2 advancements screen in under five minutes."
+---
+
+This guide walks you through creating your first custom advancement tree from scratch. By the end you will have a root tab and a child advancement visible in the Minecraft advancements screen, built entirely from JSON files — no coding required. The whole process takes under five minutes once the mod is installed.
+
+<Steps>
+  <Step title="Install the mod">
+    Follow the [Installation guide](/installation) to add Custom Advancements 4.7.5 to your Forge 1.18.2 instance.
+  </Step>
+
+  <Step title="Launch the game once">
+    Start Minecraft at least once with the mod installed. Custom Advancements automatically creates the `customadvancements/` folder inside your game directory on the first run and copies its bundled example files into it. You can close the game again after reaching the main menu.
+  </Step>
+
+  <Step title="Plan your tree (optional, but worth it)">
+    Before writing any JSON, decide which tabs you want and which advancements gate which others. Every tab needs exactly one **root advancement** — a file with no `parent` field and a `background` in its `display` block. Everything else hangs off that root through `parent` references.
+
+    ```text
+    [Tab root]              ← no parent, has a background
+        └── [Branch]
+                ├── [Leaf]
+                └── [Leaf]
+                        └── [Deeper leaf]
+    ```
+
+    A few minutes of planning here saves a lot of restructuring later, especially if you intend to gate the tree with the [progression system](/configuration/progression).
+  </Step>
+
+  <Step title="Open the custom advancements folder">
+    Navigate to the folder the mod created:
+
+    ```text
+    <game_directory>/customadvancements/customadvancements/
+    ```
+
+    Every `.json` file in this folder (and in any subfolder of it) is loaded as an advancement in the `customadvancements` namespace. The example files the mod copied here can be referenced or deleted freely.
+
+    <Tip>
+      Not sure where your game directory is? In the Minecraft launcher, select your Forge profile, click **More Options**, and look at the **Game Directory** field.
+    </Tip>
+  </Step>
+
+  <Step title="Create the root advancement">
+    A root advancement defines a new tab in the advancements screen. Create the file `my_root.json` inside the `customadvancements/customadvancements/` folder with the following content:
+
+    ```json my_root.json
+    {
+      "display": {
+        "icon": {
+          "item": "minecraft:diamond_block"
+        },
+        "title": {
+          "text": "My First Tab"
+        },
+        "description": {
+          "text": "Welcome to my custom advancement tree!"
+        },
+        "background": "minecraft:textures/gui/advancements/backgrounds/adventure.png",
+        "show_toast": false,
+        "announce_to_chat": false,
+        "hidden": false
+      },
+      "criteria": {
+        "requirement": {
+          "trigger": "minecraft:tick"
+        }
+      }
+    }
+    ```
+
+    Key fields to note:
+    - **`display.icon`** — the item shown on the tab header. Any valid item ID works. In 1.18.2 the key is `item` (singular).
+    - **`display.title` / `display.description`** — use `{"text": "..."}` for a hardcoded string, or a `translate` key you define in a language file.
+    - **`display.background`** — **required on every root advancement.** A file with no `parent` and no `background` fails validation and is skipped at load time. See [Background Types](/advancements/background-types) for custom images and the list of vanilla textures.
+    - **`criteria`** — the `minecraft:tick` trigger fires on the first game tick, so the root is granted immediately and the tab is always visible.
+  </Step>
+
+  <Step title="Create a child advancement">
+    Child advancements appear as nodes branching off the root inside its tab. Create the file `first_steps.json` in the same folder:
+
+    ```json first_steps.json
+    {
+      "display": {
+        "icon": {
+          "item": "minecraft:iron_sword"
+        },
+        "title": {
+          "text": "First Steps"
+        },
+        "description": {
+          "text": "Pick up some dirt."
+        },
+        "frame": "task",
+        "show_toast": true,
+        "announce_to_chat": true
+      },
+      "parent": "customadvancements:my_root",
+      "criteria": {
+        "requirement": {
+          "trigger": "minecraft:inventory_changed",
+          "conditions": {
+            "items": [
+              {
+                "item": "minecraft:dirt"
+              }
+            ]
+          }
+        }
+      }
+    }
+    ```
+
+    Key fields to note:
+    - **`parent`** — the resource location of the advancement this node connects to. Here `customadvancements:my_root` refers to the `my_root.json` file from the previous step. The format is `<namespace>:<path>`, where the path mirrors the file path relative to the namespace folder, without the `.json` extension.
+    - **`frame`** — the border shape of the icon. Valid values are `task`, `goal`, and `challenge`.
+    - **`criteria`** — this advancement is granted when dirt appears in the player's inventory. Replace the trigger and conditions to match whatever goal you have in mind.
+
+    See [Structure](/advancements/structure) for the full list of top-level fields and [Criteria](/advancements/criteria) for triggers and conditions.
+  </Step>
+
+  <Step title="Organize larger trees into subfolders">
+    Subfolders are fully supported, and the folder path becomes part of the resource location. Once you move beyond a couple of files, mirror your tree structure on disk:
+
+    ```text
+    customadvancements/customadvancements/
+    ├── chapter1/
+    │   ├── root.json          → customadvancements:chapter1/root
+    │   ├── gather_wood.json   → customadvancements:chapter1/gather_wood
+    │   └── final_boss.json    → customadvancements:chapter1/final_boss
+    └── chapter2/
+        ├── root.json          → customadvancements:chapter2/root
+        └── reach_the_end.json → customadvancements:chapter2/reach_the_end
+    ```
+  </Step>
+
+  <Step title="Load your changes">
+    You have two options:
+
+    - **Already in-game** — run `/ca reload` in chat to reload all custom advancements, textures, and language files without restarting. No operator permission is required.
+    - **Starting fresh** — launch or relaunch Minecraft. The mod loads every JSON file at startup automatically.
+  </Step>
+
+  <Step title="Open the advancements screen">
+    Press **L** (the default keybind) to open the advancements screen. A new **My First Tab** tab with a diamond block icon should appear alongside the vanilla tabs. Click it to see your **First Steps** child advancement branching off the root node, then pick up a block of dirt to complete it.
+
+    If the tab does not appear, check the game log for lines from the `customadvancements` logger — the most common causes are malformed JSON syntax and a root advancement that is missing its `background` field. See [Common Issues](/troubleshooting/common-issues) for more.
+
+    <Frame>
+      [INSERT IMAGE: The new root advancement tab visible in the advancements screen, next to the vanilla tabs]
+    </Frame>
+  </Step>
+
+  <Step title="Test the whole setup">
+    Before you call it done — especially if you are building this into a modpack — open the advancements screen and confirm that:
+
+    - All custom tabs appear with the correct background, icon, and title
+    - Child advancements are connected to the parents you expect
+    - Any [progression gating](/configuration/progression) blocks what it should and nothing more
+    - The tab order matches your [sorting configuration](/configuration/tab-sorting)
+  </Step>
+</Steps>
+
+<Tip>
+  Want to customize or override an existing vanilla advancement? Run `/ca generate advancement all` in-game. The mod exports every currently loaded advancement as an editable JSON file into `customadvancements/<namespace>/` and reloads automatically, so your edited copy replaces the original. See the [Commands overview](/commands/overview) for the full list of available commands.
+</Tip>
+
+## Shipping Your Advancements with a Modpack
+
+If you are building a modpack, the two things you need to distribute are the `customadvancements/` folder and your configured `config/customadvancements-common.toml`. Both go into your pack's overrides layer (the `overrides/` directory in a CurseForge or Modrinth pack), so every player gets them pre-populated on install and never has to place a file by hand.
+
+<Note>
+  Shipping the folder matters for more than convenience: custom background textures and language files are read from each **client's own** `customadvancements/data/` folder, so players who do not have those files will see the vanilla default background and raw translation keys. See [Textures](/data/textures) and [Language Files](/data/lang).
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Advancement Structure" icon="file-code" href="/advancements/structure">
+    Every top-level field in a Custom Advancements JSON file, with the folder rules that derive resource locations.
+  </Card>
+  <Card title="Examples" icon="lightbulb" href="/advancements/examples">
+    The three advancement files bundled with the mod, explained field by field.
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/configuration/config-file">
+    Every option in `config/customadvancements-common.toml`.
+  </Card>
+  <Card title="Commands" icon="terminal" href="/commands/overview">
+    Generate, export, and reload advancements from in-game chat.
+  </Card>
+</CardGroup>

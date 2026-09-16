@@ -1,0 +1,178 @@
+---
+title: "Advancement Progression System Configuration Guide"
+sidebarTitle: "Progression"
+description: "Gate advancements behind their parents with Custom Advancements' progression system — configure scope, connected advancements, and death resets."
+---
+
+Custom Advancements includes a server-side progression system that turns the advancement tree into an actual prerequisite chain. When it is enabled, a player cannot earn an advancement until its parent advancement has been completed. This transforms what is normally a loose achievement log into a structured, gated progression — useful for RPG-style modpacks, adventure maps, and skill trees.
+
+---
+
+## Enabling progression
+
+Set `advancementProgression = true` in `config/customadvancements-common.toml` to switch the system on. No other option is required; the settings below fine-tune its scope and behavior.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementProgression = true
+```
+
+When the system is active, earning a gated advancement while its parent is incomplete simply fails — the criteria are not granted and the player sees no error message. That silence is expected behavior, not a bug.
+
+<Note>
+  Recipe advancements (those whose path contains `recipes/`) are never subject to progression gating, so recipe-book unlocks keep working normally.
+</Note>
+
+---
+
+## `advancementProgressionMode`
+
+This enum controls the **scope** of the progression system — which namespaces are gated behind their parents.
+
+<ParamField path="advancementProgressionMode" type="enum" default="ALL">
+  Accepted values:
+
+  - **`ALL`** — Every advancement from every namespace is gated. This is the most restrictive mode.
+  - **`MODS`** — Gating is decided per namespace using `modBlacklist`. With `modBlacklistIsWhitelist = false`, every namespace **except** those listed is gated; with `modBlacklistIsWhitelist = true`, only the listed namespaces are gated.
+  - **`MINECRAFT`** — Only advancements in the `minecraft:` namespace are gated. Mod-added advancements are unaffected.
+  - **`CUSTOM_ADVANCEMENTS`** — Only advancements in the `customadvancements:` namespace (the ones you added yourself) are gated.
+</ParamField>
+
+<Warning>
+  `MODS` mode treats `minecraft` as just another namespace. With an empty `modBlacklist`, vanilla advancements are gated too. Add `"minecraft"` to `modBlacklist` if you want to leave the vanilla trees ungated.
+</Warning>
+
+---
+
+## `modBlacklist` and `modBlacklistIsWhitelist`
+
+These two options are only meaningful when `advancementProgressionMode = MODS`. They let you name the namespaces that should be included in or excluded from progression gating.
+
+<ParamField path="modBlacklist" type="list of strings" default="[]">
+  A list of mod IDs (for example `"botania"`, `"quark"`) that interact with the progression system. Whether they are **excluded** or **exclusively included** depends on `modBlacklistIsWhitelist`. Entries must be namespaces that at least one loaded advancement belongs to.
+</ParamField>
+
+<ParamField path="modBlacklistIsWhitelist" type="boolean" default="false">
+  When `false` (default), the namespaces in `modBlacklist` are **excluded** from progression gating — their advancements can be earned at any time. When `true`, the list becomes a whitelist: only advancements from the listed namespaces are gated; all others are free.
+</ParamField>
+
+**Example — exclude a few mods from gating:**
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementProgression = true
+    advancementProgressionMode = "MODS"
+
+    # Botania, Quark, and Thermal advancements can be earned in any order
+    modBlacklist = ["botania", "quark", "thermal"]
+    modBlacklistIsWhitelist = false
+```
+
+**Example — gate only one mod:**
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementProgression = true
+    advancementProgressionMode = "MODS"
+
+    # Only myrpgmod advancements are gated; everything else is free
+    modBlacklist = ["myrpgmod"]
+    modBlacklistIsWhitelist = true
+```
+
+---
+
+## `connectedAdvancementsList`
+
+Every advancement tree has a root — an advancement with no parent. Because root advancements have no parent to gate them, they would always be immediately earnable even when progression is enabled. `connectedAdvancementsList` solves this by adding **virtual parent links** between advancements in different trees.
+
+Each entry uses the format `"parent_id -> child_id"`. The mod treats the left-hand advancement as a required prerequisite for the right-hand advancement, even though no such relationship exists in the advancement JSON files.
+
+<Warning>
+  The separator must be written as a space, `->`, and another space. The parser reads the position of `->` and assumes exactly one space on each side, so `"parent->child"` or extra spacing breaks the entry.
+</Warning>
+
+A virtual link is only consulted for advancements that have **no real parent**. Pointing one at an advancement that already sits inside a tree has no effect — that advancement is already gated by its own parent.
+
+**Default connections:**
+
+| Virtual parent | Child (root) | Effect |
+|---|---|---|
+| `minecraft:story/follow_ender_eye` | `minecraft:end/root` | The End tab is locked until *Eye Spy* is completed |
+| `minecraft:story/form_obsidian` | `minecraft:nether/root` | The Nether tab is locked until *We Need to Go Deeper* is completed |
+
+These defaults model the natural game progression: players must reach the relevant story milestone before the corresponding dimension's advancement tab opens up.
+
+**Custom connections example:**
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementProgression = true
+
+    connectedAdvancementsList = [
+        # Vanilla defaults
+        "minecraft:story/follow_ender_eye -> minecraft:end/root",
+        "minecraft:story/form_obsidian -> minecraft:nether/root",
+        # Custom: require killing the Ender Dragon before an endgame tree unlocks
+        "minecraft:end/kill_dragon -> myrpgmod:endgame/root",
+        # Custom: chain your own chapters together
+        "customadvancements:chapter1/final_boss -> customadvancements:chapter2/root"
+    ]
+```
+
+<Tip>
+  Combine `connectedAdvancementsList` with your own advancements in the `customadvancements` folder to build a fully custom RPG progression tree. Place a hand-crafted root advancement at the top of your tree, then use a connected entry to link it to a vanilla milestone — giving you control over the entire player journey.
+</Tip>
+
+---
+
+## `resetAdvancementProgressOnDeath`
+
+<ParamField path="resetAdvancementProgressOnDeath" type="boolean" default="false">
+  When `true`, every completed criterion of every advancement is revoked for a player when they die, and the player is told in chat that their progress was reset. Combined with `advancementProgression = true`, this forces them to work through the entire progression tree again from the beginning.
+</ParamField>
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    resetAdvancementProgressOnDeath = true
+```
+
+<Warning>
+  Death resets are permanent and immediate — the wipe happens as the player respawns, with no grace period or confirmation. Make sure players understand this mechanic before enabling it on a live server.
+</Warning>
+
+---
+
+## Complete example — gated modpack with death penalty
+
+This configuration gates every advancement in the game behind its parent, locks the Nether and End tabs behind story milestones, and wipes all progress on death.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    # Enable the progression system
+    advancementProgression = true
+
+    # Gate all advancements across every namespace
+    advancementProgressionMode = "ALL"
+
+    # Connect dimension roots to the main story line
+    connectedAdvancementsList = [
+        "minecraft:story/follow_ender_eye -> minecraft:end/root",
+        "minecraft:story/form_obsidian -> minecraft:nether/root"
+    ]
+
+    # Wipe progress when the player dies
+    resetAdvancementProgressOnDeath = true
+
+    # Mod-scope options (unused when the mode is ALL)
+    modBlacklist = []
+    modBlacklistIsWhitelist = false
+```
+
+For every option in the file, see [Config File](/configuration/config-file).

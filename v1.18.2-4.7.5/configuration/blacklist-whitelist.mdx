@@ -1,0 +1,209 @@
+---
+title: "Filter Advancements with Blacklist and Whitelist Mode"
+sidebarTitle: "Blacklist & Whitelist"
+description: "Remove, keep, or override vanilla and mod advancements in Minecraft 1.18.2 using Custom Advancements' blacklist and whitelist configuration options."
+---
+
+Custom Advancements lets you control precisely which advancements exist in your game. You can remove individual advancements, strip out recipe unlocks, wipe the advancement system entirely, flip the logic so only the advancements you list survive, or replace an existing advancement with an edited copy of your own. All of the filtering options live in `config/customadvancements-common.toml` and are applied when the advancement data is loaded.
+
+<Warning>
+  `/ca reload` does not re-read the config file. Changes to any option on this page require a restart of the game or server. See [Config File](/configuration/config-file).
+</Warning>
+
+---
+
+## `advancementsBlacklist`
+
+`advancementsBlacklist` is a list of advancement resource location IDs that Custom Advancements removes before the game presents them to players. Resource locations follow the standard Minecraft format `namespace:path`, for example `"minecraft:story/root"` or `"create:main/root"`.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementsBlacklist = [
+        "minecraft:story/mine_stone",
+        "minecraft:nether/root"
+    ]
+```
+
+When an advancement is removed, **all of its children are removed automatically** as well. The cascade is recursive — grandchildren, great-grandchildren, and so on are all cleared without needing to list them individually.
+
+<Warning>
+  Removing a root advancement (one with no parent) removes its entire tab from the advancements screen. Players see no trace of that tab. Make sure this is intentional before blacklisting a root.
+</Warning>
+
+<Note>
+  Wildcards are **not** supported in this version. Each entry must be a complete, valid resource location — `"create:*"` is not parsed as "every Create advancement" and simply has no effect. To remove a whole mod's tree, blacklist that mod's root advancement and let the cascade do the rest.
+</Note>
+
+---
+
+## `blacklistIsWhitelist`
+
+Setting `blacklistIsWhitelist = true` inverts the list: instead of removing the listed advancements, Custom Advancements **keeps only** the listed advancements and removes everything else.
+
+When whitelist mode is active, the ancestors of any whitelisted advancement are preserved automatically even if they are not explicitly listed. This prevents broken trees in which a child exists without the parent it hangs from.
+
+**Edge case — empty list plus whitelist mode:** if `advancementsBlacklist` is empty and `blacklistIsWhitelist = true`, there is nothing to keep, so every advancement is removed. Recipe advancements are the exception: they are left alone unless you also set `noRecipeAdvancements = true`, so the recipe book keeps functioning.
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="Blacklist mode">
+    Remove specific advancements while keeping everything else.
+
+    ```toml config/customadvancements-common.toml
+    ["Config for Custom Advancements"]
+
+        # Remove the End and Nether tabs entirely, plus one story step
+        advancementsBlacklist = [
+            "minecraft:end/root",
+            "minecraft:nether/root",
+            "minecraft:story/mine_stone"
+        ]
+
+        blacklistIsWhitelist = false
+    ```
+
+    Because the two roots are listed, their whole tabs disappear along with
+    every advancement inside them. Everything else loads normally.
+  </Tab>
+  <Tab title="Whitelist mode">
+    Keep only the advancements you list; remove everything else.
+
+    ```toml config/customadvancements-common.toml
+    ["Config for Custom Advancements"]
+
+        # Only these advancements (and their ancestors) will be kept
+        advancementsBlacklist = [
+            "minecraft:story/root",
+            "minecraft:story/mine_stone",
+            "minecraft:story/upgrade_tools",
+            "minecraft:story/smelt_iron",
+            "minecraft:story/obtain_armor"
+        ]
+
+        blacklistIsWhitelist = true
+    ```
+
+    Only the listed advancements and their required ancestors survive.
+    Every other advancement — vanilla, mod-added, and custom — is removed.
+  </Tab>
+</Tabs>
+
+---
+
+## Additional Filtering Options
+
+### `noRecipeAdvancements`
+
+Setting `noRecipeAdvancements = true` removes every advancement whose resource location contains `recipes/`. This covers both vanilla recipe-unlock advancements and any added by mods, and is processed independently of `advancementsBlacklist`, so you never need to list recipe advancements by hand.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    noRecipeAdvancements = true
+```
+
+Recipes themselves are unaffected — only the advancement entries that announce their unlock are removed.
+
+### `noAdvancements`
+
+Setting `noAdvancements = true` removes every advancement in the game for all players, overriding the blacklist and whitelist entirely. Recipe advancements are kept so the recipe book still works; combine it with `noRecipeAdvancements = true` if you want those gone too.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    noAdvancements = true
+```
+
+### `disableStandardAdvancementLoad`
+
+Setting `disableStandardAdvancementLoad = true` skips loading the game's own advancement data altogether. Only the files in your `customadvancements/` folder are loaded — no vanilla advancements, no mod advancements, nothing from any datapack. This is the cleanest way to build an advancement system from scratch.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    disableStandardAdvancementLoad = true
+```
+
+<Warning>
+  With this option enabled, any advancement in your folder whose `parent` is not also present in your folder is dropped, together with all of its children. If your tree hangs off a vanilla advancement, export that parent into your folder as well — or leave this option off and use the blacklist instead.
+</Warning>
+
+---
+
+## Overriding an Advancement Instead of Removing It
+
+Sometimes you do not want an advancement gone — you want it changed. Custom Advancements handles that through the same folder it uses for your own content: place a JSON file at the existing advancement's namespace and path, and your file is loaded in place of the original.
+
+<Steps>
+  <Step title="Export the advancement to a file">
+    Run the generate command with the advancement's resource location:
+
+    ```text
+    /ca generate advancement minecraft:story/mine_stone
+    ```
+
+    Tab-complete lists every advancement currently loaded if you are unsure of the exact ID. The mod writes the file to `customadvancements/minecraft/story/mine_stone.json` and reloads automatically.
+
+    To export everything at once, run `/ca generate advancement all` instead, then delete the files you do not intend to change — every file left behind overrides its original.
+  </Step>
+  <Step title="Edit the JSON file">
+    Open the generated file and change whatever you need: criteria, rewards, title, description, icon, `announce_to_chat`, `parent`, and so on.
+
+    For example, to silence the chat announcement for **Mine Stone**:
+
+    ```json customadvancements/minecraft/story/mine_stone.json
+    {
+      "display": {
+        "icon": { "item": "minecraft:cobblestone" },
+        "title": { "translate": "advancements.story.mine_stone.title" },
+        "description": { "translate": "advancements.story.mine_stone.description" },
+        "announce_to_chat": false
+      },
+      "parent": "minecraft:story/root",
+      "criteria": {
+        "get_stone": {
+          "trigger": "minecraft:inventory_changed",
+          "conditions": {
+            "items": [
+              { "tag": "minecraft:stone_tool_materials" }
+            ]
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Reload to apply the change">
+    Run `/ca reload` in-game or from the server console, or restart. Your file replaces the original advancement.
+  </Step>
+</Steps>
+
+<Warning>
+  An override file **fully replaces** the original advancement — the two are not merged field by field. Whatever your file contains becomes the entire definition, so anything you delete from it is gone from the advancement. This is why exporting the advancement first and editing the exported file in place is the reliable workflow: you start from a complete, correct definition.
+</Warning>
+
+<Note>
+  Override files go in `customadvancements/<namespace>/`, for example `customadvancements/minecraft/story/mine_stone.json`. Do **not** put them in `customadvancements/customadvancements/`, which registers everything under the `customadvancements` namespace and would create a new advancement rather than replacing the vanilla one. The `/ca generate` commands always write to the correct place for you. See [Structure](/advancements/structure).
+</Note>
+
+The generate commands refuse to export an advancement whose namespace is already `customadvancements` — those files live directly in your folder and are managed by hand, not generated.
+
+---
+
+## Finding Advancement IDs
+
+Run `/ca generate resource_locations` in-game or from the server console to write every currently loaded advancement ID to `customadvancements/resource_locations.txt`, one per line:
+
+```text
+minecraft:story/root,
+minecraft:story/mine_stone,
+minecraft:nether/root,
+customadvancements:my_root,
+customadvancements:story/chapter1,
+```
+
+This is the fastest way to find the exact resource location strings to use in `advancementsBlacklist`, in `advancementSortingList`, or as the argument to `/ca generate advancement`. See [Commands](/commands/overview) for more information.

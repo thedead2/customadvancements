@@ -1,0 +1,108 @@
+---
+title: "Installing Custom Advancements on Minecraft Forge 1.19.3"
+sidebarTitle: "Installation"
+description: "Step-by-step instructions to install Custom Advancements 6.3.5 on Minecraft Forge for Minecraft 1.19.3, for both single-player clients and dedicated servers."
+---
+
+Installing Custom Advancements takes only a few minutes. It is a standard Forge mod with no library dependencies — drop the jar into your `mods/` folder and launch the game. On the first run the mod creates its own folder structure inside your game directory and copies in a set of working example files, so you have something to reference immediately.
+
+You can download Custom Advancements from either of the two official distribution platforms:
+
+- **CurseForge:** [https://www.curseforge.com/minecraft/mc-mods/custom-advancements](https://www.curseforge.com/minecraft/mc-mods/custom-advancements)
+- **Modrinth:** [https://modrinth.com/mod/custom-advancements](https://modrinth.com/mod/custom-advancements)
+
+## Requirements
+
+| Component | Version |
+|---|---|
+| Minecraft | 1.19.3 |
+| Minecraft Forge | 44.1.0 or newer |
+| Custom Advancements | 6.3.5 |
+
+<Note>
+  Forge is the only required dependency. The mod's declared Forge version range is `[44,)` and its Minecraft version range is `[1.19.3, 1.20)`. Forge 44.1.0 is the version the mod is built and tested against.
+</Note>
+
+## Installation Steps
+
+<Tabs>
+  <Tab title="Client">
+    <Steps>
+      <Step title="Install Minecraft Forge">
+        Download the Minecraft Forge installer for **Minecraft 1.19.3** from the [official Forge site](https://files.minecraftforge.net/net/minecraftforge/forge/). Run it and choose **Install client**. Launch the game once with the new Forge profile so that Forge generates its folder structure.
+      </Step>
+      <Step title="Download the mod jar">
+        Grab the **Custom Advancements 6.3.5** `.jar` from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/custom-advancements) or [Modrinth](https://modrinth.com/mod/custom-advancements). Always download from official sources to avoid modified or malicious files.
+      </Step>
+      <Step title="Place the jar in your mods folder">
+        Copy the `.jar` file into `.minecraft/mods/`. If you use a third-party launcher such as Prism, MultiMC, or the CurseForge app, use that instance's own `mods/` folder instead.
+      </Step>
+      <Step title="Launch the game">
+        Start Minecraft with the Forge profile. On the first launch, Custom Advancements creates its folder structure inside your game directory and copies example files into it.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Dedicated server">
+    <Steps>
+      <Step title="Install Minecraft Forge server">
+        Download the Minecraft Forge installer for **Minecraft 1.19.3** and run it with **Install server**, pointing it at your server directory. Start the server once so Forge generates its folder structure.
+      </Step>
+      <Step title="Download the mod jar">
+        Grab the **Custom Advancements 6.3.5** `.jar` from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/custom-advancements) or [Modrinth](https://modrinth.com/mod/custom-advancements).
+      </Step>
+      <Step title="Place the jar in the server mods folder">
+        Copy the `.jar` file into `<server_root>/mods/`. Create the folder manually if it does not exist yet.
+      </Step>
+      <Step title="Start the server">
+        Start the server. Custom Advancements creates `customadvancements/` in the server directory alongside `world/` and `config/`, and writes its config file to `config/customadvancements-common.toml`.
+
+        <Warning>
+          Custom textures and language files are read from each game instance's own `customadvancements/data/` folder — they are **not** sent to clients over the network. If your advancements use custom backgrounds or translation keys, every player also needs the mod and a copy of those files. See [Textures](/data/textures) and [Language Files](/data/lang).
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## The `customadvancements/` Folder
+
+After the first successful launch, your game directory will contain a new folder called `customadvancements/`. This is where all of your advancement JSON files, language files, and textures live. The folder is created automatically — you do not need to create it manually.
+
+<Note>
+  The `customadvancements/` folder behaves like a global datapack: its contents are applied to every world you play or host on that installation, not just a single world's `datapacks/` folder. This makes it ideal for modpack-wide advancement customization.
+</Note>
+
+The expected layout inside the folder is:
+
+```
+.minecraft/
+└── customadvancements/
+    ├── customadvancements/       ← your own advancements (namespace = "customadvancements")
+    │   ├── root.json
+    │   ├── example.json
+    │   └── back_to_the_roots.json
+    ├── minecraft/                ← optional overrides for vanilla advancements
+    │   └── story/
+    │       └── root.json
+    └── data/
+        ├── lang/
+        │   └── en_us.json        ← translation files
+        └── textures/
+            └── screenshot.png    ← custom background images
+```
+
+The mod's config file is written separately, to `config/customadvancements-common.toml`. See [Config File](/configuration/config-file) for a reference of every option.
+
+## Example Files
+
+On first launch the mod copies a small, working advancement tree into `customadvancements/customadvancements/` (`root.json`, `example.json`, and `back_to_the_roots.json`), example textures into `customadvancements/data/textures/`, and four example language files into `customadvancements/data/lang/`. Open them to see the expected format before writing your own — they are walked through field by field in [Examples](/advancements/examples).
+
+You can safely edit or delete these example files at any time. The mod only copies them in once, when each folder is first created.
+
+## BetterAdvancements Compatibility
+
+Custom Advancements detects the [BetterAdvancements](https://www.curseforge.com/minecraft/mc-mods/better-advancements) mod automatically. When it is present, tab sorting is applied inside the BetterAdvancements screen as well as the vanilla one. No extra configuration is needed.
+
+<Frame>
+  [INSERT IMAGE: The Custom Advancements entry shown in the Forge mod list screen, confirming a successful install]
+</Frame>

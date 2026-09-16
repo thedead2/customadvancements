@@ -1,0 +1,184 @@
+---
+title: "Filter Advancements with Blacklist and Whitelist Mode"
+sidebarTitle: "Blacklist & Whitelist"
+description: "Remove specific advancements or entire advancement trees from Minecraft using Custom Advancements' blacklist and whitelist configuration options."
+---
+
+Custom Advancements lets you control precisely which advancements exist in your game. You can remove individual advancements, wipe out an entire tree with a single entry, or flip the logic so that only the advancements you explicitly list survive. All of these options live in `config/customadvancements-common.toml`.
+
+---
+
+## `advancementsBlacklist`
+
+`advancementsBlacklist` is a list of advancement resource location IDs that Custom Advancements removes before the game presents them to players. Resource locations follow the standard Minecraft format `namespace:path`, for example `"minecraft:story/root"` or `"botania:main/roots"`.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementsBlacklist = [
+        "minecraft:story/mine_stone",
+        "minecraft:adventure/kill_a_mob",
+        "botania:main/roots"
+    ]
+```
+
+When an advancement is removed, **all of its children are removed automatically**. The cascade is recursive — grandchildren, great-grandchildren, and so on are all cleared without needing to list them individually. This is what makes removing a whole mod's tree a one-line job: blacklist its root advancement.
+
+<Note>
+  Use the `/ca generate resource_locations` command to write a file containing every currently loaded advancement ID, which makes it easy to find the exact resource locations you need. See [Commands](/commands/overview) for details.
+</Note>
+
+<Warning>
+  Removing a root advancement (one with no parent) removes its entire tab from the advancements screen along with every advancement in that tree. Make sure this is intentional before blacklisting a root advancement.
+</Warning>
+
+<Warning>
+  Wildcards are not supported. `"modid:*"` is not a valid entry — each line must be a complete resource location. Entries that do not match an advancement loaded on the server are rejected as invalid.
+</Warning>
+
+---
+
+## `blacklistIsWhitelist`
+
+Setting `blacklistIsWhitelist = true` inverts the list: instead of removing the listed advancements, Custom Advancements **keeps only** the listed advancements and removes everything else.
+
+When whitelist mode is active, the parent advancements of any whitelisted advancement are preserved automatically even if they are not listed — this prevents broken trees where a child exists without its parent.
+
+**Edge case — empty list plus whitelist mode:** if `advancementsBlacklist` is empty and `blacklistIsWhitelist = true`, there is nothing to keep, so every advancement is removed. Combine that with your own files in the `customadvancements` folder to build an advancement system entirely from scratch.
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="Blacklist mode">
+    Remove specific advancements while keeping everything else.
+
+    ```toml config/customadvancements-common.toml
+    ["Config for Custom Advancements"]
+
+        # Remove two vanilla tabs and one mod's entire tree
+        advancementsBlacklist = [
+            "minecraft:end/root",
+            "minecraft:nether/root",
+            "botania:main/root"
+        ]
+
+        blacklistIsWhitelist = false
+    ```
+
+    This removes the End and Nether advancement tabs along with every advancement
+    in Botania's tree, because removing a root also removes its children. All
+    other advancements load normally.
+  </Tab>
+  <Tab title="Whitelist mode">
+    Keep only the advancements you list; remove everything else.
+
+    ```toml config/customadvancements-common.toml
+    ["Config for Custom Advancements"]
+
+        # Only these advancements (and their ancestors) will be kept
+        advancementsBlacklist = [
+            "minecraft:story/root",
+            "minecraft:story/mine_stone",
+            "minecraft:story/upgrade_tools",
+            "minecraft:story/smelt_iron",
+            "minecraft:story/obtain_armor"
+        ]
+
+        blacklistIsWhitelist = true
+    ```
+
+    Only the listed advancements and the parents they depend on survive.
+    Every other advancement — including those from other mods — is removed.
+  </Tab>
+</Tabs>
+
+---
+
+## Additional filtering options
+
+### `noRecipeAdvancements`
+
+Setting `noRecipeAdvancements = true` removes every advancement whose path contains `recipes/`. This covers both vanilla recipe-unlock advancements and any added by mods. It is processed independently of `advancementsBlacklist`, so you do not need to list recipe advancements by hand. Many modpack authors use it simply to stop recipe advancements from cluttering the advancements screen.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    noRecipeAdvancements = true
+```
+
+### `noAdvancements`
+
+Setting `noAdvancements = true` removes every advancement in the game in a single line — vanilla, modded, custom, and recipe advancements alike. It takes precedence over the blacklist, so nothing else in this section applies while it is enabled. Use it when you want a completely clean advancements screen.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    noAdvancements = true
+```
+
+### `disableStandardAdvancementLoad`
+
+Setting `disableStandardAdvancementLoad = true` discards the advancements Minecraft and other mods would normally load, so that **only** the files in your `customadvancements/` folder are registered. This is the option to use when your own advancement set is meant to replace the vanilla one rather than sit alongside it — for example after exporting templates with `/ca generate advancement all` and editing them.
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    disableStandardAdvancementLoad = true
+```
+
+<Warning>
+  With this option enabled, any advancement in your folder whose `parent` is missing from the folder is skipped, and its own children are skipped with it. Make sure every tree in your folder is complete, starting from a root advancement, before turning it on.
+</Warning>
+
+---
+
+## Common scenarios
+
+### Remove one mod's advancements
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementsBlacklist = [
+        "botania:main/root"
+    ]
+```
+
+Because removing a root removes all of its children, this single entry clears the mod's whole tab.
+
+### Keep only your own advancements
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    advancementsBlacklist = [
+        "customadvancements:chapter1/root",
+        "customadvancements:chapter2/root"
+    ]
+
+    blacklistIsWhitelist = true
+    noRecipeAdvancements = true
+```
+
+### Remove recipe advancements plus a few specific entries
+
+```toml config/customadvancements-common.toml
+["Config for Custom Advancements"]
+
+    noRecipeAdvancements = true
+
+    advancementsBlacklist = [
+        "minecraft:adventure/kill_a_mob",
+        "minecraft:adventure/trade"
+    ]
+```
+
+Both mechanisms work together — `noRecipeAdvancements` handles all recipes, and the blacklist handles the individual entries you want gone.
+
+---
+
+## Finding advancement IDs
+
+Run `/ca generate resource_locations` in-game or from the server console to write every currently loaded advancement ID to `customadvancements/resource_locations.txt`. This is the fastest way to find the exact resource location strings to paste into `advancementsBlacklist`. See [Commands](/commands/overview) for more information.

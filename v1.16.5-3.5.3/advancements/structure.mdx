@@ -1,0 +1,189 @@
+---
+title: "Custom Advancements JSON Structure and File Layout"
+sidebarTitle: "Structure"
+description: "Learn the required JSON structure and folder layout for Custom Advancements files, including top-level fields, path conventions, and working examples."
+---
+
+Every custom advancement is a `.json` file placed inside the `customadvancements/` folder in your Minecraft game directory. The mod reads all `.json` files it finds, validates them, and injects them into every world that loads — no per-world datapack setup required. The format is Minecraft's own advancement format, so anything you already know from writing datapacks applies here too.
+
+## Folder Layout
+
+Your own advancements belong in `customadvancements/customadvancements/`. The inner folder name is the namespace, and the resource location of each advancement is derived from the file path: a file at `customadvancements/customadvancements/<path>.json` becomes the advancement `customadvancements:<path>`.
+
+```
+.minecraft/
+└── customadvancements/
+    └── customadvancements/      ← namespace folder for your own advancements
+        ├── root.json            → customadvancements:root
+        └── my_advancement.json  → customadvancements:my_advancement
+```
+
+Subdirectories are supported and become part of the resource location, so you can group advancements by chapter or quest line without any risk of name collisions.
+
+```
+.minecraft/
+└── customadvancements/
+    └── customadvancements/
+        ├── root.json
+        ├── story/
+        │   └── mine_stone.json  → customadvancements:story/mine_stone
+        └── nether/
+            └── root.json        → customadvancements:nether/root
+```
+
+<Note>
+  Any *other* subfolder of `customadvancements/` is treated as an override for existing game advancements in that namespace. A file at `customadvancements/minecraft/story/mine_stone.json` replaces the vanilla `minecraft:story/mine_stone` advancement. This is exactly where the `/ca generate advancement` commands write their output — see [Commands](/commands/overview).
+</Note>
+
+The `customadvancements/data/` folder is skipped entirely by the advancement loader; it holds [language files](/data/lang) and [textures](/data/textures) only.
+
+## Naming Rules
+
+File and folder names map directly to resource locations, so they must be valid resource location paths:
+
+- Use only **lowercase letters**, **digits**, **underscores** (`_`), **hyphens** (`-`), and **dots** (`.`).
+- Do **not** use spaces — use underscores instead, for example `enter_nether.json`.
+- Do **not** include the `.json` extension when referencing an advancement in a `parent` field.
+
+| File path (relative to the game directory) | Resource location |
+|---|---|
+| `customadvancements/customadvancements/root.json` | `customadvancements:root` |
+| `customadvancements/customadvancements/example.json` | `customadvancements:example` |
+| `customadvancements/customadvancements/chapter1/enter_nether.json` | `customadvancements:chapter1/enter_nether` |
+| `customadvancements/customadvancements/quests/act2/defeat_wither.json` | `customadvancements:quests/act2/defeat_wither` |
+
+## Top-Level JSON Fields
+
+<ParamField body="display" type="object" required>
+  Controls how the advancement appears in the advancements screen: icon, title, description, frame style, toast, chat notification, and — on root advancements — the tab background. This field is required: a file without it is rejected by the loader. See [Display](/advancements/display) for the full list of sub-fields.
+</ParamField>
+
+<ParamField body="parent" type="string">
+  Resource location of the parent advancement, for example `customadvancements:root`. Omit this field to make the advancement a **root** — it appears as its own tab in the advancements screen. Every non-root advancement must reference a parent that exists in the loaded advancement set; if the parent is missing, the child is dropped along with its own children.
+</ParamField>
+
+<ParamField body="criteria" type="object" required>
+  A map of criterion names to trigger definitions. Each key is an arbitrary string identifier for the criterion, and the value defines which game event fires it and any conditions that must be met. See [Criteria](/advancements/criteria) for details and examples.
+
+  ```json
+  "criteria": {
+    "my_criterion": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [{ "item": "minecraft:diamond" }] }
+    }
+  }
+  ```
+</ParamField>
+
+<ParamField body="requirements" type="array of arrays">
+  A two-dimensional array that expresses logical AND/OR combinations of criteria. The outer array is AND; each inner array is OR. If this field is omitted, **all** criteria must be satisfied.
+
+  ```json
+  "requirements": [["criterion_a", "criterion_b"], ["criterion_c"]]
+  ```
+
+  The example above means: `(criterion_a OR criterion_b) AND criterion_c`.
+</ParamField>
+
+<ParamField body="rewards" type="object">
+  Optional rewards granted when the advancement is completed. Supported sub-fields:
+
+  - `"experience"` — integer amount of XP points
+  - `"loot"` — array of loot table resource locations
+  - `"recipes"` — array of recipe resource locations to unlock
+  - `"function"` — resource location of a function to run
+
+  ```json
+  "rewards": {
+    "experience": 50
+  }
+  ```
+
+  See [Criteria](/advancements/criteria) for the full rewards reference.
+</ParamField>
+
+## What the Loader Requires
+
+Custom Advancements validates every file before it is registered, and the requirements differ slightly between root and child advancements:
+
+| Advancement type | Required fields |
+|---|---|
+| **Root** (no `parent`) | `display`, and `display.background` |
+| **Child** (has `parent`) | `parent`, `criteria`, and `display` |
+
+A file that does not satisfy its row is skipped with `does not match the required '.json' format!` in the log — the rest of your files still load normally.
+
+<Warning>
+  The `background` requirement on root advancements is specific to this mod. A root advancement without a `display.background` field never appears in the game, even though vanilla Minecraft would accept it.
+</Warning>
+
+## Minimal Root Advancement
+
+A root advancement has no `parent` field and must include a `display` block with a `background`. The `minecraft:tick` trigger fires every game tick and is the conventional way to make a root advancement complete immediately, so that its tab is always visible.
+
+```json root.json
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:diamond_block"
+    },
+    "title": {
+      "translate": "customadvancements.advancements.example_root.title"
+    },
+    "description": {
+      "translate": "customadvancements.advancements.example_root.description"
+    },
+    "background": "customadvancements:textures/logo.png",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
+```
+
+## Minimal Child Advancement
+
+A child advancement links to its parent via the `parent` field. The resource location must match the namespace and path of the parent file exactly, without the `.json` extension.
+
+```json my_advancement.json
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:dirt"
+    },
+    "title": {
+      "translate": "customadvancements.advancements.example_example.title"
+    },
+    "description": {
+      "translate": "customadvancements.advancements.example_example.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "customadvancements:root",
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "minecraft:dirt"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+<Tip>
+  Run `/ca generate advancement all` in-game to export every currently loaded advancement as a ready-to-edit JSON file directly into your `customadvancements/` folder. This is the fastest way to inspect the exact JSON format Minecraft uses for any existing advancement. See [Commands](/commands/overview) for the full command reference.
+</Tip>
+
+For full documentation of every `display` sub-field, see [Display](/advancements/display). For criteria, triggers, and rewards, see [Criteria](/advancements/criteria). For complete working files, see [Examples](/advancements/examples).

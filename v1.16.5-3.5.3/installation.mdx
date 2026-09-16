@@ -1,0 +1,88 @@
+---
+title: "Installing Custom Advancements on Minecraft Forge 1.16.5"
+sidebarTitle: "Installation"
+description: "Step-by-step instructions to install Custom Advancements 3.5.3 on Minecraft Forge for 1.16.5, including the folder layout the mod creates on first launch."
+---
+
+Installing Custom Advancements follows the same process as any other Forge mod: grab the `.jar`, drop it into your `mods/` folder, and launch the game. The mod creates its own working directory automatically on first launch and fills it with example files, so there is no manual folder setup required. This page walks through each step and explains the directory layout you end up with.
+
+## Requirements
+
+- **Minecraft 1.16.5** — this build targets that version exclusively.
+- **Minecraft Forge for 1.16.5** — any Forge build matching the loader range `[36,)`. Download it from [minecraftforge.net](https://minecraftforge.net).
+
+You can download Custom Advancements from either of the two official distribution platforms:
+
+- **CurseForge:** [https://www.curseforge.com/minecraft/mc-mods/custom-advancements](https://www.curseforge.com/minecraft/mc-mods/custom-advancements)
+- **Modrinth:** [https://modrinth.com/mod/custom-advancements](https://modrinth.com/mod/custom-advancements)
+
+## Installation Steps
+
+<Steps>
+  <Step title="Install Forge for Minecraft 1.16.5">
+    Download the Forge installer for Minecraft 1.16.5 from [minecraftforge.net](https://minecraftforge.net) and run it. Choose **Install client** (or **Install server** for a dedicated server) and let the installer finish. A new Forge profile appears in the Minecraft Launcher.
+  </Step>
+  <Step title="Download the mod">
+    Download Custom Advancements **3.5.3** for Minecraft 1.16.5 from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/custom-advancements) or [Modrinth](https://modrinth.com/mod/custom-advancements). Keep the `.jar` file as it is — do not extract it.
+  </Step>
+  <Step title="Place the jar in your mods folder">
+    Locate your Minecraft game directory:
+
+    - **Windows:** `%APPDATA%\.minecraft`
+    - **macOS:** `~/Library/Application Support/minecraft`
+    - **Linux:** `~/.minecraft`
+
+    Copy the downloaded `.jar` file into the `mods/` folder inside that directory. If `mods/` does not exist yet, create it.
+  </Step>
+  <Step title="Launch the game">
+    Open the Minecraft Launcher, select the **Forge 1.16.5** profile, and click **Play**. Forge loads the mod during startup — check the mod list to confirm that **Custom Advancements** appears. On first launch, the mod creates the `customadvancements/` folder inside your game directory and copies its example files into it.
+  </Step>
+</Steps>
+
+<Note>
+  Install the mod on both the server and the clients when you play in multiplayer. The advancement logic itself runs server-side, but custom background textures, custom translations, and tab sorting are rendered by the client — a player without the mod sees Minecraft's defaults instead.
+</Note>
+
+## The `customadvancements/` Folder
+
+After the first successful launch, your game directory contains a new folder called `customadvancements/`. This is where all of your advancement JSON files, language files, and textures live. It is created automatically, along with the three bundled example advancements, the example `logo.png` texture, and four example language files.
+
+<Note>
+  The `customadvancements/` folder behaves like a global datapack: its contents are applied to every world you play or host on that installation, not just to a single world's `datapacks/` folder. This makes it ideal for modpack-wide advancement customization.
+</Note>
+
+The layout created on first launch is:
+
+```
+.minecraft/
+├── config/
+│   └── customadvancements-common.toml   ← mod configuration
+└── customadvancements/
+    ├── customadvancements/              ← advancement JSON files (namespace = "customadvancements")
+    │   ├── root.json                    ← example root advancement
+    │   ├── example.json                 ← example child advancement
+    │   └── back_to_the_roots.json       ← example advancement with rewards
+    └── data/
+        ├── lang/
+        │   ├── en_us.json               ← example translation files
+        │   ├── de_de.json
+        │   ├── es_es.json
+        │   └── fr_fr.json
+        └── textures/
+            └── logo.png                 ← example background texture
+```
+
+Each location serves a specific purpose:
+
+- `customadvancements/customadvancements/` — your own advancement JSON files. Subfolders are supported and become part of the resource location. See [Structure](/advancements/structure).
+- `customadvancements/data/textures/` — `.png` files you want to use as tab backgrounds. See [Textures](/data/textures).
+- `customadvancements/data/lang/` — locale `.json` files that translate your advancement titles and descriptions. See [Language Files](/data/lang).
+- `config/customadvancements-common.toml` — the mod's configuration file, created by Forge in the standard config directory. See [Config File](/configuration/config-file).
+
+<Warning>
+  Do not delete the example files before you have studied them. They demonstrate the correct JSON structure for root advancements, child advancements, criteria, display properties, and rewards. See [Examples](/advancements/examples) for a full walkthrough of all three.
+</Warning>
+
+<Frame>
+  [INSERT IMAGE: The Custom Advancements entry in the Forge mod list screen, confirming a successful install]
+</Frame>

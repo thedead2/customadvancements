@@ -1,0 +1,83 @@
+---
+title: "Custom Advancements Frequently Asked Questions"
+sidebarTitle: "FAQ"
+description: "Answers to common questions about permissions, reloading, Forge support, and what Custom Advancements can and can't do in Minecraft 1.18.2."
+---
+
+<AccordionGroup>
+  <Accordion title="Do I need to be a server operator to use the /ca commands?">
+    No. None of the Custom Advancements commands require operator permissions — any connected player can run them, and in single-player they work whether or not cheats are enabled for the world. See [Commands](/commands/overview).
+  </Accordion>
+
+  <Accordion title="Is there a reload command, or do I have to restart every time?">
+    There is. `/ca reload` (or `/customadvancements reload`) reloads every advancement JSON file, texture, and language file and applies them to the running world — no restart and no rejoin needed. The `/ca generate` commands trigger a reload automatically when they finish, so you do not need to run it after them. See [Commands](/commands/overview).
+  </Accordion>
+
+  <Accordion title="Do changes to config/customadvancements-common.toml apply without restarting?">
+    No. `/ca reload` does not re-read the config file — it only reloads advancement JSON files, textures, and language files. Edit the config with the game or server stopped, then restart to apply it. This is true for every option, including blacklists, progression settings, and tab sorting. See [Config File](/configuration/config-file).
+  </Accordion>
+
+  <Accordion title="Do I need a datapack as well as this mod?">
+    No. Custom Advancements reads JSON files directly from the `customadvancements/` folder in your game directory and applies them to every world on that installation, as if they were a global datapack — no `datapacks/` folder setup and no per-world configuration. See [Structure](/advancements/structure).
+  </Accordion>
+
+  <Accordion title="Which Minecraft versions and mod loaders does this version support?">
+    Custom Advancements 4.7.5 targets **Minecraft 1.18.2** on **Minecraft Forge 40** or newer, and accepts any Minecraft version in the range `[1.18.2, 1.19)`. Fabric, Quilt, and NeoForge are not supported by this release. The mod has no dependencies beyond Forge itself. See [Installation](/installation).
+  </Accordion>
+
+  <Accordion title="Do other players need the mod installed to see my custom advancements?">
+    It depends on the feature.
+
+    **No mod needed on the client:** advancement loading, overrides, blacklisting, whitelisting, and progression gating are all enforced server-side, so they apply to every connected player regardless of what they have installed.
+
+    **Mod and files needed on the client:** custom background images and custom language files are rendered client-side from each player's own `customadvancements/data/` folder. Version 4.7.5 does not transmit them over the network, so a player without the mod — or with the mod but without those files — sees the vanilla default background and raw translation keys. Ship the whole `customadvancements/` folder with your modpack to avoid this. See [Textures](/data/textures) and [Language Files](/data/lang).
+  </Accordion>
+
+  <Accordion title="Why does my root advancement refuse to load?">
+    In Minecraft 1.18.2 every root advancement — one with no `parent` field — must include a `background` inside its `display` object. A root without one fails validation and is skipped with an error in the log. Add any texture resource location, such as `minecraft:textures/gui/advancements/backgrounds/adventure.png`, and it will load. See [Backgrounds](/advancements/background-types).
+  </Accordion>
+
+  <Accordion title="Can advancement backgrounds be a solid color or a gradient instead of an image?">
+    Not in this version. The `background` field in Custom Advancements 4.7.5 is a plain texture resource location — it points at an image file and nothing else. What you can control is how that image is drawn: `largeBackground`, `shouldBgClip`, and `bgRatio` let you scale it to fill the whole panel at its correct proportions instead of tiling it. For a flat color, supply a single-color image file. See [Backgrounds](/advancements/background-types).
+  </Accordion>
+
+  <Accordion title="Can I remove every vanilla advancement and build my own from scratch?">
+    Yes, in three different ways, depending on how clean a slate you want:
+
+    - `noAdvancements = true` removes every advancement in the game (recipe advancements survive unless you also set `noRecipeAdvancements = true`).
+    - `blacklistIsWhitelist = true` with an empty `advancementsBlacklist` removes everything, then you add back only what you whitelist.
+    - `disableStandardAdvancementLoad = true` skips loading the game's advancement data entirely, so only the files in your `customadvancements/` folder exist.
+
+    See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+  </Accordion>
+
+  <Accordion title="Can I remove only recipe-unlock advancements, without touching anything else?">
+    Yes — set `noRecipeAdvancements = true`. It removes every advancement whose resource location contains `recipes/`, independently of `advancementsBlacklist`. The recipes themselves still work; only the advancement entries that announce their unlock are removed. See [Config File](/configuration/config-file).
+  </Accordion>
+
+  <Accordion title="How do I find the resource location ID of an existing advancement?">
+    Run `/ca generate resource_locations` in-game or from the server console. It writes every currently loaded advancement ID to `customadvancements/resource_locations.txt`, one per line. Use those IDs in `advancementsBlacklist`, `advancementSortingList`, `connectedAdvancementsList`, or as the argument to `/ca generate advancement`. See [Commands](/commands/overview).
+  </Accordion>
+
+  <Accordion title="If I override a vanilla advancement, does my file merge with the original?">
+    No. An override file fully replaces the original advancement — whatever your file contains becomes the entire definition, and anything you leave out is gone. Always start from a file exported with `/ca generate advancement <id>` and edit it in place, so you begin from a complete, correct definition. See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+  </Accordion>
+
+  <Accordion title="Does Custom Advancements support wildcards in the blacklist?">
+    No. Every entry in `advancementsBlacklist` must be a complete, valid resource location — `"create:*"` matches nothing in this version. To remove an entire mod's advancements, blacklist that mod's root advancement: removing an advancement removes all of its children recursively. See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+  </Accordion>
+
+  <Accordion title="Does it work with the Better Advancements mod?">
+    Yes. Custom Advancements detects Better Advancements at startup by its mod ID (`betteradvancements`) and enables compatibility automatically — no configuration required. Custom advancements render in the Better Advancements screen, and both `ALPHABETICALLY` and `DEFINED_LIST` tab sorting apply to it in the same pass as the vanilla screen. See [Tab Sorting](/configuration/tab-sorting).
+  </Accordion>
+
+  <Accordion title="Can I add new trigger types with this mod?">
+    No. Custom Advancements does not add trigger types of its own — it loads advancements that use any trigger Minecraft 1.18.2 natively supports. The full list is on the [Minecraft Wiki](https://minecraft.wiki/w/Advancement/JSON_format#List_of_triggers); make sure you are reading the schema for Java Edition 1.18.2, since the item predicate format changed in later versions. See [Criteria](/advancements/criteria).
+  </Accordion>
+
+  <Accordion title="How do I stop the update notification in chat?">
+    Set `warnMessage = false` in `config/customadvancements-common.toml` and restart. This is a common choice for modpacks, which pin a specific mod version and do not want players prompted to update it. See [Config File](/configuration/config-file).
+  </Accordion>
+</AccordionGroup>
+
+If your question is more of a symptom than a question, try [Common Issues](/troubleshooting/common-issues).

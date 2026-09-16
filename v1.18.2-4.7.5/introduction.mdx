@@ -1,0 +1,82 @@
+---
+title: "Custom Advancements — Minecraft Advancement Customization"
+sidebarTitle: "Introduction"
+description: "Custom Advancements is a Minecraft Forge mod for 1.18.2 that gives players and modpack creators full control over the advancement system."
+---
+
+Custom Advancements is a Minecraft Forge mod that hands complete creative control of the advancement system back to players and modpack creators. Whether you want to replace the default advancement trees with something entirely your own, silently remove recipe unlocks, or lock players behind a strict progression gate until they earn the right to move forward, this mod makes it possible — without writing a datapack for every individual world.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Custom Advancements" icon="trophy" href="/advancements/structure">
+    Add your own advancement JSON files and inject them into the game alongside — or entirely in place of — vanilla and mod advancements. The mod reads every `.json` file inside the `customadvancements/` folder and applies them to every world on that installation.
+  </Card>
+  <Card title="Override Existing Advancements" icon="pen-to-square" href="/commands/overview">
+    Export any vanilla or mod advancement to an editable JSON file with `/ca generate advancement`, change whatever you like, and the mod loads your version in place of the original.
+  </Card>
+  <Card title="Blacklist & Whitelist" icon="filter" href="/configuration/blacklist-whitelist">
+    Remove specific advancements, all recipe advancements, or every advancement in the game. Flip a single config flag to turn the blacklist into a whitelist and keep only the advancements you care about.
+  </Card>
+  <Card title="Progression System" icon="lock" href="/configuration/progression">
+    Enable strict advancement progression so that every advancement is only achievable once its parent has been completed. Four modes — `ALL`, `MODS`, `MINECRAFT`, and `CUSTOM_ADVANCEMENTS` — let you scope the enforcement precisely, with per-mod exemptions and optional progress reset on death.
+  </Card>
+  <Card title="Custom Backgrounds" icon="image" href="/advancements/background-types">
+    Point the `background` field of any root advancement at your own image file. Three mod-specific display fields — `largeBackground`, `shouldBgClip`, and `bgRatio` — control how that image is scaled, centered, and clipped inside the tab.
+  </Card>
+  <Card title="Tab Sorting" icon="arrow-up-arrow-down" href="/configuration/tab-sorting">
+    Control the order of tabs in the advancements screen using three sorting modes: `UNSORTED` (default), `ALPHABETICALLY`, or `DEFINED_LIST` — where you supply a specific ordered list of root advancement IDs.
+  </Card>
+  <Card title="In-Game Commands" icon="terminal" href="/commands/overview">
+    Use built-in commands such as `/ca generate advancement all` to export every loaded advancement as an editable JSON file, `/ca generate resource_locations` to dump all advancement IDs to a text file, and `/ca reload` to apply your edits without a restart.
+  </Card>
+  <Card title="Internationalization" icon="language" href="/data/lang">
+    Ship translation files alongside your advancements. The mod loads `.json` language files from `customadvancements/data/lang/` and injects them into the game's translation table, so your custom advancement titles and descriptions are fully localizable.
+  </Card>
+</CardGroup>
+
+## Who It's For
+
+| Audience | Primary use case |
+|---|---|
+| **Players** | Add personal achievement goals to a single-player world without editing game files or creating a datapack |
+| **Server admins** | Filter out irrelevant vanilla advancements, enforce a custom progression path, and reward players through a structured system |
+| **Modpack creators** | Ship a fully custom advancement experience — custom tabs, icons, backgrounds, and progression rules — bundled directly in the pack's overrides |
+
+## How the Folder Structure Works
+
+On first launch, Custom Advancements creates a `customadvancements/` folder directly inside your game directory (the same directory that holds `saves/`, `mods/`, and `config/`). On a dedicated server this is the server root — the folder that contains `server.properties`. The contents of this folder are applied to every world you load or host on that installation.
+
+Inside `customadvancements/`, the first level of subfolders defines the namespace an advancement is registered under. A file at `customadvancements/customadvancements/my_tree/root.json` is registered with the resource location `customadvancements:my_tree/root`, while a file at `customadvancements/minecraft/story/mine_stone.json` replaces the vanilla advancement `minecraft:story/mine_stone`.
+
+```text
+<game_directory>/
+└── customadvancements/
+    ├── customadvancements/   ← your own advancement trees
+    ├── minecraft/            ← overrides for vanilla advancements
+    └── data/
+        ├── textures/         ← custom background images
+        └── lang/             ← custom translation files
+```
+
+The `data/` folder is skipped when the mod scans for advancement JSON files, so your textures and language files are never parsed as advancements.
+
+<Tip>
+  The mod copies its bundled example files into `customadvancements/customadvancements/`, `data/textures/`, and `data/lang/` the first time each of those folders is created. Those examples are working, ready-to-edit references — see [Examples](/advancements/examples) for a full walkthrough of each one.
+</Tip>
+
+## Supported Platform & Versions
+
+Custom Advancements 4.7.5 targets **Minecraft 1.18.2** on **Minecraft Forge**.
+
+| Requirement | Version |
+|---|---|
+| Minecraft | 1.18.2 (accepted range `[1.18.2, 1.19)`) |
+| Minecraft Forge | 40 or newer (accepted range `[40, ∞)`) |
+| Additional dependencies | None |
+
+<Note>
+  Fabric, Quilt, and NeoForge are not supported by this release, and neither are Minecraft versions outside the `[1.18.2, 1.19)` range. Check the mod's CurseForge or Modrinth page for builds targeting other versions.
+</Note>
+
+Ready to get the mod installed? Head to the [Installation](/installation) page for step-by-step instructions.

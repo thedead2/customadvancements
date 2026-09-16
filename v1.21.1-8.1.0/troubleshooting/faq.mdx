@@ -1,0 +1,47 @@
+---
+title: "Custom Advancements Frequently Asked Questions"
+sidebarTitle: "FAQ"
+description: "Answers to common questions about permissions, reloading, mod loader support, and what Custom Advancements can and can't do."
+---
+
+<AccordionGroup>
+  <Accordion title="Do I need to be a server operator to use the /ca/ commands?">
+    No. None of the `/ca/generate/...` commands require operator permissions — any connected player can run them, and in single-player they work whether or not cheats are enabled. See [Commands](/commands/overview).
+  </Accordion>
+
+  <Accordion title="Is there a manual /ca reload command?">
+    Not in this version. The three `/ca/generate/...` commands automatically trigger a reload of advancements, textures, and language files after they finish writing. If you hand-edit a JSON file directly instead of using a generate command, run the vanilla `/reload` command (or restart the game) to pick up your changes — see [Quickstart](/quickstart).
+  </Accordion>
+
+  <Accordion title="Do I need a datapack as well as this mod?">
+    No. Custom Advancements reads JSON files directly from the `customadvancements/` folder in your game directory and injects them into every world as if they were a global datapack — no `datapacks/` folder setup, and no per-world configuration needed.
+  </Accordion>
+
+  <Accordion title="Which Minecraft versions and mod loaders does this support?">
+    This version of Custom Advancements targets **Minecraft 1.21.1** on both **Fabric** (with Fabric API and Forge Config API Port) and **NeoForge**. See [Installation](/installation) for exact minimum versions.
+  </Accordion>
+
+  <Accordion title="Do changes to config/customadvancements.toml apply without restarting?">
+    No — edit the config file while the server is stopped, then restart to apply it. Running a generate command or the vanilla `/reload` command does not re-read the config file; it only reloads advancement JSON, textures, and language files. See [Config File](/configuration/config-file).
+  </Accordion>
+
+  <Accordion title="Can I remove every vanilla advancement and build my own from scratch?">
+    Yes. Set `disableStandardAdvancements = true` to stop the mod from loading anything except what's in your `customadvancements` folder, or use whitelist mode (`blacklistIsWhitelist = true`) with an empty `advancementsBlacklist` to remove everything and add back only what you whitelist. See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+  </Accordion>
+
+  <Accordion title="How do I find the resource location ID of an existing advancement?">
+    Run `/ca/generate/ids` in-game. It writes every currently loaded advancement's ID to `customadvancements/advancements.txt`, one per line. See [Commands](/commands/overview).
+  </Accordion>
+
+  <Accordion title="Can advancement backgrounds be a solid color or a gradient instead of an image?">
+    Yes. The `background` field accepts `COLOR`, `LINEAR_GRADIENT`, and `RADIAL_GRADIENT` types in addition to `IMAGE` and the vanilla-style tiled `TEXTURE`. See [Background Types](/advancements/background-types) for every option.
+  </Accordion>
+
+  <Accordion title="Do other players need the mod installed to see my custom backgrounds and translations?">
+    Yes. Custom textures and language files are synced to clients over the network, but only a client actually running Custom Advancements can receive and render them. A player without the mod sees Minecraft's vanilla defaults instead. See [Textures](/data/textures) and [Language Files](/data/lang).
+  </Accordion>
+
+  <Accordion title="Can I remove only recipe-unlock advancements, without touching anything else?">
+    Yes — set `noRecipeAdvancements = true`. It removes every advancement whose path contains `recipes/`, independently of `advancementsBlacklist`. See [Config File](/configuration/config-file).
+  </Accordion>
+</AccordionGroup>

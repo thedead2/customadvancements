@@ -1,0 +1,151 @@
+---
+title: "Localizing Custom Advancements with Language Files"
+sidebarTitle: "Language Files"
+description: "Add multi-language support to your custom advancements by providing translation JSON files in customadvancements/data/lang/ for Minecraft 1.18.2."
+---
+
+Custom Advancements supports Minecraft's standard language file format, letting you provide translated titles and descriptions for your advancements in any language Minecraft supports. Place locale JSON files in the right folder and the mod injects their entries into the game's translation table, so players see advancement text in their own language.
+
+## Folder Location
+
+Place your language files inside the `customadvancements/` folder in your game directory, under `data/lang/`:
+
+```text
+customadvancements/
+└── data/
+    └── lang/
+        ├── en_us.json
+        ├── de_de.json
+        ├── es_es.json
+        └── fr_fr.json
+```
+
+Each file is named after a Minecraft locale code, followed by `.json`. Only `.json` files are read; anything else in the folder is ignored.
+
+| File name | Locale |
+|---|---|
+| `en_us.json` | English (United States) |
+| `de_de.json` | German (Germany) |
+| `es_es.json` | Spanish (Spain) |
+| `fr_fr.json` | French (France) |
+| `zh_cn.json` | Chinese (Simplified) |
+
+Minecraft loads the file matching the player's in-game language setting.
+
+<Tip>
+  The first time this folder is created, the mod copies four example locale files into it — `en_us.json`, `de_de.json`, `es_es.json`, and `fr_fr.json` — covering the three bundled example advancements. Open them to see the expected structure before writing your own.
+</Tip>
+
+---
+
+## Example: en_us.json
+
+The following is the full English locale file from the bundled examples:
+
+```json customadvancements/data/lang/en_us.json
+{
+  "customadvancements.advancements.example_root.title": "Custom Advancements",
+  "customadvancements.advancements.example_root.description": "Follow your imagination!",
+  "customadvancements.advancements.example_example.title": "Example",
+  "customadvancements.advancements.example_example.description": "This is an example advancement!",
+  "customadvancements.advancements.back_to_the_roots.title": "Back to the roots",
+  "customadvancements.advancements.back_to_the_roots.description": "Kill a zombie with rotten flesh!"
+}
+```
+
+And its German counterpart:
+
+```json customadvancements/data/lang/de_de.json
+{
+  "customadvancements.advancements.example_root.title": "Custom Advancements",
+  "customadvancements.advancements.example_root.description": "Folge deiner Fantasie!",
+  "customadvancements.advancements.example_example.title": "Beispiel",
+  "customadvancements.advancements.example_example.description": "Dies ist ein Beispiel Advancement!"
+}
+```
+
+Note that the German file covers fewer keys than the English one. That is fine — any key a locale does not define falls back to Minecraft's own handling, which displays the raw key. Supply as many or as few locales as you want to support.
+
+---
+
+## File Format
+
+Language files use the standard Minecraft JSON lang format: a single flat JSON object where every entry maps a string key to a string value. No nested objects, no arrays.
+
+```json
+{
+  "translation.key.here": "The text players see",
+  "another.translation.key": "More text"
+}
+```
+
+---
+
+## Key Format
+
+Translation keys are arbitrary strings — the only rule is that the key in your advancement JSON matches the key in your language file exactly. That said, the convention used by the bundled examples is worth following:
+
+```text
+customadvancements.advancements.<advancement_name>.title
+customadvancements.advancements.<advancement_name>.description
+```
+
+Where `<advancement_name>` identifies the advancement, typically matching its filename without the `.json` extension. An advancement defined in `back_to_the_roots.json` therefore uses `customadvancements.advancements.back_to_the_roots.title`.
+
+<Tip>
+  Sticking to a namespaced pattern like `<modid>.advancements.<path>.(title|description)` keeps your keys predictable and avoids collisions with other mods or Minecraft's own translation entries. Avoid bare keys such as `"my_advancement"` — they are easy to clash with.
+</Tip>
+
+---
+
+## Referencing Keys in Advancement JSON
+
+Instead of a plain string, pass a text component with a `translate` field to point at a key from your language file:
+
+```json customadvancements/customadvancements/my_root.json
+{
+  "display": {
+    "icon": { "item": "minecraft:compass" },
+    "title": { "translate": "customadvancements.advancements.example_root.title" },
+    "description": { "translate": "customadvancements.advancements.example_root.description" },
+    "background": "minecraft:textures/gui/advancements/backgrounds/adventure.png"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
+```
+
+Minecraft resolves the `translate` component at render time against the active language. Switching the game language in the settings updates the advancements screen automatically — no reload required.
+
+See [Display](/advancements/display) for the full list of fields that accept text components.
+
+---
+
+## Fallback Behavior
+
+If a key has no translation in the active locale, Minecraft displays the raw key string — for example `customadvancements.advancements.example_root.title` — instead of readable text. This is the tell-tale sign of a missing or misspelled key.
+
+<Tip>
+  Always ship an `en_us.json` covering every key you use. English is Minecraft's fallback locale, so a complete `en_us.json` means players never see a raw key even if their own language is not covered.
+</Tip>
+
+---
+
+## How Translations Reach the Client
+
+Language files are read from the `customadvancements/data/lang/` folder of whichever installation is reading them, and injected into that side's translation table. Custom Advancements 4.7.5 does not transmit language files over the network.
+
+<Warning>
+  On a multiplayer server this means every player who should see translated advancement text needs both the Custom Advancements mod and the language files in their own `customadvancements/data/lang/` folder. A player without them sees the raw translation keys. If you are building a modpack, ship the whole `customadvancements/` folder in your pack's overrides layer so every player has them from the start.
+</Warning>
+
+An alternative, if client-side files are not an option: skip translation keys entirely and hardcode the text with `{"text": "..."}` in the advancement JSON. Advancement definitions themselves are synced to every client by the server, so hardcoded titles always display, at the cost of being untranslatable.
+
+---
+
+## Applying Changes
+
+Adding or editing a language file takes effect on the next `/ca reload` or on the next game start. See [Commands](/commands/overview).

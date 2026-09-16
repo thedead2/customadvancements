@@ -1,0 +1,81 @@
+---
+title: "Using Custom Textures as Advancement Backgrounds"
+sidebarTitle: "Textures"
+description: "Place PNG image files in customadvancements/data/textures/ to use them as custom tab backgrounds in your advancement definitions."
+---
+
+Custom Advancements loads image files directly from your `customadvancements/data/textures/` folder and registers them with the game's resource manager under the `customadvancements` namespace. This lets you use your own artwork as an advancement tab background without building a resource pack — you drop a `.png` file in the folder and reference it from your advancement JSON.
+
+## Folder Location
+
+Place your image files inside the `customadvancements/` folder in your game directory, under `data/textures/`:
+
+```
+customadvancements/
+└── data/
+    └── textures/
+        ├── logo.png            ← shipped with the mod
+        └── my_background.png
+```
+
+The folder is created automatically on first launch and `logo.png` is copied into it, so there is always at least one working texture available.
+
+## Supported File Type
+
+Only **PNG** files are loaded. The texture loader checks each file name for a `.png` ending; any other file is skipped and logged as:
+
+```
+File 'my_background.jpg' is not a '.png' file, ignoring it!
+```
+
+If a texture is not appearing, this log line is the first thing to check. Converting the image to PNG resolves it.
+
+<Note>
+  Subfolders inside `data/textures/` are not scanned — keep your image files directly in `data/textures/`.
+</Note>
+
+## Referencing a Texture in an Advancement
+
+Textures in this folder are registered under the `customadvancements` namespace using the format:
+
+```
+customadvancements:textures/<filename>.png
+```
+
+The file name includes its extension. A file named `my_background.png` is therefore referenced as `customadvancements:textures/my_background.png`.
+
+To use it as a tab background, set the `background` field in a root advancement's `display` block:
+
+```json customadvancements/customadvancements/root.json
+{
+  "display": {
+    "icon": { "item": "minecraft:diamond_block" },
+    "title": { "translate": "customadvancements.advancements.example_root.title" },
+    "description": { "translate": "customadvancements.advancements.example_root.description" },
+    "background": "customadvancements:textures/my_background.png"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
+```
+
+Minecraft tiles the texture in 16×16 pixel blocks across the tab panel rather than scaling it to fit, so seamless, repeating artwork gives the best result. See [Background Types](/advancements/background-types) for the full rendering details and for how to reference vanilla textures instead.
+
+<Warning>
+  Texture file names are case-sensitive on Linux and macOS servers. `MyTexture.png` and `mytexture.png` are different files — make sure the name in your advancement JSON matches the file on disk exactly.
+</Warning>
+
+## When Textures Are Loaded
+
+Textures are read at startup and again on every `/ca reload`, so you can add or replace an image and pick it up without restarting the game. If an advancement references a texture the mod cannot find, it logs a warning naming both the advancement file and the expected texture location, and the tab falls back to Minecraft's default background.
+
+<Note>
+  Textures are loaded and rendered on the client. In multiplayer, each player needs the mod installed **and** their own copy of the texture files in `customadvancements/data/textures/` to see your custom backgrounds — this version does not transfer texture files from the server to connecting clients. Ship the folder alongside your modpack so every player has the same files.
+</Note>
+
+<Tip>
+  Because the texture is tiled rather than stretched, resolution matters much less than seamlessness. A small 16×16 or 32×32 tileable image looks better and loads faster than a large photograph.
+</Tip>

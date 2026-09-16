@@ -1,0 +1,257 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Custom Advancements",
+  "theme": "palm",
+  "colors": {
+    "primary": "#f16529"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/thedead2/customadvancements"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/thedead2/customadvancements"
+    }
+  },
+  "navigation": {
+    "versions": [
+      {
+        "version": "1.21.1-8.1.0",
+        "default": true,
+        "tabs": [
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Getting Started",
+                "pages": [
+                  "v1.21.1-8.1.0/introduction",
+                  "v1.21.1-8.1.0/installation",
+                  "v1.21.1-8.1.0/quickstart"
+                ]
+              },
+              {
+                "group": "Creating Advancements",
+                "pages": [
+                  "v1.21.1-8.1.0/advancements/structure",
+                  "v1.21.1-8.1.0/advancements/display",
+                  "v1.21.1-8.1.0/advancements/background-types",
+                  "v1.21.1-8.1.0/advancements/criteria",
+                  "v1.21.1-8.1.0/advancements/examples"
+                ]
+              },
+              {
+                "group": "Configuration",
+                "pages": [
+                  "v1.21.1-8.1.0/configuration/config-file",
+                  "v1.21.1-8.1.0/configuration/blacklist-whitelist",
+                  "v1.21.1-8.1.0/configuration/progression",
+                  "v1.21.1-8.1.0/configuration/tab-sorting"
+                ]
+              },
+              {
+                "group": "Commands",
+                "pages": [
+                  "v1.21.1-8.1.0/commands/overview"
+                ]
+              },
+              {
+                "group": "Localization & Textures",
+                "pages": [
+                  "v1.21.1-8.1.0/data/lang",
+                  "v1.21.1-8.1.0/data/textures"
+                ]
+              },
+              {
+                "group": "Troubleshooting",
+                "pages": [
+                  "v1.21.1-8.1.0/troubleshooting/common-issues",
+                  "v1.21.1-8.1.0/troubleshooting/faq"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "version": "1.19.3-6.3.5",
+        "tabs": [
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Getting Started",
+                "pages": [
+                  "v1.19.3-6.3.5/introduction",
+                  "v1.19.3-6.3.5/installation",
+                  "v1.19.3-6.3.5/quickstart"
+                ]
+              },
+              {
+                "group": "Creating Advancements",
+                "pages": [
+                  "v1.19.3-6.3.5/advancements/structure",
+                  "v1.19.3-6.3.5/advancements/display",
+                  "v1.19.3-6.3.5/advancements/background-types",
+                  "v1.19.3-6.3.5/advancements/criteria",
+                  "v1.19.3-6.3.5/advancements/examples"
+                ]
+              },
+              {
+                "group": "Configuration",
+                "pages": [
+                  "v1.19.3-6.3.5/configuration/config-file",
+                  "v1.19.3-6.3.5/configuration/blacklist-whitelist",
+                  "v1.19.3-6.3.5/configuration/progression",
+                  "v1.19.3-6.3.5/configuration/tab-sorting"
+                ]
+              },
+              {
+                "group": "Commands",
+                "pages": [
+                  "v1.19.3-6.3.5/commands/overview"
+                ]
+              },
+              {
+                "group": "Localization & Textures",
+                "pages": [
+                  "v1.19.3-6.3.5/data/lang",
+                  "v1.19.3-6.3.5/data/textures"
+                ]
+              },
+              {
+                "group": "Troubleshooting",
+                "pages": [
+                  "v1.19.3-6.3.5/troubleshooting/common-issues",
+                  "v1.19.3-6.3.5/troubleshooting/faq"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "version": "1.18.2-4.7.5",
+        "tabs": [
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Getting Started",
+                "pages": [
+                  "v1.18.2-4.7.5/introduction",
+                  "v1.18.2-4.7.5/installation",
+                  "v1.18.2-4.7.5/quickstart"
+                ]
+              },
+              {
+                "group": "Creating Advancements",
+                "pages": [
+                  "v1.18.2-4.7.5/advancements/structure",
+                  "v1.18.2-4.7.5/advancements/display",
+                  "v1.18.2-4.7.5/advancements/background-types",
+                  "v1.18.2-4.7.5/advancements/criteria",
+                  "v1.18.2-4.7.5/advancements/examples"
+                ]
+              },
+              {
+                "group": "Configuration",
+                "pages": [
+                  "v1.18.2-4.7.5/configuration/config-file",
+                  "v1.18.2-4.7.5/configuration/blacklist-whitelist",
+                  "v1.18.2-4.7.5/configuration/progression",
+                  "v1.18.2-4.7.5/configuration/tab-sorting"
+                ]
+              },
+              {
+                "group": "Commands",
+                "pages": [
+                  "v1.18.2-4.7.5/commands/overview"
+                ]
+              },
+              {
+                "group": "Localization & Textures",
+                "pages": [
+                  "v1.18.2-4.7.5/data/lang",
+                  "v1.18.2-4.7.5/data/textures"
+                ]
+              },
+              {
+                "group": "Troubleshooting",
+                "pages": [
+                  "v1.18.2-4.7.5/troubleshooting/common-issues",
+                  "v1.18.2-4.7.5/troubleshooting/faq"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "version": "1.16.5-3.5.3",
+        "tabs": [
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Getting Started",
+                "pages": [
+                  "v1.16.5-3.5.3/introduction",
+                  "v1.16.5-3.5.3/installation",
+                  "v1.16.5-3.5.3/quickstart"
+                ]
+              },
+              {
+                "group": "Creating Advancements",
+                "pages": [
+                  "v1.16.5-3.5.3/advancements/structure",
+                  "v1.16.5-3.5.3/advancements/display",
+                  "v1.16.5-3.5.3/advancements/background-types",
+                  "v1.16.5-3.5.3/advancements/criteria",
+                  "v1.16.5-3.5.3/advancements/examples"
+                ]
+              },
+              {
+                "group": "Configuration",
+                "pages": [
+                  "v1.16.5-3.5.3/configuration/config-file",
+                  "v1.16.5-3.5.3/configuration/blacklist-whitelist",
+                  "v1.16.5-3.5.3/configuration/progression",
+                  "v1.16.5-3.5.3/configuration/tab-sorting"
+                ]
+              },
+              {
+                "group": "Commands",
+                "pages": [
+                  "v1.16.5-3.5.3/commands/overview"
+                ]
+              },
+              {
+                "group": "Localization & Textures",
+                "pages": [
+                  "v1.16.5-3.5.3/data/lang",
+                  "v1.16.5-3.5.3/data/textures"
+                ]
+              },
+              {
+                "group": "Troubleshooting",
+                "pages": [
+                  "v1.16.5-3.5.3/troubleshooting/common-issues",
+                  "v1.16.5-3.5.3/troubleshooting/faq"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "projectType": "general",
+  "projectName": "Custom Advancements",
+  "projectDescription": "A Minecraft mod (Fabric & NeoForge) that lets players and modpack creators add custom advancements, remove or filter existing ones, enforce advancement progression, and fully customize the advancement screen.",
+  "theme": "palm",
+  "primaryColor": "#ffffff",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Creating Advancements",
+            "pages": [
+              "advancements/structure",
+              "advancements/display",
+              "advancements/background-types",
+              "advancements/criteria",
+              "advancements/examples"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/config-file",
+              "configuration/blacklist-whitelist",
+              "configuration/progression",
+              "configuration/tab-sorting"
+            ]
+          },
+          {
+            "group": "Commands",
+            "pages": [
+              "commands/overview"
+            ]
+          },
+          {
+            "group": "Localization & Textures",
+            "pages": [
+              "data/lang",
+              "data/textures"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Add fully custom advancements via JSON files placed in the customadvancements/ folder",
+    "Remove or filter any vanilla or mod advancements using a blacklist (or whitelist mode)",
+    "Disable recipe advancements globally with a single config flag",
+    "Advancement progression system — require parent completion before a child can be earned",
+    "Reset all advancement progress on player death",
+    "Custom backgrounds: IMAGE, TEXTURE, COLOR, LINEAR_GRADIENT, RADIAL_GRADIENT types",
+    "Tab sorting modes: ALPHABETICALLY, DEFINED_LIST, or UNSORTED",
+    "In-game commands to generate advancement JSON files and export advancement IDs",
+    "Multi-language (i18n) support for advancement titles and descriptions",
+    "Works as a datapack-like system across all worlds (Fabric and NeoForge)"
+  ],
+  "publicApiSurface": [
+    "customadvancements/ folder (advancement JSON files)",
+    "customadvancements/data/lang/ (translation JSON files)",
+    "customadvancements/data/textures/ (custom texture files)",
+    "customadvancements.toml config: noRecipeAdvancements, advancementsBlacklist, blacklistIsWhitelist, disableStandardAdvancements",
+    "customadvancements.toml config: advancementProgression, connectedAdvancementsList, resetAdvancementProgressOnDeath",
+    "customadvancements.toml config: advancementProgressionMode (ALL, MODS, MINECRAFT, CUSTOM_ADVANCEMENTS)",
+    "customadvancements.toml config: advancementTabSortingMode (UNSORTED, ALPHABETICALLY, DEFINED_LIST), advancementSortingList",
+    "Command: /ca/generate/ids",
+    "Command: /ca/generate/advancement/all",
+    "Command: /ca/generate/advancement/[advancement]",
+    "BackgroundType enum: NONE, IMAGE, TEXTURE, LINEAR_GRADIENT, RADIAL_GRADIENT, COLOR",
+    "AdvancementProgressionMode enum: ALL, MODS, MINECRAFT, CUSTOM_ADVANCEMENTS",
+    "AdvancementTabsSorter enum: UNSORTED, ALPHABETICALLY, DEFINED_LIST"
+  ]
+}

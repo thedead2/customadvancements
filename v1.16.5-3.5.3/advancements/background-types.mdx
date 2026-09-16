@@ -1,0 +1,91 @@
+---
+title: "Custom Advancement Tab Backgrounds and Texture References"
+sidebarTitle: "Background Types"
+description: "Set the background texture of a root advancement tab in Custom Advancements using a vanilla texture or your own PNG file, and understand how it is tiled."
+---
+
+The `background` field on a root advancement decides what is drawn behind the advancement tree in that tab. In this version of Custom Advancements the field is a plain resource location string — exactly the same format vanilla Minecraft uses — and the game renders it with vanilla's own tiling logic. There are no background types, gradients, or scaling modes to configure here; you point the field at a texture and Minecraft repeats it across the panel.
+
+<Warning>
+  The `background` field is **required** on every root advancement (an advancement with no `parent` field). A root advancement without it fails validation and is never registered. On a child advancement the field has no effect and is ignored — children always inherit their root's background.
+</Warning>
+
+## Using a Vanilla Texture
+
+Reference any texture that ships with Minecraft by its full resource location. The five backgrounds used by the vanilla advancement tabs are the most convenient starting points:
+
+```json
+"background": "minecraft:textures/gui/advancements/backgrounds/adventure.png"
+```
+
+| Resource location | Tab it appears on by default |
+|---|---|
+| `minecraft:textures/gui/advancements/backgrounds/stone.png` | Minecraft (Story) |
+| `minecraft:textures/gui/advancements/backgrounds/nether.png` | Nether |
+| `minecraft:textures/gui/advancements/backgrounds/end.png` | The End |
+| `minecraft:textures/gui/advancements/backgrounds/adventure.png` | Adventure |
+| `minecraft:textures/gui/advancements/backgrounds/husbandry.png` | Husbandry |
+
+Any texture registered in the game works, including textures added by other mods and by resource packs — the string is passed straight to Minecraft's texture manager.
+
+## Using a Custom Texture
+
+To use your own artwork, place the `.png` file in `customadvancements/data/textures/` and reference it under the `customadvancements` namespace with a `textures/` prefix and the full file name, extension included:
+
+```json
+"background": "customadvancements:textures/logo.png"
+```
+
+That string maps to the file `<game directory>/customadvancements/data/textures/logo.png`. The mod registers every `.png` in that folder with the client's resource manager on startup and on every reload, so no resource pack is needed. `logo.png` ships with the mod, so the example above works out of the box.
+
+<Note>
+  Only `.png` files are loaded. Any other file in `data/textures/` is skipped with `is not a '.png' file, ignoring it!` in the log. See [Textures](/data/textures) for file placement, reload behavior, and multiplayer notes.
+</Note>
+
+If the mod cannot find a texture referenced by one of your advancements, it logs a warning naming both the advancement file and the texture location it expected, and the tab falls back to rendering Minecraft's default background.
+
+## How the Texture Is Rendered
+
+Minecraft draws advancement backgrounds by **tiling** the texture in 16×16 pixel blocks across the whole tab panel, repeating it in both directions until the area is filled. It is never stretched or scaled to fit.
+
+This has two practical consequences:
+
+- **Design for tiling.** A seamless, repeating texture looks best. Vanilla's own backgrounds are small tileable images of stone, netherrack, end stone, and so on.
+- **A large photo will not fill the tab.** Only the top-left 16×16 region of any image is used as the tile, so a full screenshot is drawn as a grid of its own top-left corner rather than as one big picture.
+
+<Tip>
+  If you want a flat, solid-color tab, make a 16×16 PNG filled with that color and point `background` at it. Because the tile repeats, the whole panel ends up in that one color.
+</Tip>
+
+<Frame>
+  [INSERT IMAGE: A root advancement tab showing a custom texture tiled across the panel behind the advancement tree]
+</Frame>
+
+## Complete Root Advancement
+
+```json root.json
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:diamond_block"
+    },
+    "title": {
+      "translate": "customadvancements.advancements.example_root.title"
+    },
+    "description": {
+      "translate": "customadvancements.advancements.example_root.description"
+    },
+    "background": "customadvancements:textures/logo.png",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
+```
+
+For every other field in the `display` object, see [Display](/advancements/display).

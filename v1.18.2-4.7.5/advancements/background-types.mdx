@@ -1,0 +1,153 @@
+---
+title: "Custom Advancement Tab Backgrounds and Scaling Options"
+sidebarTitle: "Backgrounds"
+description: "Set the background of a root advancement tab in Minecraft 1.18.2 using vanilla textures or your own images, with largeBackground, shouldBgClip, and bgRatio."
+---
+
+The `background` field inside a root advancement's `display` object controls what is drawn behind the advancement tree in the tab panel. In Minecraft 1.18.2 this field is a plain resource-location string pointing at a texture — either one of Minecraft's own background textures or an image file you supply yourself. Custom Advancements then adds three optional fields that change how that texture is scaled and positioned.
+
+<Warning>
+  `background` is **required** on every root advancement — an advancement with no `parent` field and no `background` fails validation and is skipped at load time with an error in the log. On a child advancement the field is simply ignored.
+</Warning>
+
+---
+
+## The `background` Field
+
+<ParamField body="background" type="string" required>
+  A texture resource location in `namespace:path` form. Two kinds of value are useful here:
+
+  **A vanilla Minecraft texture** — no extra files needed:
+
+  ```json
+  "background": "minecraft:textures/gui/advancements/backgrounds/stone.png"
+  ```
+
+  **One of your own images** — place the file in `customadvancements/data/textures/` and reference it with the `customadvancements` namespace:
+
+  ```json
+  "background": "customadvancements:textures/my_background.png"
+  ```
+
+  Any texture registered in the game works, including textures added by other mods.
+</ParamField>
+
+By default the texture is tiled across the panel in 16×16 pixel steps, exactly as vanilla renders its own advancement backgrounds. That is ideal for seamless tile patterns and wrong for photographs or artwork — which is what the three fields in the next section are for.
+
+### Vanilla Background Textures
+
+| Resource location | Description |
+|---|---|
+| `minecraft:textures/gui/advancements/backgrounds/stone.png` | Stone tile — the Minecraft (Story) tab |
+| `minecraft:textures/gui/advancements/backgrounds/nether.png` | Netherrack — the Nether tab |
+| `minecraft:textures/gui/advancements/backgrounds/end.png` | End stone — The End tab |
+| `minecraft:textures/gui/advancements/backgrounds/adventure.png` | Cobblestone — the Adventure tab |
+| `minecraft:textures/gui/advancements/backgrounds/husbandry.png` | Hay bale — the Husbandry tab |
+
+<Frame>
+  [INSERT IMAGE: A root advancement tab using the vanilla `adventure.png` texture, showing the default tiled background]
+</Frame>
+
+---
+
+## Scaling and Clipping Extensions
+
+Custom Advancements reads three extra fields from the `display` object. They are ignored by vanilla Minecraft and by any client that does not have the mod installed, so an advancement using them still loads correctly everywhere — it simply falls back to vanilla tiling.
+
+<ParamField body="largeBackground" type="boolean" default="false">
+  When `true`, the mod takes over rendering of the tab and draws your background image **once, scaled to fill the entire panel**, instead of tiling it. This is the field to set for screenshots, artwork, and any image that is not a seamless tile.
+
+  `shouldBgClip` and `bgRatio` are only consulted when `largeBackground` is `true`; on their own they do nothing.
+
+  ```json
+  "largeBackground": true
+  ```
+</ParamField>
+
+<ParamField body="shouldBgClip" type="boolean" default="false">
+  Controls how a large background handles an image whose proportions do not match the tab panel.
+
+  - `false` — the image is stretched to fill the panel exactly. Images that are not already the right shape come out distorted.
+  - `true` — the image is drawn at the aspect ratio given by `bgRatio`, vertically centered in the panel, and the overflow is cropped away. Proportions are preserved.
+
+  ```json
+  "shouldBgClip": true
+  ```
+</ParamField>
+
+<ParamField body="bgRatio" type="float" default="1.0">
+  The width-to-height aspect ratio of your image, used only when `shouldBgClip` is `true`. The mod divides the panel width by this value to work out how tall to draw the image, then centers it vertically.
+
+  Set it to your image's real ratio — divide its pixel width by its pixel height:
+
+  | Image size | `bgRatio` |
+  |---|---|
+  | 1920 × 1080 | `1.7777` |
+  | 1280 × 720 | `1.7777` |
+  | 1024 × 512 | `2.0` |
+  | 512 × 512 | `1.0` |
+
+  ```json
+  "bgRatio": 1.7777
+  ```
+
+  A value larger than the true ratio crops more from the top and bottom; a smaller value leaves the image shorter than the panel.
+</ParamField>
+
+<Tip>
+  The combination you want for a photograph or screenshot is all three together: `largeBackground: true`, `shouldBgClip: true`, and `bgRatio` set to the image's actual proportions. That fills the panel edge to edge without distorting anything.
+</Tip>
+
+---
+
+## Worked Example
+
+The `root.json` file bundled with the mod uses a 16:9-ish screenshot as a full-panel background. Note the `bgRatio` value — it is simply the image's width divided by its height.
+
+```json root.json
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:diamond_block"
+    },
+    "title": {
+      "translate": "customadvancements.advancements.example_root.title"
+    },
+    "description": {
+      "translate": "customadvancements.advancements.example_root.description"
+    },
+    "background": "customadvancements:textures/screenshot.png",
+    "largeBackground": true,
+    "shouldBgClip": true,
+    "bgRatio": 1.7208029197,
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
+```
+
+<Frame>
+  [INSERT IMAGE: The same tab rendered with `largeBackground` and `shouldBgClip` enabled, showing the screenshot filling the whole panel instead of tiling]
+</Frame>
+
+---
+
+## Troubleshooting a Missing Background
+
+<Warning>
+  If the texture file cannot be found, the mod logs a warning naming the advancement and the texture location it tried to load, and the tab renders with the missing-texture checkerboard or no background at all. Verify the path and test it in-game before distributing your advancement pack.
+</Warning>
+
+The most common causes are:
+
+- **A wrong resource location.** A file at `customadvancements/data/textures/my_background.png` is referenced as `customadvancements:textures/my_background.png` — the `textures/` segment is part of the resource location and the `.png` extension is included.
+- **An unsupported file extension.** See [Textures](/data/textures) for the full list of formats the loader accepts.
+- **The client does not have the file.** Custom Advancements 4.7.5 does not send textures over the network. Each client reads them from its own `customadvancements/data/textures/` folder, so every player needs the image locally.
+
+See [Textures](/data/textures) for file placement and supported formats, and [Common Issues](/troubleshooting/common-issues) for more diagnostics.

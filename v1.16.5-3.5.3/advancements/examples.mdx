@@ -1,0 +1,211 @@
+---
+title: "Custom Advancements JSON Examples: Root, Task, and Rewards"
+sidebarTitle: "Examples"
+description: "Complete working examples of Custom Advancements JSON files for Minecraft 1.16.5, from a simple root tab to a multi-condition advancement with rewards."
+---
+
+The three examples below are the files the mod copies into `customadvancements/customadvancements/` the first time it runs. They form a small, self-contained advancement tree: a root tab, a simple task child, and a reward-bearing task that chains off the second. Together they demonstrate every common pattern you will encounter when writing your own advancements.
+
+All three belong to the `customadvancements` namespace. If you deleted them and want them back, remove the `customadvancements/customadvancements/` folder and restart the game — the mod recreates it with the examples inside.
+
+---
+
+## 1. Root Advancement — root.json
+
+A root advancement defines an entirely new tab in the advancements screen. It has no `parent` field, and its `display` block **must** include a `background` or the file is rejected by the loader. The `minecraft:tick` trigger fires every game tick, so the root completes silently the moment any player logs in.
+
+```json root.json
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:diamond_block"
+    },
+    "title": {
+      "translate": "customadvancements.advancements.example_root.title"
+    },
+    "description": {
+      "translate": "customadvancements.advancements.example_root.description"
+    },
+    "background": "customadvancements:textures/logo.png",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
+```
+
+**Notable fields:**
+
+- **`background`** — A plain resource location pointing at `customadvancements/data/textures/logo.png`, the texture the mod ships with. Minecraft tiles it across the tab panel. See [Background Types](/advancements/background-types).
+- **`show_toast: false`** and **`announce_to_chat: false`** — A root advancement that completes on every login should never fire notifications; these two flags suppress both the toast overlay and the chat broadcast.
+- **`hidden: false`** — The root is always visible in its tab, so there is no reason to hide it.
+- **`minecraft:tick` trigger** — The simplest possible trigger. No `conditions` block is needed because the tick trigger always fires unconditionally.
+- **No `parent`** — Omitting the field is what makes this advancement a root and gives it its own tab.
+
+---
+
+## 2. Simple Task — example.json
+
+This is a standard child advancement linked to the root above. It completes as soon as dirt appears anywhere in the player's inventory, triggering a toast and a chat announcement.
+
+```json example.json
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:dirt"
+    },
+    "title": {
+      "translate": "customadvancements.advancements.example_example.title"
+    },
+    "description": {
+      "translate": "customadvancements.advancements.example_example.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "customadvancements:root",
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "minecraft:dirt"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+**Notable fields:**
+
+- **`parent: "customadvancements:root"`** — Links this advancement as a child of `root.json`. The resource location is the namespace (`customadvancements`) plus the file name without the `.json` extension (`root`).
+- **`frame: "task"`** — Renders the standard square frame around the icon. Use `"goal"` for a rounded frame or `"challenge"` for a star frame on more difficult objectives.
+- **`minecraft:inventory_changed` trigger** — Fires whenever the player's inventory changes. The `conditions.items` array narrows it to only fire when at least one `minecraft:dirt` item is present.
+- No `requirements` field — with only one criterion, omitting `requirements` means that single criterion must be satisfied, which is equivalent to `[["requirement"]]`.
+
+---
+
+## 3. Task with Rewards — back_to_the_roots.json
+
+This advancement chains off `example.json` and requires the player to kill an adult zombie while holding rotten flesh in their main hand. On completion it grants 50 experience points.
+
+```json back_to_the_roots.json
+{
+  "parent": "customadvancements:example",
+  "criteria": {
+    "back_to_the_roots": {
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "minecraft:zombie",
+              "flags": {
+                "is_baby": false
+              }
+            }
+          }
+        ],
+        "killing_blow": {
+          "direct_entity": {
+            "equipment": {
+              "mainhand": {
+                "items": [
+                  "minecraft:rotten_flesh"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "trigger": "minecraft:player_killed_entity"
+    }
+  },
+  "display": {
+    "announce_to_chat": true,
+    "description": {
+      "translate": "customadvancements.advancements.back_to_the_roots.description"
+    },
+    "frame": "task",
+    "hidden": false,
+    "icon": {
+      "item": "minecraft:rotten_flesh"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "customadvancements.advancements.back_to_the_roots.title"
+    }
+  },
+  "requirements": [
+    [
+      "back_to_the_roots"
+    ]
+  ],
+  "rewards": {
+    "experience": 50
+  }
+}
+```
+
+**Notable fields:**
+
+- **`minecraft:player_killed_entity` trigger** — Fires when the player lands the killing blow on an entity.
+- **`conditions.entity`** — An array of condition objects the killed entity must match. The single entry here uses `minecraft:entity_properties` to assert that the entity is a `minecraft:zombie` and is not a baby (`is_baby: false`).
+- **`conditions.killing_blow`** — Inspects the damage source. The `direct_entity.equipment.mainhand.items` array requires the player to be holding `minecraft:rotten_flesh` in their main hand when the kill lands.
+- **`requirements`** — Explicitly lists the single criterion. With only one criterion this is optional, but it is good practice to include it for clarity.
+- **`rewards.experience: 50`** — Awards 50 XP points directly to the player on completion. See [Criteria](/advancements/criteria) for the other reward types.
+
+---
+
+## Matching Language File
+
+All three examples use `translate` keys rather than literal text. The mod also copies four language files into `customadvancements/data/lang/`; the English one supplies every key used above:
+
+```json customadvancements/data/lang/en_us.json
+{
+  "customadvancements.advancements.example_root.title": "Custom Advancements",
+  "customadvancements.advancements.example_root.description": "Follow your imagination!",
+  "customadvancements.advancements.example_example.title": "Example",
+  "customadvancements.advancements.example_example.description": "This is an example advancement!",
+  "customadvancements.advancements.back_to_the_roots.title": "Back to the roots",
+  "customadvancements.advancements.back_to_the_roots.description": "Kill a zombie with rotten flesh!"
+}
+```
+
+See [Language Files](/data/lang) for the full localization guide.
+
+---
+
+## Using Vanilla Advancements as Templates
+
+Writing advancement JSON from scratch can be tedious when you are not sure what a complex `conditions` block should look like. The `/ca generate advancement all` command exports every currently loaded advancement — vanilla and modded alike — as ready-to-edit JSON files placed into `customadvancements/<namespace>/<path>.json`, then reloads automatically.
+
+```
+/ca generate advancement all
+```
+
+This gives you accurate, working examples of every trigger type and condition structure Minecraft 1.16.5 uses, which you can then copy and modify for your own advancements. To export just one advancement instead of all of them, use the single-advancement form:
+
+```
+/ca generate advancement minecraft:story/obtain_armor
+```
+
+<Warning>
+  `/ca generate advancement all` writes one file per loaded advancement, which can be hundreds of files on a modded instance. Treat the output as a reference dump: delete the files you do not intend to customize, because every file left in place is loaded as an override of the original advancement.
+</Warning>
+
+<Tip>
+  Run `/ca generate resource_locations` first to dump every loaded advancement ID to `customadvancements/resource_locations.txt`. That makes it easy to find the exact ID of the advancement you want to inspect or override before generating anything.
+</Tip>
+
+See [Commands](/commands/overview) for the full command reference, and [Structure](/advancements/structure) for the complete field reference used in these examples.

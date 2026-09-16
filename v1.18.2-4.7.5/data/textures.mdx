@@ -1,0 +1,116 @@
+---
+title: "Using Custom Textures as Advancement Backgrounds"
+sidebarTitle: "Textures"
+description: "Place image files in customadvancements/data/textures/ to use them as custom backgrounds in your Minecraft 1.18.2 advancement tab definitions."
+---
+
+Custom Advancements loads image files directly from your `customadvancements/data/textures/` folder and registers them as textures the game can draw, so you can use your own artwork as an advancement background without building a resource pack. Drop the file in the folder, reference it by resource location, and the mod handles the rest.
+
+## Folder Location
+
+Place your image files inside the `customadvancements/` folder in your game directory, under `data/textures/`:
+
+```text
+customadvancements/
+└── data/
+    └── textures/
+        ├── my_background.png
+        ├── chapter1.jpeg
+        └── fancy_tab.gif
+```
+
+The `data/` folder is excluded from advancement scanning, so the mod never tries to parse your images as advancement JSON.
+
+<Tip>
+  The first time this folder is created, the mod copies two example images into it — `logo.png` and `screenshot.png`. The bundled `root.json` example uses `screenshot.png` as its background, so you have a working reference to compare against before creating your own.
+</Tip>
+
+---
+
+## Supported File Types
+
+The following file extensions are recognized by the texture loader. The check is case-insensitive. Files with any other extension are skipped with a warning in the log.
+
+| Extension | Format |
+|-----------|--------|
+| `.png`    | PNG |
+| `.jpeg`   | JPEG |
+| `.jpg`    | JPEG |
+| `.hdr`    | HDR Radiance |
+| `.bmp`    | Bitmap |
+| `.tga`    | Targa |
+| `.psd`    | Photoshop |
+| `.gif`    | GIF |
+| `.pic`    | Softimage PIC |
+| `.pnm`    | Portable Any Map |
+
+PNG is the safest choice for advancement backgrounds — it is lossless, widely supported, and handles transparency correctly.
+
+---
+
+## Referencing a Texture in an Advancement
+
+Textures in the `data/textures/` folder are registered under the `customadvancements` namespace with a `textures/` path prefix:
+
+```text
+customadvancements:textures/<filename>
+```
+
+The file extension is part of the resource location. A file named `my_background.png` is referenced as `customadvancements:textures/my_background.png`.
+
+To use it as a tab background, set the `background` field in a root advancement's `display` block:
+
+```json customadvancements/customadvancements/my_root.json
+{
+  "display": {
+    "icon": { "item": "minecraft:diamond" },
+    "title": { "text": "My Tab" },
+    "description": { "text": "A custom adventure." },
+    "background": "customadvancements:textures/my_background.png",
+    "largeBackground": true,
+    "shouldBgClip": true,
+    "bgRatio": 1.7777
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
+```
+
+By default the texture is tiled in 16×16 pixel steps, exactly like vanilla advancement backgrounds. The three extra fields above (`largeBackground`, `shouldBgClip`, and `bgRatio`) make the mod draw your image once, scaled to fill the whole panel at its correct proportions instead. See [Backgrounds](/advancements/background-types) for the complete reference.
+
+<Warning>
+  If the file is missing or the resource location is wrong, the mod logs a warning naming the advancement and the location it tried to load, and the tab renders with the missing-texture checkerboard or no background at all. The most common mistake is omitting the `textures/` segment or the file extension from the resource location.
+</Warning>
+
+---
+
+## How Textures Reach the Client
+
+Texture loading in Custom Advancements 4.7.5 runs **client-side only**. Each client reads the images from its own `customadvancements/data/textures/` folder — the server does not transmit them over the network.
+
+<Warning>
+  On a multiplayer server this means every player who should see your custom backgrounds needs two things locally: the Custom Advancements mod, and the image files in their own `customadvancements/data/textures/` folder. A player without them sees the vanilla default background instead. Advancement loading, removal, and progression are unaffected — those are enforced server-side for everyone.
+</Warning>
+
+The practical answer for a modpack is to ship the whole `customadvancements/` folder in your pack's overrides layer, so every player installs with the textures already in place. See [Installation](/installation).
+
+---
+
+## Sizing Your Images
+
+Advancement background images are drawn into a panel a few hundred pixels across, so there is nothing to gain from very large files — and a real cost to them, since the mod reads every image in the folder at load time.
+
+<Tip>
+  A resolution of **512×512** or **1024×576** is more than enough for a full-panel background. Export a compressed PNG rather than an uncompressed or full-resolution photograph; at the size it is displayed, the difference is invisible in-game.
+</Tip>
+
+When you use `shouldBgClip`, set `bgRatio` to the image's real width divided by its real height, or the image will be cropped more or less than you intended. See [Backgrounds](/advancements/background-types) for a table of common ratios.
+
+---
+
+## Applying Changes
+
+Adding, replacing, or deleting a texture file takes effect on the next `/ca reload` or on the next game start. See [Commands](/commands/overview).

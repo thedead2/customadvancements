@@ -1,0 +1,157 @@
+---
+title: "Advancement Tab Backgrounds and Rendering Options"
+sidebarTitle: "Backgrounds"
+description: "Configure custom backgrounds for root advancement tabs in Custom Advancements using the background, largeBackground, shouldBgClip, and bgRatio fields."
+---
+
+The `background` field on a root advancement controls what is drawn behind the advancement tree in the tab panel. In this version it is a plain resource location string, exactly as vanilla Minecraft expects. On top of that, Custom Advancements adds three optional `display` fields — `largeBackground`, `shouldBgClip`, and `bgRatio` — that switch the mod's own renderer on and control how your image fills the panel.
+
+<Warning>
+  The `background` field is **required** on root advancements — those with no `parent` field. A root advancement without one fails validation and is skipped entirely with an error in the log. On a child advancement the field is accepted but has no visual effect, because only root advancements own a tab.
+</Warning>
+
+---
+
+## `background`
+
+<ParamField body="background" type="string" required>
+  Resource location of the texture drawn behind the advancement tree, in `namespace:path` format including the file extension.
+
+  ```json
+  "background": "customadvancements:textures/my_background.png"
+  ```
+
+  You can point at three kinds of texture:
+
+  - **Your own image**, placed in `customadvancements/data/textures/`. It is registered as `customadvancements:textures/<filename>` — the filename must match exactly, including the extension. See [Textures](/data/textures).
+  - **A vanilla texture**, e.g. `minecraft:textures/gui/advancements/backgrounds/stone.png`.
+  - **Any texture registered by another mod**, using that mod's namespace.
+</ParamField>
+
+<Note>
+  The mod only warns about a missing texture when the namespace is `customadvancements` and no matching file was found in the textures folder. Resource locations in other namespaces are passed straight to Minecraft's resource manager, so a typo there fails silently as a missing-texture placeholder rather than a log warning.
+</Note>
+
+<Frame>
+  [INSERT IMAGE: A root advancement tab showing the default tiled vanilla stone background for comparison]
+</Frame>
+
+---
+
+## `largeBackground`
+
+<ParamField body="largeBackground" type="boolean" default="false">
+  The master switch for the mod's own background renderer.
+
+  When `false` (the default), Minecraft renders the background the vanilla way: the texture is **tiled** across the panel at 16×16 pixel intervals. This looks correct for small, seamless patterns like the vanilla `stone.png`, and wrong for artwork or screenshots.
+
+  When `true`, Custom Advancements takes over and draws the texture **once**, scaled to fill the entire tab panel instead of repeating it. Use this for any full-size background image.
+
+  ```json
+  "largeBackground": true
+  ```
+</ParamField>
+
+<Warning>
+  `shouldBgClip` and `bgRatio` are only consulted when `largeBackground` is `true`. Setting either of them on their own has no effect — the vanilla tiling renderer ignores both.
+</Warning>
+
+<Frame>
+  [INSERT IMAGE: The same tab with largeBackground set to true, showing the image drawn once across the whole panel instead of tiled]
+</Frame>
+
+---
+
+## `shouldBgClip`
+
+<ParamField body="shouldBgClip" type="boolean" default="false">
+  Controls how the image is fitted to the panel when `largeBackground` is `true`.
+
+  When `false`, the image is **stretched** to the panel's exact width and height. Nothing is cropped, but an image whose proportions differ from the panel will look distorted.
+
+  When `true`, the image is scaled to the panel width while keeping the proportions given by `bgRatio`, then **vertically centered and cropped** to the panel height. Nothing is distorted, but the top and bottom of a tall image are trimmed away.
+
+  ```json
+  "shouldBgClip": true
+  ```
+</ParamField>
+
+<Tip>
+  Use `shouldBgClip: true` for photographs, screenshots, and artwork where distortion would be obvious. Stretching (`false`) is fine for abstract gradients and textures with no recognizable shapes.
+</Tip>
+
+<Frame>
+  [INSERT IMAGE: Side-by-side comparison of the same background with shouldBgClip false (stretched) and true (proportional, cropped)]
+</Frame>
+
+---
+
+## `bgRatio`
+
+<ParamField body="bgRatio" type="float" default="1.0">
+  The aspect ratio of your image, expressed as **width divided by height**. It is used only when both `largeBackground` and `shouldBgClip` are `true`, where it tells the renderer how tall the image is relative to the panel width so it can crop correctly.
+
+  ```json
+  "bgRatio": 1.7777777778
+  ```
+
+  Common values:
+
+  | Image size | `bgRatio` |
+  |---|---|
+  | 512 × 512 (square) | `1.0` |
+  | 1920 × 1080 (16:9) | `1.7777777778` |
+  | 1600 × 900 (16:9) | `1.7777777778` |
+  | 1440 × 1080 (4:3) | `1.3333333333` |
+  | 1080 × 1920 (portrait 9:16) | `0.5625` |
+
+  Setting a value that does not match your image's real proportions is what causes a clipped background to look squashed or to crop more than you expect — divide the pixel width by the pixel height and use the result.
+</ParamField>
+
+---
+
+## Worked Example
+
+The `root.json` file shipped with the mod uses all four fields together. It points at the bundled `screenshot.png`, enables the mod renderer, and clips proportionally using the screenshot's real aspect ratio.
+
+```json root.json
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:diamond_block"
+    },
+    "title": {
+      "translate": "customadvancements.advancements.example_root.title"
+    },
+    "description": {
+      "translate": "customadvancements.advancements.example_root.description"
+    },
+    "background": "customadvancements:textures/screenshot.png",
+    "largeBackground": true,
+    "shouldBgClip": true,
+    "bgRatio": 1.7208029197,
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
+```
+
+Reading the display block from the top: the tab uses the bundled screenshot as its backdrop; `largeBackground: true` draws it once across the whole panel rather than tiling it; `shouldBgClip: true` keeps its proportions and crops the overflow; and `bgRatio: 1.7208029197` is the screenshot's own width-to-height ratio, so the crop lands where it should. Because the root completes on the first tick, `show_toast` and `announce_to_chat` are both `false` to keep it silent.
+
+---
+
+## Placing Custom Texture Files
+
+When you use your own image, place the file inside `customadvancements/data/textures/`. A file at `customadvancements/data/textures/my_background.png` is referenced as `customadvancements:textures/my_background.png` in the `background` field.
+
+<Warning>
+  Texture files are read from each game instance's own folder — they are not transmitted from server to client. On a multiplayer server, every player needs both the mod and a copy of the texture file for a custom background to render on their screen.
+</Warning>
+
+See [Textures](/data/textures) for supported file formats, naming rules, and sizing guidance.

@@ -1,0 +1,82 @@
+---
+title: "Custom Advancements Frequently Asked Questions"
+sidebarTitle: "FAQ"
+description: "Answers to common questions about permissions, reloading, multiplayer, datapack compatibility, and what Custom Advancements can and can't do."
+---
+
+<AccordionGroup>
+  <Accordion title="Do I need to be a server operator to use the /ca commands?">
+    No. None of the Custom Advancements commands require operator permissions — any connected player can run them, and in single-player they work whether or not cheats are enabled. Because the mod enforces no permission level of its own, use a permissions plugin or restrict access at the server level if you want to limit who can run them on a public server. See [Commands](/commands/overview).
+  </Accordion>
+
+  <Accordion title="Does /ca reload apply changes to the config file?">
+    No. `/ca reload` reloads advancement JSON files, textures, and language files, then triggers a game-data reload — but it never re-reads `config/customadvancements-common.toml`. Blacklists, progression settings, tab sorting, and every other config option require a full game or server **restart**. See [Config File](/configuration/config-file).
+  </Accordion>
+
+  <Accordion title="Does this work on multiplayer servers?">
+    Yes. Install the mod on the server to manage advancements for everyone connected. Advancement definitions themselves are server-side, so players can join without the mod and still see the advancement set you have configured. Custom textures and language files are the exception — see the next question.
+  </Accordion>
+
+  <Accordion title="Do other players need the mod installed?">
+    It depends on what you are using:
+
+    - **Server-side only** — adding, overriding, removing, or gating advancements that use vanilla assets works with the mod on the server alone.
+    - **Custom textures and language files** — these are read from each game instance's own `customadvancements/data/` folder and are not transmitted over the network. Every player needs both the mod *and* a copy of those files locally. Ship them in your modpack's `overrides/` directory so this happens automatically. See [Textures](/data/textures) and [Language Files](/data/lang).
+  </Accordion>
+
+  <Accordion title="Do I need a datapack as well as this mod?">
+    No. Custom Advancements reads JSON files directly from the `customadvancements/` folder in your game directory and applies them to every world, as if they were a global datapack — no `datapacks/` folder setup and no per-world configuration needed.
+
+    It also coexists with datapacks without conflict. The difference is scope: a datapack applies to the single world save you add it to, while Custom Advancements applies to every world on that installation.
+  </Accordion>
+
+  <Accordion title="Which Minecraft and Forge versions does this support?">
+    This version of Custom Advancements (**6.3.5**) targets **Minecraft 1.19.3** on **Minecraft Forge 44.1.0 or newer**. Forge is the only required dependency. Check the [CurseForge](https://www.curseforge.com/minecraft/mc-mods/custom-advancements) or [Modrinth](https://modrinth.com/mod/custom-advancements) pages for releases targeting other Minecraft versions. See [Installation](/installation).
+  </Accordion>
+
+  <Accordion title="Can I use this with other advancement mods?">
+    Custom Advancements includes built-in compatibility with [BetterAdvancements](https://www.curseforge.com/minecraft/mc-mods/better-advancements) — it detects the mod automatically and applies tab sorting inside the enhanced screen too, with no extra configuration. Compatibility with other advancement-related mods varies and is not guaranteed; if you hit a conflict, test with a minimal mod list to isolate it before reporting.
+  </Accordion>
+
+  <Accordion title="Can I override a vanilla or mod advancement?">
+    Yes. Run `/ca generate advancement <advancement>` with the advancement's resource location — for example `/ca generate advancement minecraft:story/mine_stone`. The mod writes the original advancement to `customadvancements/<namespace>/<path>.json`, already at the correct path, and reloads automatically. Edit that file and run `/ca reload`, and your version replaces the original. See [Structure](/advancements/structure) and [Commands](/commands/overview).
+  </Accordion>
+
+  <Accordion title="Can I remove every advancement and build my own from scratch?">
+    Yes, and there are three ways to do it. Set `noAdvancements = true` to remove everything in one line; use whitelist mode (`blacklistIsWhitelist = true`) with an empty `advancementsBlacklist` for the same effect; or set `disableStandardAdvancementLoad = true` to bypass the standard loading pipeline entirely. Then add your own advancements in `customadvancements/customadvancements/`. See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+  </Accordion>
+
+  <Accordion title="How do I find the resource location ID of an existing advancement?">
+    Run `/ca generate resource_locations` in-game. It writes every currently loaded advancement's ID to `customadvancements/resource_locations.txt`, one per line, in a format you can paste straight into a config list. See [Commands](/commands/overview).
+  </Accordion>
+
+  <Accordion title="Why is my background tiled into small squares instead of filling the tab?">
+    Because `largeBackground` is not set. Without it, Minecraft renders the background the vanilla way and repeats the texture at 16×16 intervals. Set `"largeBackground": true` in the advancement's `display` object to draw the image once across the whole panel, then use `shouldBgClip` and `bgRatio` to control how it is fitted. See [Backgrounds](/advancements/background-types).
+  </Accordion>
+
+  <Accordion title="Under MODS progression mode, are vanilla advancements gated?">
+    Yes — by default. Despite the name, `MODS` mode applies to **every** namespace, `minecraft:` included. `modBlacklist` only narrows that down; it never opts a namespace in. To leave vanilla advancements ungated, add `"minecraft"` to `modBlacklist` explicitly. See [Progression](/configuration/progression).
+  </Accordion>
+
+  <Accordion title="Will my custom advancements apply to worlds I created before installing the mod?">
+    Yes. Custom Advancements applies globally rather than per world, so it makes no difference whether a world is new or predates the mod. Your advancements and progression settings are active in every world on that installation.
+
+    <Tip>
+      If you add advancements mid-playthrough, run `/ca reload` to apply them immediately without restarting.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Can I remove only recipe-unlock advancements, without touching anything else?">
+    Yes — set `noRecipeAdvancements = true`. It removes every recipe-unlock advancement and the toast notifications that go with them, independently of `advancementsBlacklist`. See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+  </Accordion>
+
+  <Accordion title="Where can I get help or report bugs?">
+    You can report issues and follow known bugs on the mod's official pages:
+
+    - **GitHub:** [github.com/thedead2/customadvancements/issues](https://github.com/thedead2/customadvancements/issues)
+    - **CurseForge:** [curseforge.com/minecraft/mc-mods/custom-advancements](https://www.curseforge.com/minecraft/mc-mods/custom-advancements)
+    - **Modrinth:** [modrinth.com/mod/custom-advancements](https://modrinth.com/mod/custom-advancements)
+
+    When reporting a bug, include your Minecraft version, Forge version, mod version, and the relevant section of `logs/latest.log` so the developer can reproduce the issue quickly. For step-by-step help with specific errors, see [Common Issues](/troubleshooting/common-issues) first.
+  </Accordion>
+</AccordionGroup>

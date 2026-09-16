@@ -1,0 +1,213 @@
+---
+title: "Custom Advancements JSON Structure and File Layout"
+sidebarTitle: "Structure"
+description: "Learn the required JSON structure and folder layout for Custom Advancements files in Minecraft 1.18.2, including top-level fields and path conventions."
+---
+
+Every custom advancement is a `.json` file placed inside the `customadvancements/` folder in your Minecraft game directory. The mod reads all `.json` files it finds, validates them, and applies them to every world that loads — no per-world datapack setup required.
+
+---
+
+## Folder Layout
+
+The **first subfolder** inside `customadvancements/` determines the namespace an advancement is registered under. The rest of the path becomes the advancement's path. A file at `customadvancements/<namespace>/<path>.json` becomes the advancement `<namespace>:<path>`.
+
+```text
+<game_directory>/
+└── customadvancements/
+    └── customadvancements/      ← subfolder name = namespace
+        ├── my_root.json         → customadvancements:my_root
+        └── story/
+            └── chapter1.json    → customadvancements:story/chapter1
+```
+
+Subdirectories are fully supported and nest as deeply as you like. The folder path beneath the namespace folder becomes the resource location path, with `/` as the separator.
+
+| File path | Resource location |
+|---|---|
+| `customadvancements/customadvancements/my_root.json` | `customadvancements:my_root` |
+| `customadvancements/customadvancements/story/chapter1.json` | `customadvancements:story/chapter1` |
+| `customadvancements/minecraft/story/mine_stone.json` | `minecraft:story/mine_stone` |
+
+Use these resource locations in the `parent` field of child advancements to link your tree together.
+
+---
+
+## Custom Advancements vs. Game Advancements
+
+The mod sorts every file it loads into one of two categories based purely on which namespace folder it sits in:
+
+<CardGroup cols={2}>
+  <Card title="Custom Advancements" icon="star">
+    Files inside `customadvancements/customadvancements/`. These are registered under the `customadvancements` namespace and create entirely new advancement trees of your own.
+  </Card>
+  <Card title="Game Advancements" icon="wrench">
+    Files inside any other namespace folder, such as `customadvancements/minecraft/` or `customadvancements/create/`. These replace the vanilla or mod advancement that shares the same resource location.
+  </Card>
+</CardGroup>
+
+Both categories use exactly the same JSON format and support the same fields. The only difference is which namespace the file ends up in and, consequently, whether it creates a new advancement or replaces an existing one.
+
+<Warning>
+  An override file **fully replaces** the original advancement — it is not merged with it field by field. Whatever your file contains becomes the entire advancement definition, so include every field you want the advancement to keep, not just the ones you changed. The easiest way to guarantee this is to start from a file exported with `/ca generate advancement <id>` and edit it in place. See [Commands](/commands/overview).
+</Warning>
+
+<Note>
+  The `data/` folder is excluded from advancement scanning. Textures and language files placed in `customadvancements/data/` are never parsed as advancement JSON. See [Textures](/data/textures) and [Language Files](/data/lang).
+</Note>
+
+---
+
+## Validation Rules
+
+Every file is checked against three rules before it is loaded. A file that fails is skipped with an error in the log; the rest of your advancements continue to load normally and the game does not crash.
+
+1. The file must contain a top-level **`criteria`** object.
+2. The file must contain a top-level **`display`** object.
+3. If the file has **no `parent` field**, its `display` object must contain a **`background`** field. In other words, every root advancement needs a background.
+
+<Note>
+  Files whose path contains a `recipes/` folder bypass these checks entirely, so exported recipe advancements load without modification.
+</Note>
+
+---
+
+## Top-Level JSON Fields
+
+<ParamField body="display" type="object" required>
+  Controls how the advancement appears in the advancements screen: icon, title, description, frame style, toast, chat notification, and — for root advancements — the tab background. See [Display](/advancements/display) for the full list of sub-fields.
+</ParamField>
+
+<ParamField body="parent" type="string">
+  Resource location of the parent advancement, for example `customadvancements:my_root`. Omit this field to make the advancement a **root** — it appears as its own tab in the advancements screen and must then carry a `background` in its `display` block. Every non-root advancement must reference a parent that exists in the loaded advancement set; a child whose parent cannot be resolved does not appear.
+</ParamField>
+
+<ParamField body="criteria" type="object" required>
+  A map of criterion names to trigger definitions. Each key is an arbitrary string identifier for the criterion, and the value defines which game event fires it and any conditions that must be met. See [Criteria](/advancements/criteria) for details and examples.
+
+  ```json
+  "criteria": {
+    "my_criterion": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [{ "item": "minecraft:diamond" }] }
+    }
+  }
+  ```
+</ParamField>
+
+<ParamField body="requirements" type="array of arrays">
+  A two-dimensional array that expresses logical AND/OR combinations of criteria. The outer array is AND; each inner array is OR. If this field is omitted, **all** criteria must be satisfied.
+
+  ```json
+  "requirements": [["criterion_a", "criterion_b"], ["criterion_c"]]
+  ```
+
+  The example above means: `(criterion_a OR criterion_b) AND criterion_c`.
+</ParamField>
+
+<ParamField body="rewards" type="object">
+  Optional rewards granted when the advancement is completed. Supported sub-fields:
+
+  - `"experience"` — integer amount of XP points
+  - `"loot"` — array of loot table resource locations
+  - `"recipes"` — array of recipe resource locations to unlock
+  - `"function"` — resource location of a function to run as the player
+
+  ```json
+  "rewards": {
+    "experience": 50
+  }
+  ```
+
+  See [Criteria](/advancements/criteria) for the full rewards reference.
+</ParamField>
+
+---
+
+## Minimal Root Advancement
+
+A root advancement has no `parent` field and must include a `display` block with a `background` so the game can render the tab. The `minecraft:tick` trigger fires every game tick and is the conventional way to make a root advancement complete immediately.
+
+```json my_root.json
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:diamond_block"
+    },
+    "title": {
+      "text": "My First Tab"
+    },
+    "description": {
+      "text": "Welcome to my custom advancement tree!"
+    },
+    "background": "minecraft:textures/gui/advancements/backgrounds/adventure.png",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
+```
+
+---
+
+## Minimal Child Advancement
+
+A child advancement links to its parent via the `parent` field. The resource location must match the namespace and path of the parent file exactly, without the `.json` extension.
+
+```json first_steps.json
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:dirt"
+    },
+    "title": {
+      "text": "First Steps"
+    },
+    "description": {
+      "text": "Pick up some dirt."
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "customadvancements:my_root",
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "minecraft:dirt"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+---
+
+## Applying Changes
+
+Changes to your JSON files take effect in one of two ways:
+
+<Steps>
+  <Step title="Run the reload command">
+    Run `/ca reload` in-game or from the server console. The mod rescans every directory and reloads advancements, textures, and language files without a restart. See [Commands](/commands/overview).
+  </Step>
+  <Step title="Restart the game or server">
+    A full restart reloads everything as well. This is also the only way to apply changes to `config/customadvancements-common.toml`, which `/ca reload` does **not** re-read.
+  </Step>
+</Steps>
+
+<Tip>
+  Run `/ca generate advancement all` in-game to export every currently loaded advancement as a ready-to-edit JSON file into your `customadvancements/` folder. This is the fastest way to inspect the exact JSON format Minecraft 1.18.2 uses for any existing advancement. See [Commands](/commands/overview) for the full command reference.
+</Tip>
+
+For full documentation of every `display` sub-field, see [Display](/advancements/display). For criteria and trigger definitions, see [Criteria](/advancements/criteria). For complete working files, see [Examples](/advancements/examples).

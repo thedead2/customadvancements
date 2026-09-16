@@ -1,0 +1,68 @@
+---
+title: "Custom Advancements — Minecraft Advancement Customization"
+sidebarTitle: "Introduction"
+description: "Custom Advancements is a Minecraft Forge mod for 1.16.5 that gives players and modpack creators full control over the advancement system."
+---
+
+Custom Advancements is a Minecraft Forge mod that hands complete creative control of the advancement system back to players and modpack creators. Whether you want to replace the default advancement trees with something entirely your own, silently remove recipe unlocks, or lock players behind a strict progression gate until they earn the right to move forward, this mod makes it possible — without writing a datapack for every individual world.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Custom Advancements" icon="trophy" href="/advancements/structure">
+    Add your own advancement JSON files and inject them into the game alongside — or entirely in place of — vanilla and mod advancements. The mod reads every `.json` file inside the `customadvancements/` folder and applies them to every world on that installation.
+  </Card>
+  <Card title="Blacklist & Whitelist" icon="filter" href="/configuration/blacklist-whitelist">
+    Remove specific advancements, whole advancement trees, or every recipe advancement from the game via a flexible blacklist. Flip a single config flag to turn that blacklist into a whitelist and keep only the advancements you care about.
+  </Card>
+  <Card title="Progression System" icon="lock" href="/configuration/progression">
+    Enable strict advancement progression so that every advancement is only achievable once its parent has been completed. Four modes — `ALL`, `MINECRAFT`, `MODS`, and `CUSTOM_ADVANCEMENTS` — let you scope the enforcement precisely, with per-mod exemptions and optional progress reset on death.
+  </Card>
+  <Card title="Custom Backgrounds" icon="image" href="/advancements/background-types">
+    Override the background texture of any root advancement tab with a vanilla texture or your own `.png` file. Background textures are read straight from `customadvancements/data/textures/` — no resource pack needed.
+  </Card>
+  <Card title="Tab Sorting" icon="arrow-up-arrow-down" href="/configuration/tab-sorting">
+    Control the order of tabs in the advancements screen using three sorting modes: `UNSORTED` (default), `ALPHABETICALLY`, or `DEFINED_LIST` — where you supply a specific ordered list of root advancement IDs.
+  </Card>
+  <Card title="In-Game Commands" icon="terminal" href="/commands/overview">
+    Use built-in commands such as `/ca reload` to apply file changes without a restart, `/ca generate advancement all` to export every loaded advancement as an editable JSON file, or `/ca generate resource_locations` to dump all advancement IDs to a text file.
+  </Card>
+  <Card title="Localization" icon="language" href="/data/lang">
+    Ship translation files alongside your advancements. The mod loads `.json` language files from `customadvancements/data/lang/` and injects them into the game's language map, so your custom advancement titles and descriptions are fully localizable.
+  </Card>
+  <Card title="Death Reset" icon="skull" href="/configuration/progression">
+    Optionally wipe every completed criterion when a player dies, creating a challenging permadeath-style experience without any extra mods.
+  </Card>
+</CardGroup>
+
+## How the Folder Structure Works
+
+On first launch, Custom Advancements creates a `customadvancements/` folder directly inside your Minecraft game directory (the same directory that holds `saves/`, `mods/`, and `config/`). This folder behaves like a global datapack — its contents are applied to every world you load or host on that installation.
+
+Your own advancements live in `customadvancements/customadvancements/`, and the resource location of each file is derived from its path: `customadvancements/customadvancements/my_tree/root.json` becomes `customadvancements:my_tree/root`. Any other subfolder of `customadvancements/` is treated as an override for an existing game advancement in that namespace — this is exactly where the `/ca generate advancement` commands place the files they export.
+
+Language files live at `customadvancements/data/lang/<locale>.json` and texture files at `customadvancements/data/textures/<name>.png`. These two paths are skipped by the advancement loader, so nothing inside `data/` is ever parsed as an advancement.
+
+<Tip>
+  Run `/ca generate advancement all` in-game to export every currently loaded advancement as a ready-to-edit JSON file placed directly into `customadvancements/`. This is the fastest way to start customizing or overriding existing advancements. See [Commands](/commands/overview) for the full reference.
+</Tip>
+
+## Supported Platform & Versions
+
+Custom Advancements 3.5.3 targets **Minecraft 1.16.5** and runs on **Minecraft Forge** only.
+
+| Platform | Minimum Version | Required Dependencies |
+|----------|-----------------|-----------------------|
+| Forge    | Forge 36 (`[36,)`) | None beyond Forge itself |
+
+<Note>
+  The mod declares a Minecraft version range of `[1.16.5, 1.17)` and a Forge version range of `[36, ∞)`. It is not compatible with Fabric, Quilt, or any other mod loader, and it will refuse to load on other Minecraft versions.
+</Note>
+
+## Who Should Use This Mod?
+
+**Modpack creators** use it to build achievement-driven progression systems that tie multiple mods together under a single unified advancement tree — something datapacks alone cannot do across every world at once.
+
+**Server administrators** use it to add custom challenges, reward milestones, and server-specific goals that give players long-term objectives beyond the vanilla game.
+
+**Solo players and hobbyists** use it to experiment with the advancement system, add personal goals to their survival worlds, or override advancements they find too easy or irrelevant.

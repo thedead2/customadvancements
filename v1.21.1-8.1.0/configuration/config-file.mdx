@@ -1,0 +1,136 @@
+---
+title: "Custom Advancements Configuration File Complete Reference"
+sidebarTitle: "Config File"
+description: "Complete reference for config/customadvancements.toml — every option, its type, default value, and effect on the advancement system."
+---
+
+Custom Advancements stores all of its settings in a single file located at `config/customadvancements.toml` inside your Minecraft instance directory. This file is generated automatically with default values the first time the game launches with the mod installed — you do not need to create it by hand. On Fabric the file is managed through the `forgeconfigapiport` library, which implements the NeoForge config API so the format is identical on both mod loaders.
+
+All keys live under the section header `[Config for Custom Advancements]`. Edit the file with any plain-text editor while the server is stopped, then restart to apply changes.
+
+---
+
+## All configuration options
+
+<ParamField path="noRecipeAdvancements" type="boolean" default="false">
+  When `true`, every advancement whose path contains `recipes/` is removed from the game. This applies to both vanilla and custom recipe advancements. Processed independently of the blacklist.
+</ParamField>
+
+<ParamField path="advancementsBlacklist" type="list of strings" default="[]">
+  A list of advancement resource location IDs (e.g. `"minecraft:story/root"`) that the mod should remove. Use the wildcard form `"modid:*"` to remove every advancement belonging to a specific mod namespace. When `blacklistIsWhitelist` is `false` (the default), every listed ID is removed and everything else is kept. See [Blacklist & Whitelist](/configuration/blacklist-whitelist) for full details.
+</ParamField>
+
+<ParamField path="blacklistIsWhitelist" type="boolean" default="false">
+  Inverts the meaning of `advancementsBlacklist`. When `true`, only the advancements in the list are kept; all others are removed. An empty list combined with whitelist mode removes every advancement. See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+</ParamField>
+
+<ParamField path="advancementProgression" type="boolean" default="false">
+  Enables the progression system. When `true`, a player cannot earn an advancement until its parent advancement has been fully completed. See [Progression](/configuration/progression) for full details.
+</ParamField>
+
+<ParamField path="connectedAdvancementsList" type="list of strings" default='["minecraft:story/follow_ender_eye -> minecraft:end/root", "minecraft:story/form_obsidian -> minecraft:nether/root"]'>
+  Adds virtual parent links between advancements that belong to separate trees. Each entry uses the format `"parent_id -> child_id"`. The defaults connect the Nether and End root advancements to the main story line so that players must progress through the overworld before unlocking those tabs. Only active when `advancementProgression = true`. See [Progression](/configuration/progression).
+</ParamField>
+
+<ParamField path="resetAdvancementProgressOnDeath" type="boolean" default="false">
+  When `true`, all advancement progress for a player is revoked the moment they die, forcing them to start over. See [Progression](/configuration/progression).
+</ParamField>
+
+<ParamField path="advancementProgressionMode" type="enum" default="ALL">
+  Controls which advancements are subject to the progression system. Accepted values:
+  - `ALL` — every advancement in every namespace is gated.
+  - `MODS` — applies progression gating to all mods, with `modBlacklist` used to exclude specific mods (or, when `modBlacklistIsWhitelist = true`, to exclusively include specific mods).
+  - `MINECRAFT` — only advancements in the `minecraft:` namespace.
+  - `CUSTOM_ADVANCEMENTS` — only advancements in the `customadvancements:` namespace.
+
+  See [Progression](/configuration/progression).
+</ParamField>
+
+<ParamField path="modBlacklist" type="list of strings" default="[]">
+  A list of mod IDs to exclude from the progression system. Only relevant when `advancementProgressionMode = MODS`. Flip `modBlacklistIsWhitelist` to treat the list as an allow-list instead. See [Progression](/configuration/progression).
+</ParamField>
+
+<ParamField path="modBlacklistIsWhitelist" type="boolean" default="false">
+  When `true`, `modBlacklist` becomes a whitelist: only advancements from the listed mods are subject to progression gating. See [Progression](/configuration/progression).
+</ParamField>
+
+<ParamField path="advancementTabSortingMode" type="enum" default="UNSORTED">
+  Determines the order of tabs in the advancements screen. Accepted values:
+  - `UNSORTED` — tabs appear in their natural load order.
+  - `ALPHABETICALLY` — tabs are sorted A–Z by their display title.
+  - `DEFINED_LIST` — tabs are ordered according to `advancementSortingList`.
+
+  See [Tab Sorting](/configuration/tab-sorting).
+</ParamField>
+
+<ParamField path="advancementSortingList" type="list of strings" default="[]">
+  An ordered list of root advancement resource location IDs used when `advancementTabSortingMode = DEFINED_LIST`. Tabs not included in the list fall back to their natural position after the listed tabs. See [Tab Sorting](/configuration/tab-sorting).
+</ParamField>
+
+<ParamField path="disableStandardAdvancements" type="boolean" default="false">
+  When `true`, the mod completely replaces the vanilla/mod advancement loading pipeline. Only advancements placed in the `customadvancements` folder are loaded; every advancement that would otherwise come from a datapack or mod is ignored.
+</ParamField>
+
+---
+
+## Complete example file
+
+```toml config/customadvancements.toml
+["Config for Custom Advancements"]
+
+    # Whether the mod should remove all recipe advancements
+    noRecipeAdvancements = false
+
+    # Blacklist of Advancements that should be removed by the mod
+    # Use "modid:*" to remove all advancements from a mod
+    advancementsBlacklist = []
+
+    # Whether the Blacklist of Advancements should be a Whitelist
+    blacklistIsWhitelist = false
+
+    # Changing this to true causes each advancement to only be achievable
+    # if its parent has been achieved. Useful for progression systems!
+    advancementProgression = false
+
+    # A list of connected advancements in the format of parent -> child used
+    # by the advancement progression system (adds dummy parents for advancements).
+    # Has no effect if advancementProgression = false
+    connectedAdvancementsList = [
+        "minecraft:story/follow_ender_eye -> minecraft:end/root",
+        "minecraft:story/form_obsidian -> minecraft:nether/root"
+    ]
+
+    # Whether all advancement progress should be reset when the player dies
+    resetAdvancementProgressOnDeath = false
+
+    # The advancements that are affected by the progression system
+    # Accepted values: ALL, MODS, MINECRAFT, CUSTOM_ADVANCEMENTS
+    advancementProgressionMode = "ALL"
+
+    # Blacklist of mods that should not be affected by the advancement
+    # progression system
+    modBlacklist = []
+
+    # Whether the mod blacklist should be treated as a whitelist
+    modBlacklistIsWhitelist = false
+
+    # In which order advancement tabs in the advancement screen should appear
+    # Accepted values: UNSORTED, ALPHABETICALLY, DEFINED_LIST
+    advancementTabSortingMode = "UNSORTED"
+
+    # Order of the advancement tabs when DEFINED_LIST is selected.
+    # Enter root advancement IDs in the order you want them displayed.
+    advancementSortingList = []
+
+    # Whether the mod should overwrite the advancement system completely.
+    # Only custom advancements from the customadvancements folder will load.
+    disableStandardAdvancements = false
+```
+
+---
+
+## Further reading
+
+- [Blacklist & Whitelist](/configuration/blacklist-whitelist) — filter advancements in or out by ID or mod
+- [Progression](/configuration/progression) — gate advancements behind their parents and configure death resets
+- [Tab Sorting](/configuration/tab-sorting) — control the order of tabs in the advancements screen

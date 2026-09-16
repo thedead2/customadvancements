@@ -1,0 +1,118 @@
+---
+title: "Common Custom Advancements Issues and How to Fix Them"
+sidebarTitle: "Common Issues"
+description: "Solutions to the most frequent problems when creating custom advancements, configuring backgrounds, or setting up progression gating in Minecraft 1.18.2."
+---
+
+Run into something that does not behave the way you expect? Check the log first — Custom Advancements logs every skipped file, malformed JSON file, and missing texture through its own `customadvancements` logger, and names the file in question. The entries below cover the causes seen most often.
+
+<AccordionGroup>
+  <Accordion title="My custom advancement tab doesn't appear in the advancements screen">
+    In this version, four causes account for almost every case:
+
+    1. **The root advancement has no `background`.** This is the most common one and it is specific to Minecraft 1.18.2. A file with no `parent` field **must** have a `background` inside its `display` object, or it fails validation and is skipped with an error in the log. Add one — a vanilla texture such as `minecraft:textures/gui/advancements/backgrounds/adventure.png` works without any extra files. See [Backgrounds](/advancements/background-types).
+    2. **A missing `display` or `criteria` object.** Both are required at the top level of every advancement file.
+    3. **Malformed JSON.** A missing comma or brace stops that single file from loading; look in the log for a parse error naming the file. The rest of your advancements still load and the game does not crash.
+    4. **You haven't reloaded.** Files added while the world is already loaded need a `/ca reload` or a restart before they are picked up.
+
+    <Frame>
+      [INSERT IMAGE: A log excerpt showing the "does not match the required '.json' format!" error next to a correctly loading file, for comparison]
+    </Frame>
+  </Accordion>
+
+  <Accordion title="The background shows a missing-texture checkerboard, or no background at all">
+    Check these in order:
+
+    - **The resource location is wrong.** A file at `customadvancements/data/textures/my_background.png` is referenced as `customadvancements:textures/my_background.png`. Both the `textures/` segment and the `.png` extension are part of the location — leaving either out is the usual mistake.
+    - **The file extension is not supported.** See [Textures](/data/textures) for the full list the loader accepts. Anything else is skipped with a warning.
+    - **The `background` is on a child advancement.** Backgrounds only render on root advancements — those with no `parent` field. On a child the field is simply ignored.
+    - **The player does not have the file.** Custom Advancements 4.7.5 does not send textures over the network. Every client reads them from its own `customadvancements/data/textures/` folder, so a player without the mod, or without the image, sees the vanilla default.
+
+    The mod logs a warning naming both the advancement and the texture location it failed to find, which is the quickest way to confirm which of these applies.
+
+    <Frame>
+      [INSERT IMAGE: An advancement tab background rendering as the purple-and-black missing-texture checkerboard]
+    </Frame>
+  </Accordion>
+
+  <Accordion title="My background image is tiled or stretched instead of filling the tab properly">
+    By default the `background` texture is tiled across the panel in 16×16 pixel steps, exactly as vanilla renders its own backgrounds. That is correct for seamless tile patterns and wrong for a screenshot or piece of artwork.
+
+    To draw the image once, filling the panel:
+
+    - Set `"largeBackground": true` in the `display` block. Without it, the next two fields do nothing.
+    - Set `"shouldBgClip": true` to preserve the image's proportions instead of stretching it.
+    - Set `"bgRatio"` to the image's real width divided by its real height — for example `1.7777` for a 1920×1080 image.
+
+    A stretched, distorted image almost always means `shouldBgClip` is missing; a wrongly cropped one means `bgRatio` does not match the file. See [Backgrounds](/advancements/background-types).
+  </Accordion>
+
+  <Accordion title="Advancement titles show the raw translation key instead of readable text">
+    A title rendering as `customadvancements.advancements.my_root.title` means Minecraft found no translation for that key in the active locale.
+
+    - **Check for a typo.** The key in the advancement JSON must match the key in the language file character for character.
+    - **Check the file name and location.** Language files go in `customadvancements/data/lang/` and are named with a Minecraft locale code, such as `en_us.json`. Only `.json` files are read.
+    - **Ship an `en_us.json`.** English is Minecraft's fallback locale, so a complete English file prevents raw keys from ever showing.
+    - **Check that the player has the files.** Language files are not sent over the network in this version — each client reads them from its own `customadvancements/data/lang/` folder. If a title looks right for you and raw for someone else, that is the cause.
+
+    See [Language Files](/data/lang).
+  </Accordion>
+
+  <Accordion title="Changes to the config file do nothing">
+    `/ca reload` does **not** re-read `config/customadvancements-common.toml`. It reloads advancement JSON files, textures, and language files only.
+
+    Edit the config while the game or server is stopped, then restart to apply it. This applies to every option: blacklists, progression settings, tab sorting, and the rest. See [Config File](/configuration/config-file).
+  </Accordion>
+
+  <Accordion title="A blacklisted advancement (or its whole tab) still shows up">
+    - **Check the exact resource location.** Entries in `advancementsBlacklist` must match `namespace:path` exactly, including case. IDs are validated as resource locations when the config loads — but at that point the server is not running yet, so an ID that simply does not exist is accepted and then silently does nothing. Verify yours against `/ca generate resource_locations` output.
+    - **Wildcards are not supported in this version.** `"create:*"` does not mean "every Create advancement" — it matches nothing. To remove a whole mod's tree, blacklist that mod's root advancement and let the cascade remove its children.
+    - **Removing a child does not remove its parent or siblings.** The cascade runs downward only. To remove an entire tab, blacklist its **root** advancement.
+    - **In whitelist mode, ancestors are kept automatically.** If something unexpected survives with `blacklistIsWhitelist = true`, it is most likely a required ancestor of an advancement you did list — parents are always preserved so the tree does not break.
+    - **Restart after editing.** Blacklist changes are config changes, so they need a restart.
+
+    See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+  </Accordion>
+
+  <Accordion title="Progression gating isn't blocking anything, or is blocking too much">
+    - Confirm `advancementProgression = true` is actually set in `config/customadvancements-common.toml` — the progression system is off by default — and that you restarted afterwards.
+    - Check `advancementProgressionMode`. Under `MINECRAFT` or `CUSTOM_ADVANCEMENTS`, advancements outside that namespace are never gated, which looks like the system "isn't working" if you happen to be testing with a mod advancement.
+    - Under `MODS` mode with an empty `modBlacklist`, every namespace is gated — **including `minecraft`**. If you expected vanilla advancements to stay ungated, add `"minecraft"` to `modBlacklist`.
+    - Root advancements have no parent to gate them, so they are always immediately earnable. Use `connectedAdvancementsList` to give a root a virtual prerequisite from another tree.
+    - Check the arrow spacing in `connectedAdvancementsList`. Entries must be written `"parent -> child"` with a space on each side of the arrow; `"parent->child"` is parsed incorrectly and matches nothing.
+    - Recipe advancements are never gated, in any mode.
+    - A gated advancement that cannot be earned yet shows no error to the player — the criteria are simply not granted. That is expected behavior, not a bug.
+
+    See [Progression](/configuration/progression).
+  </Accordion>
+
+  <Accordion title="An advancement I overrode lost its rewards, criteria, or description">
+    Override files **fully replace** the original advancement — they are not merged with it field by field. Whatever your file contains becomes the entire definition, so any field you left out is gone from the advancement.
+
+    The fix is to start from a complete definition rather than writing one by hand: run `/ca generate advancement <id>` to export the original, then edit the exported file in place, changing only what you mean to change. See [Blacklist & Whitelist](/configuration/blacklist-whitelist) for the full override workflow.
+  </Accordion>
+
+  <Accordion title="Generating an advancement fails with an already-exists message">
+    `/ca generate advancement <id>` refuses to export an advancement whose namespace is `customadvancements`, and reports `The file for <id> already exist!`. Those advancements come from your own `customadvancements/customadvancements/` folder — the file already exists on disk and is yours to edit directly, so there is nothing to generate.
+
+    If you meant to export a vanilla or mod advancement, double-check the ID you passed. See [Commands](/commands/overview).
+  </Accordion>
+
+  <Accordion title="advancementSortingList doesn't change the tab order">
+    - `advancementSortingList` only has an effect when `advancementTabSortingMode = "DEFINED_LIST"`. Under `UNSORTED` or `ALPHABETICALLY` the list is ignored entirely.
+    - Entries must be the **root** advancement's resource location — not a child advancement, and not the tab's display name. Use `/ca generate resource_locations` and look for the IDs ending in `/root`, or check which of your files have no `"parent"` field.
+    - Tab sorting is a config setting, so it needs a restart to apply — `/ca reload` will not pick it up.
+
+    See [Tab Sorting](/configuration/tab-sorting).
+  </Accordion>
+
+  <Accordion title="Everything disappeared after I ran /ca generate advancement all">
+    That command exports every loaded advancement into your `customadvancements/` folder, and every exported file then **overrides** the advancement it came from. If something looks wrong afterwards, an edited or partially deleted export is usually the cause.
+
+    Delete the files you did not intend to keep. Anything removed from `customadvancements/<namespace>/` reverts to the game's own version on the next reload.
+
+    A related case: if you also set `disableStandardAdvancementLoad = true`, any advancement in your folder whose `parent` is not present in the folder is dropped along with all of its children. Either export the missing parents too, or turn that option off. See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+  </Accordion>
+</AccordionGroup>
+
+Still stuck? The [FAQ](/troubleshooting/faq) covers what the mod can and cannot do in this version, which sometimes turns out to be the real answer.

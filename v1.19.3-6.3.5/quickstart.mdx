@@ -1,0 +1,166 @@
+---
+title: "Get Started: Create Your First Custom Advancement Tree"
+sidebarTitle: "Quickstart"
+description: "Create your first custom advancement JSON file and see it appear in the Minecraft advancements screen in under five minutes with Custom Advancements."
+---
+
+This guide walks you through creating your first custom advancement tree from scratch. By the end you will have a root tab and a child advancement visible in the Minecraft advancements screen, built entirely from JSON files — no coding required. The whole process takes under five minutes once the mod is installed.
+
+<Steps>
+  <Step title="Install the mod">
+    Follow the [Installation guide](/installation) to set up Minecraft Forge 44.1.0 or newer for Minecraft 1.19.3 and add the Custom Advancements jar to your `mods/` folder.
+  </Step>
+
+  <Step title="Launch the game once">
+    Start Minecraft at least once with the mod installed. Custom Advancements creates the `customadvancements/` folder inside your game directory on the first run and copies its example files into it. You can close the game again after reaching the main menu.
+  </Step>
+
+  <Step title="Open the advancement folder">
+    Inside the `customadvancements/` folder that was just created, open the subfolder that is also named `customadvancements`:
+
+    ```
+    .minecraft/
+    └── customadvancements/
+        └── customadvancements/    ← your advancements go here
+    ```
+
+    <Note>
+      The first subfolder level under `customadvancements/` determines the namespace. The folder named `customadvancements` holds your own new advancements, which are all registered under the `customadvancements` namespace. Any other subfolder name is treated as an override for an existing namespace — for example, `customadvancements/minecraft/` overrides vanilla advancements. See [Structure](/advancements/structure) for the full rules.
+    </Note>
+
+    <Tip>
+      On Windows, type `%appdata%\.minecraft\customadvancements\customadvancements` directly into the Explorer address bar to jump straight there.
+    </Tip>
+  </Step>
+
+  <Step title="Create the root advancement">
+    A root advancement defines a new tab in the advancements screen. Create the file `my_root.json` inside the `customadvancements/customadvancements/` folder with the following content:
+
+    ```json my_root.json
+    {
+      "display": {
+        "icon": {
+          "item": "minecraft:diamond_block"
+        },
+        "title": {
+          "text": "My First Tab"
+        },
+        "description": {
+          "text": "Follow your imagination!"
+        },
+        "background": "minecraft:textures/gui/advancements/backgrounds/stone.png",
+        "show_toast": false,
+        "announce_to_chat": false,
+        "hidden": false
+      },
+      "criteria": {
+        "requirement": {
+          "trigger": "minecraft:tick"
+        }
+      }
+    }
+    ```
+
+    Key fields to note:
+    - **`display.icon`** — the item shown on the tab header. Any valid item ID works. In Minecraft 1.19.3 the field inside the icon object is `item`.
+    - **`display.title` / `display.description`** — a `{"text": "..."}` component gives you a hardcoded string. Swap it for `{"translate": "some.key"}` if you want translatable text, and define the key in a language file.
+    - **`display.background`** — the tab's background texture, given as a plain resource location string. See [Background Types](/advancements/background-types) for custom images and the extra rendering fields.
+    - **`criteria`** — root advancements are typically granted automatically via the `minecraft:tick` trigger; the player earns it on the first game tick.
+
+    <Warning>
+      A root advancement — one with no `parent` field — **must** include a `background` in its `display` object. Files that omit it fail validation and are skipped entirely with an error in the log, rather than loading without a background.
+    </Warning>
+  </Step>
+
+  <Step title="Create a child advancement">
+    Child advancements appear as nodes branching off the root inside its tab. Create the file `diamond_finder.json` in the same folder:
+
+    ```json diamond_finder.json
+    {
+      "display": {
+        "icon": {
+          "item": "minecraft:diamond"
+        },
+        "title": {
+          "text": "Diamond Finder"
+        },
+        "description": {
+          "text": "Find your first diamond!"
+        },
+        "frame": "task",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+      },
+      "parent": "customadvancements:my_root",
+      "criteria": {
+        "get_diamond": {
+          "trigger": "minecraft:inventory_changed",
+          "conditions": {
+            "items": [
+              {
+                "item": "minecraft:diamond"
+              }
+            ]
+          }
+        }
+      }
+    }
+    ```
+
+    Key fields to note:
+    - **`parent`** — the resource location of the advancement this node connects to. Here `customadvancements:my_root` refers to the `my_root.json` file you created in the previous step. The format is `<namespace>:<path>`, where the path mirrors the file path relative to the namespace folder, without the `.json` extension.
+    - **`frame`** — controls the border shape of the advancement icon in the screen. Valid values are `task`, `goal`, and `challenge`.
+    - **`criteria`** — this advancement is granted when a diamond appears in the player's inventory. Replace the trigger and conditions to match whatever goal you have in mind.
+
+    See the [Advancement JSON Reference](/advancements/structure) for the full list of fields, and [Criteria](/advancements/criteria) for triggers and conditions.
+  </Step>
+
+  <Step title="Reload and check the advancements screen">
+    Load into a world, then run the reload command in chat:
+
+    ```
+    /ca reload
+    ```
+
+    The mod re-reads every advancement file, texture, and language file, then reloads game data — no restart required. Press **L** to open the advancements screen; a new tab labeled **My First Tab** should appear alongside the vanilla tabs, with **Diamond Finder** as a node inside it. Pick up a diamond to complete it.
+
+    <Note>
+      `/ca reload` does **not** re-read `config/customadvancements-common.toml`. Config changes require a full game or server restart. See [Config File](/configuration/config-file).
+    </Note>
+
+    If the tab does not appear, check `logs/latest.log` for entries tagged `customadvancements` — the most common causes are malformed JSON syntax and a root advancement without a `background` field. See [Common Issues](/troubleshooting/common-issues) for more.
+
+    <Frame>
+      [INSERT IMAGE: The new root advancement tab visible in the advancements screen, next to the vanilla tabs]
+    </Frame>
+  </Step>
+</Steps>
+
+---
+
+## Setting Up a Modpack
+
+If you are building a modpack rather than a single world, the same files drive the whole pack. A typical end-to-end setup runs like this:
+
+<Steps>
+  <Step title="Export the existing advancements as templates">
+    Join a world and run `/ca generate advancement all`. The mod writes a JSON file for every currently loaded advancement — vanilla and mod alike — into `customadvancements/`, grouped into namespace folders. Editing one of those files overrides that advancement. See [Commands](/commands/overview).
+  </Step>
+  <Step title="Decide what to keep">
+    Run `/ca generate resource_locations` to dump every advancement ID to `customadvancements/resource_locations.txt`, then use that list to fill in `advancementsBlacklist` — or flip `blacklistIsWhitelist` and keep only a curated set. See [Blacklist & Whitelist](/configuration/blacklist-whitelist).
+  </Step>
+  <Step title="Write your own advancements">
+    Add your pack's own trees under `customadvancements/customadvancements/`. Use subfolders to group them; the path becomes part of the resource location. See [Examples](/advancements/examples) for three complete, working files.
+  </Step>
+  <Step title="Gate progression (optional)">
+    Turn on `advancementProgression` and pick an `advancementProgressionMode` to make players work through your tree in order, and use `connectedAdvancementsList` to link trees that have no parent-child relationship of their own. See [Progression](/configuration/progression).
+  </Step>
+  <Step title="Ship it with the pack">
+    Place both the `customadvancements/` folder and `config/customadvancements-common.toml` in your pack's `overrides/` directory. Every major launcher (CurseForge, Prism, MultiMC, ATLauncher) merges that directory into the game directory on install, so players get your full advancement setup on their first launch with nothing extra to do.
+  </Step>
+</Steps>
+
+<Tip>
+  Build your advancement system in a local test instance first and use `/ca reload` after each save to iterate without restarting. Once everything works, copy the final `customadvancements/` folder and config file into your pack's `overrides/` directory.
+</Tip>

@@ -1,0 +1,66 @@
+---
+title: "Custom Advancements: Minecraft Mod for Advancement Freedom"
+sidebarTitle: "Home"
+description: "Custom Advancements is a Minecraft Forge mod for 1.16.5 that lets you add, remove, filter, and fully customize advancements across all of your worlds."
+---
+
+Custom Advancements gives modpack creators and server operators complete control over the Minecraft advancement system. Drop JSON files into the `customadvancements/` folder to add new advancements, remove unwanted ones, enforce progression gates, and reorder the advancement screen — no datapack required.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Custom Advancements 3.5.3 on Minecraft Forge for 1.16.5.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Create your first custom advancement in under five minutes.
+  </Card>
+  <Card title="Advancement Structure" icon="file-code" href="/advancements/structure">
+    Understand the JSON format for defining advancements.
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/configuration/config-file">
+    Tune blacklists, progression rules, and tab sorting from one config file.
+  </Card>
+</CardGroup>
+
+## What can Custom Advancements do?
+
+<CardGroup cols={2}>
+  <Card title="Add Custom Advancements" icon="plus" href="/advancements/structure">
+    Place `.json` files in `customadvancements/customadvancements/` and they are loaded into every world automatically.
+  </Card>
+  <Card title="Remove Advancements" icon="trash" href="/configuration/blacklist-whitelist">
+    Blacklist individual advancements, wipe entire trees, or flip to whitelist mode to keep only what you choose.
+  </Card>
+  <Card title="Progression System" icon="list-check" href="/configuration/progression">
+    Require players to complete parent advancements before unlocking children — perfect for RPG-style modpacks.
+  </Card>
+  <Card title="Custom Backgrounds" icon="image" href="/advancements/background-types">
+    Point a root advancement at a vanilla texture or your own `.png` file to theme its tab.
+  </Card>
+  <Card title="Tab Sorting" icon="arrow-up-a-z" href="/configuration/tab-sorting">
+    Sort advancement tabs alphabetically, by a defined list, or leave them unsorted.
+  </Card>
+  <Card title="In-Game Commands" icon="terminal" href="/commands/overview">
+    Reload your files and export advancement templates from the game with `/ca` commands.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Install the mod">
+    Download the Forge build for Minecraft 1.16.5 and place the `.jar` file in your `mods/` folder.
+  </Step>
+  <Step title="Add your advancements">
+    Create `.json` files inside `customadvancements/customadvancements/` in your game directory. The mod loads them on every world start.
+  </Step>
+  <Step title="Configure behavior">
+    Edit `config/customadvancements-common.toml` to control blacklists, progression gating, recipe advancement removal, and more.
+  </Step>
+  <Step title="Reload in-game">
+    Run `/ca reload` to apply your edits without restarting, or use `/ca generate advancement all` to export existing advancements as editable templates first.
+  </Step>
+</Steps>
+
+<Note>
+  This version of Custom Advancements supports **Minecraft 1.16.5** on **Minecraft Forge** only. It does not run on Fabric, Quilt, or any other loader. See the [installation page](/installation) for exact version requirements.
+</Note>
